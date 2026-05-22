@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source "../popup.html";
+@source "../popup.js";
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .preset-btn {
+    @apply rounded-md border border-neutral-200 bg-white px-2 py-2 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-[0.98]
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-700;
+  }
+  .preset-btn.is-active {
+    @apply border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-300;
+  }
+}

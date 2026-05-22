@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# OS cruft
+.DS_Store
+
+# Distributable build artifacts — rebuildable from source, attach to releases instead
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+
+# Claude Code machine-local settings (keep shared .claude/settings.json if added)
+.claude/settings.local.json
+
+# Note: compiled popup.css IS committed so the extension loads unpacked without a build step.

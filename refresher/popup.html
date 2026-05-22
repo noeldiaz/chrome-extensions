@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body class="invisible w-72 bg-neutral-50 text-neutral-900 dark:bg-slate-900 dark:text-slate-100">
+    <div class="p-4">
+      <div class="flex items-center justify-between">
+        <h1 class="text-sm font-bold uppercase tracking-wider text-neutral-700 dark:text-slate-300">Refresher</h1>
+        <button
+          id="theme-toggle"
+          type="button"
+          class="rounded p-1 text-neutral-500 transition hover:text-neutral-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
+          title="Toggle dark mode"
+          aria-label="Toggle dark mode"
+        >
+          <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+          </svg>
+          <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="my-3 border-t border-neutral-200 dark:border-slate-700"></div>
+
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label for="minutes" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Minutes</label>
+          <input
+            type="number"
+            id="minutes"
+            min="0"
+            max="1440"
+            step="1"
+            value="15"
+            inputmode="numeric"
+            class="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
+                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+          />
+        </div>
+        <div class="flex-1">
+          <label for="seconds" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Seconds</label>
+          <input
+            type="number"
+            id="seconds"
+            min="0"
+            max="59"
+            step="1"
+            value="0"
+            inputmode="numeric"
+            class="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
+                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+          />
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <span class="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Preset intervals</span>
+        <div class="grid grid-cols-3 gap-2" id="presets">
+          <button type="button" class="preset-btn" data-seconds="30">30 Seconds</button>
+          <button type="button" class="preset-btn" data-seconds="60">1 Minute</button>
+          <button type="button" class="preset-btn" data-seconds="120">2 Minutes</button>
+          <button type="button" class="preset-btn" data-seconds="300">5 Minutes</button>
+          <button type="button" class="preset-btn" data-seconds="600">10 Minutes</button>
+          <button type="button" class="preset-btn" data-seconds="900">15 Minutes</button>
+        </div>
+      </div>
+
+      <div class="mt-4 flex justify-center">
+        <button
+          id="add"
+          type="button"
+          class="w-full rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-1
+                 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400
+                 dark:focus:ring-offset-slate-900"
+        >
+          Refresh this Tab
+        </button>
+      </div>
+
+      <label for="preserveScroll" class="mt-3 flex cursor-pointer items-center gap-2 text-xs text-neutral-600 dark:text-slate-400">
+        <input
+          type="checkbox"
+          id="preserveScroll"
+          class="h-3.5 w-3.5 accent-blue-600"
+        />
+        Preserve scroll position
+      </label>
+
+      <p id="status" class="mt-2 text-center text-xs text-neutral-500 empty:hidden dark:text-slate-400"></p>
+
+      <div class="my-4 border-t border-neutral-200 dark:border-slate-700"></div>
+
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Active tabs</span>
+        <span id="count" class="text-[10px] font-medium tabular-nums text-neutral-400 dark:text-slate-500"></span>
+      </div>
+
+      <p id="empty" class="mt-2 text-center text-xs text-neutral-400 dark:text-slate-500">No tabs refreshing yet.</p>
+      <div id="list" class="mt-2 space-y-2"></div>
+    </div>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
