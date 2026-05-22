@@ -33,3 +33,32 @@ export function dataUrlMimeType(dataUrl) {
 export function isImageDataUrl(dataUrl) {
   return /^data:image\//.test(dataUrl || "");
 }
+
+// Convert a CSS-pixel selection rect to integer device-pixel source coords for
+// cropping a captureVisibleTab image. Clamped to the image bounds when given.
+export function scaleRect(rect, dpr = 1, bounds = null) {
+  const sx = Math.max(0, Math.round(rect.x * dpr));
+  const sy = Math.max(0, Math.round(rect.y * dpr));
+  let sw = Math.round(rect.w * dpr);
+  let sh = Math.round(rect.h * dpr);
+  if (bounds) {
+    sw = Math.min(sw, bounds.w - sx);
+    sh = Math.min(sh, bounds.h - sy);
+  }
+  return { sx, sy, sw: Math.max(0, sw), sh: Math.max(0, sh) };
+}
+
+// Plan the scroll offsets for a full-page capture: one viewport-height step at a
+// time, the last clamped so the bottom is flush, capped at maxTiles. Returns a
+// deduped ascending list of Y offsets (always includes 0 and the bottom).
+export function planScrollSteps(total, viewportHeight, maxTiles = 40) {
+  if (!(viewportHeight > 0)) return [0];
+  const last = Math.max(0, total - viewportHeight);
+  const steps = [];
+  for (let y = 0; y < total && steps.length < maxTiles; y += viewportHeight) {
+    steps.push(Math.min(y, last));
+  }
+  if (steps.length === 0) steps.push(0);
+  if (steps[steps.length - 1] !== last && steps.length < maxTiles) steps.push(last);
+  return steps.filter((y, i) => i === 0 || y !== steps[i - 1]);
+}

@@ -20,13 +20,21 @@ async function capture(mode) {
     return;
   }
 
-  statusEl.textContent = "";
-  const res = await chrome.runtime.sendMessage({
+  statusEl.textContent = mode === "fullpage" ? "Capturing full page…" : "";
+  const send = chrome.runtime.sendMessage({
     type: "capture",
     mode,
     tab: { id: tab.id, windowId: tab.windowId, url: tab.url || "", title: tab.title || "" },
   });
 
+  // Selection needs the user to click+drag the page, so the popup must close to
+  // get out of the way. Background opens the editor (or quietly drops a cancel).
+  if (mode === "selection") {
+    window.close();
+    return;
+  }
+
+  const res = await send;
   if (!res?.ok) {
     statusEl.textContent = res?.error || "Capture failed.";
     return;
