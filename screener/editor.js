@@ -1,5 +1,5 @@
 import { loadTheme, wireTheme } from "./theme.js";
-import { captureFilename } from "./lib.js";
+import { captureFilename, originPatternFromUrl } from "./lib.js";
 import { takeCapture } from "./idb.js";
 import { Annotator } from "./annotator.js";
 
@@ -8,15 +8,27 @@ const emptyEl = document.getElementById("empty");
 const metaEl = document.getElementById("meta");
 const toolbarEl = document.getElementById("toolbar");
 const downloadEl = document.getElementById("download");
+const copyEl = document.getElementById("copy");
+const submitEl = document.getElementById("submit");
 const undoEl = document.getElementById("undo");
 const redoEl = document.getElementById("redo");
 const deleteEl = document.getElementById("delete");
+
+// Submit modal
+const submitModalEl = document.getElementById("submitModal");
+const ticketTitleEl = document.getElementById("ticketTitle");
+const ticketDescEl = document.getElementById("ticketDesc");
+const submitStatusEl = document.getElementById("submitStatus");
+const submitSendEl = document.getElementById("submitSend");
+const submitCancelEl = document.getElementById("submitCancel");
+const openOptionsEl = document.getElementById("openOptions");
 
 const params = new URLSearchParams(location.search);
 const id = params.get("id");
 const errorMsg = params.get("error");
 let current = null;
 let anno = null;
+let settings = { endpoint: "", token: "" };
 
 async function loadCapture() {
   if (!id) return null;
@@ -91,14 +103,122 @@ function wireShortcuts() {
 
 // --- outputs ---
 
+const footerStatusEl = document.getElementById("status");
+let footerTimer = null;
+function flash(message, ok = true) {
+  footerStatusEl.textContent = message;
+  footerStatusEl.classList.toggle("text-red-500", !ok);
+  footerStatusEl.classList.toggle("dark:text-red-400", !ok);
+  clearTimeout(footerTimer);
+  footerTimer = setTimeout(() => (footerStatusEl.textContent = ""), 2500);
+}
+
+function captureName() {
+  const m = current?.meta || {};
+  return captureFilename(m.mode || "capture", Date.parse(m.capturedAt) || Date.now());
+}
+
+async function annotatedBlob() {
+  return (await fetch(anno.toDataURL())).blob();
+}
+
 async function download() {
   if (!anno) return;
-  const m = current?.meta || {};
-  await chrome.downloads.download({
-    url: anno.toDataURL(),
-    filename: captureFilename(m.mode || "capture", Date.parse(m.capturedAt) || Date.now()),
-    saveAs: true,
-  });
+  await chrome.downloads.download({ url: anno.toDataURL(), filename: captureName(), saveAs: true });
+}
+
+async function copyImage() {
+  if (!anno) return;
+  try {
+    const blob = await annotatedBlob();
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    flash("Copied to clipboard.");
+  } catch (e) {
+    flash("Copy failed: " + (e?.message || e), false);
+  }
+}
+
+// --- submit ticket ---
+
+function setSubmitStatus(message, ok = true) {
+  submitStatusEl.textContent = message;
+  submitStatusEl.classList.toggle("text-red-500", !ok);
+  submitStatusEl.classList.toggle("dark:text-red-400", !ok);
+}
+
+function openSubmit() {
+  if (!anno) return;
+  setSubmitStatus(settings.endpoint ? "" : "Set a ticket endpoint in Settings first.", !!settings.endpoint);
+  ticketTitleEl.value = current?.meta?.pageTitle || "";
+  submitModalEl.hidden = false;
+  ticketTitleEl.focus();
+  ticketTitleEl.select();
+}
+
+function closeSubmit() {
+  submitModalEl.hidden = true;
+}
+
+async function doSubmit() {
+  const title = ticketTitleEl.value.trim();
+  if (!title) return setSubmitStatus("Title is required.", false);
+  if (!settings.endpoint) return setSubmitStatus("Set a ticket endpoint in Settings first.", false);
+  const origin = originPatternFromUrl(settings.endpoint);
+  if (!origin) return setSubmitStatus("Endpoint URL is invalid — check Settings.", false);
+
+  // permissions.request must be the first await so the user gesture survives.
+  const granted = await chrome.permissions.request({ origins: [origin] });
+  if (!granted) return setSubmitStatus("Permission to reach the endpoint was denied.", false);
+
+  submitSendEl.disabled = true;
+  setSubmitStatus("Sending…");
+  try {
+    const m = current?.meta || {};
+    const fd = new FormData();
+    fd.append("title", title);
+    if (ticketDescEl.value.trim()) fd.append("description", ticketDescEl.value.trim());
+    fd.append("screenshot", await annotatedBlob(), captureName());
+    if (m.pageUrl) fd.append("page_url", m.pageUrl);
+    fd.append(
+      "meta",
+      JSON.stringify({
+        mode: m.mode || null,
+        pageTitle: m.pageTitle || null,
+        capturedAt: m.capturedAt || null,
+        userAgent: navigator.userAgent,
+        viewport: { w: window.screen?.width || null, h: window.screen?.height || null },
+        devicePixelRatio: window.devicePixelRatio || 1,
+      }),
+    );
+
+    const headers = { Accept: "application/json" };
+    if (settings.token) headers.Authorization = `Bearer ${settings.token}`;
+    const res = await fetch(settings.endpoint, { method: "POST", headers, body: fd });
+
+    if (res.ok) {
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        /* empty/non-JSON body is fine */
+      }
+      const ref = data.url || (data.id != null ? `#${data.id}` : "");
+      setSubmitStatus(`Ticket submitted${ref ? " — " + ref : ""}.`);
+      setTimeout(closeSubmit, 1600);
+    } else {
+      let msg = "";
+      try {
+        msg = (await res.json()).message || "";
+      } catch {
+        /* ignore */
+      }
+      setSubmitStatus(`Submit failed (${res.status})${msg ? ": " + msg : ""}.`, false);
+    }
+  } catch (e) {
+    setSubmitStatus("Submit failed: " + (e?.message || e), false);
+  } finally {
+    submitSendEl.disabled = false;
+  }
 }
 
 // --- boot ---
@@ -124,12 +244,43 @@ async function init() {
   };
   await anno.load(current.dataUrl);
 
+  settings = await chrome.storage.local.get({ endpoint: "", token: "" });
   downloadEl.disabled = false;
+  copyEl.disabled = false;
+  submitEl.disabled = false;
   wireToolbar();
   wireShortcuts();
 }
 
+// Keep settings fresh if the user edits Options in another tab.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if (changes.endpoint) settings.endpoint = changes.endpoint.newValue || "";
+  if (changes.token) settings.token = changes.token.newValue || "";
+});
+
 downloadEl.addEventListener("click", download);
+copyEl.addEventListener("click", copyImage);
+submitEl.addEventListener("click", openSubmit);
+submitCancelEl.addEventListener("click", closeSubmit);
+submitSendEl.addEventListener("click", doSubmit);
+openOptionsEl.addEventListener("click", () => chrome.runtime.openOptionsPage());
+document.getElementById("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+submitModalEl.addEventListener("click", (e) => {
+  if (e.target === submitModalEl) closeSubmit();
+});
+ticketTitleEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    doSubmit();
+  } else if (e.key === "Escape") {
+    closeSubmit();
+  }
+});
+ticketDescEl.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSubmit();
+});
+
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();
 init();

@@ -47,5 +47,6 @@ capturesEl.addEventListener("click", (e) => {
   if (btn) capture(btn.dataset.mode);
 });
 
+document.getElementById("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();

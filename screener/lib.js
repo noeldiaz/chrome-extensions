@@ -48,6 +48,27 @@ export function scaleRect(rect, dpr = 1, bounds = null) {
   return { sx, sy, sw: Math.max(0, sw), sh: Math.max(0, sh) };
 }
 
+export function isValidHttpUrl(value) {
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+// Origin match pattern for a runtime host-permission request, e.g.
+// "https://api.example.com/tickets" -> "https://api.example.com/*". Null if invalid.
+export function originPatternFromUrl(value) {
+  try {
+    const u = new URL(value);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    return `${u.protocol}//${u.host}/*`;
+  } catch {
+    return null;
+  }
+}
+
 // Plan the scroll offsets for a full-page capture: one viewport-height step at a
 // time, the last clamped so the bottom is flush, capped at maxTiles. Returns a
 // deduped ascending list of Y offsets (always includes 0 and the bottom).

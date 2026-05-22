@@ -10,6 +10,8 @@ import {
   isImageDataUrl,
   scaleRect,
   planScrollSteps,
+  isValidHttpUrl,
+  originPatternFromUrl,
 } from "../lib.js";
 
 test("CAPTURE_MODES has the four capture modes", () => {
@@ -98,4 +100,20 @@ test("planScrollSteps respects maxTiles", () => {
 
 test("planScrollSteps is safe with a zero/garbage viewport", () => {
   assert.deepEqual(planScrollSteps(5000, 0), [0]);
+});
+
+test("isValidHttpUrl accepts http/https only", () => {
+  assert.ok(isValidHttpUrl("https://api.example.com/tickets"));
+  assert.ok(isValidHttpUrl("http://localhost:8000/submit"));
+  assert.ok(!isValidHttpUrl("ftp://example.com"));
+  assert.ok(!isValidHttpUrl("javascript:alert(1)"));
+  assert.ok(!isValidHttpUrl("not a url"));
+  assert.ok(!isValidHttpUrl(""));
+});
+
+test("originPatternFromUrl returns an origin match pattern", () => {
+  assert.equal(originPatternFromUrl("https://api.example.com/tickets"), "https://api.example.com/*");
+  assert.equal(originPatternFromUrl("http://localhost:8000/submit?x=1"), "http://localhost:8000/*");
+  assert.equal(originPatternFromUrl("ftp://example.com"), null);
+  assert.equal(originPatternFromUrl("garbage"), null);
 });
