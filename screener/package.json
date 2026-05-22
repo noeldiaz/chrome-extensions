@@ -7,13 +7,15 @@
     "build:css": "tailwindcss -i src/styles.css -o app.css --minify",
     "watch:css": "tailwindcss -i src/styles.css -o app.css --watch",
     "lint": "eslint .",
-    "test": "node --test"
+    "test": "node --test",
+    "vendor:konva": "cp node_modules/konva/konva.min.js vendor/konva.min.js"
   },
   "devDependencies": {
-    "tailwindcss": "^4.0.0",
+    "@eslint/js": "^9.0.0",
     "@tailwindcss/cli": "^4.0.0",
     "eslint": "^9.0.0",
-    "@eslint/js": "^9.0.0",
-    "globals": "^15.0.0"
+    "globals": "^15.0.0",
+    "konva": "^10.3.0",
+    "tailwindcss": "^4.0.0"
   }
 }
