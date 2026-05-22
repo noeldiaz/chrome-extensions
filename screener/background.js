@@ -1,5 +1,5 @@
 import { PROTECTED_URL, scaleRect, planScrollSteps } from "./lib.js";
-import { putCapture } from "./idb.js";
+import { putCapture, purgeStale } from "./idb.js";
 
 // captureVisibleTab is rate-limited (~2/sec without broad host perms), so the
 // full-page loop waits between shots. Caps keep runaway pages bounded.
@@ -26,12 +26,19 @@ async function finalizeCapture(dataUrl, mode, tab, extra = {}) {
   const id = newId();
   await putCapture(id, { dataUrl, meta });
   await chrome.tabs.create({ url: chrome.runtime.getURL(`editor.html?id=${id}`) });
+  purgeStale().catch(() => {}); // best-effort sweep of any abandoned captures
   return { ok: true };
 }
 
-// Surface a failure the popup can't show (it closes when a picker takes focus).
+// Surface a failure the popup can't show (it closes for selection / full screen).
 async function openEditorError(message) {
   await chrome.tabs.create({ url: chrome.runtime.getURL(`editor.html?error=${encodeURIComponent(message)}`) });
+}
+
+async function surfaceError(e) {
+  const message = String(e?.message || e);
+  await openEditorError(message);
+  return { ok: false, error: message };
 }
 
 // --- image helpers (service-worker OffscreenCanvas) ---
@@ -246,33 +253,41 @@ async function captureVisible(tab) {
 }
 
 async function captureSelection(tab) {
-  const sel = await exec(tab.id, pickRegion);
-  if (!sel) return { ok: false, error: "Selection cancelled." };
-  const shot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
-  const cropped = await cropToSelection(shot, sel);
-  return finalizeCapture(cropped, "selection", tab);
+  try {
+    const sel = await exec(tab.id, pickRegion);
+    if (!sel) return { ok: false, error: "Selection cancelled." }; // intentional — stay quiet
+    const shot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+    const cropped = await cropToSelection(shot, sel);
+    return await finalizeCapture(cropped, "selection", tab);
+  } catch (e) {
+    return surfaceError(e); // popup already closed for selection
+  }
 }
 
 async function captureFullPage(tab) {
   const tabId = tab.id;
-  const m = await exec(tabId, measurePage);
-  const steps = planScrollSteps(m.total, m.vh, MAX_FULLPAGE_TILES);
-  const tiles = [];
   try {
-    for (let i = 0; i < steps.length; i++) {
-      const realY = await exec(tabId, scrollToY, [steps[i]]);
-      if (i === 1) await exec(tabId, setFixedHidden, [true]); // keep header in top tile only
-      await sleep(i === 0 ? 120 : CAPTURE_DELAY_MS); // settle paint / lazy load + rate limit
-      const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
-      tiles.push({ y: realY ?? steps[i], dataUrl });
+    const m = await exec(tabId, measurePage);
+    const steps = planScrollSteps(m.total, m.vh, MAX_FULLPAGE_TILES);
+    const tiles = [];
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        const realY = await exec(tabId, scrollToY, [steps[i]]);
+        if (i === 1) await exec(tabId, setFixedHidden, [true]); // keep header in top tile only
+        await sleep(i === 0 ? 120 : CAPTURE_DELAY_MS); // settle paint / lazy load + rate limit
+        const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+        tiles.push({ y: realY ?? steps[i], dataUrl });
+      }
+    } finally {
+      await exec(tabId, setFixedHidden, [false]).catch(() => {});
+      await exec(tabId, restoreScroll, [m.scrollX, m.scrollY]).catch(() => {});
     }
-  } finally {
-    await exec(tabId, setFixedHidden, [false]).catch(() => {});
-    await exec(tabId, restoreScroll, [m.scrollX, m.scrollY]).catch(() => {});
+    if (tiles.length === 1) return await finalizeCapture(tiles[0].dataUrl, "fullpage", tab);
+    const { dataUrl, truncated } = await stitchTiles(tiles, m.vw, m.total, m.dpr);
+    return await finalizeCapture(dataUrl, "fullpage", tab, truncated ? { truncated: true } : {});
+  } catch (e) {
+    return surfaceError(e);
   }
-  if (tiles.length === 1) return finalizeCapture(tiles[0].dataUrl, "fullpage", tab);
-  const { dataUrl, truncated } = await stitchTiles(tiles, m.vw, m.total, m.dpr);
-  return finalizeCapture(dataUrl, "fullpage", tab, truncated ? { truncated: true } : {});
 }
 
 async function captureFullScreen(tab) {
@@ -283,9 +298,7 @@ async function captureFullScreen(tab) {
     if (!res?.ok) throw new Error(res?.error || "Could not capture the screen.");
     return await finalizeCapture(res.dataUrl, "fullscreen", tab);
   } catch (e) {
-    const message = String(e?.message || e);
-    await openEditorError(message); // popup is gone, so show it in a tab
-    return { ok: false, error: message };
+    return surfaceError(e); // popup is gone, so show it in a tab
   } finally {
     await chrome.offscreen.closeDocument().catch(() => {});
   }

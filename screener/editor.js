@@ -88,7 +88,7 @@ function isTyping(e) {
 
 function wireShortcuts() {
   document.addEventListener("keydown", (e) => {
-    if (isTyping(e)) return;
+    if (isTyping(e) || !submitModalEl.hidden) return; // don't act behind an open modal
     const mod = e.metaKey || e.ctrlKey;
     if (mod && e.key.toLowerCase() === "z") {
       e.preventDefault();
@@ -124,7 +124,13 @@ async function annotatedBlob() {
 
 async function download() {
   if (!anno) return;
-  await chrome.downloads.download({ url: anno.toDataURL(), filename: captureName(), saveAs: true });
+  // Blob URL, not a data: URL — large captures exceed the downloads URL limit.
+  const url = URL.createObjectURL(await annotatedBlob());
+  try {
+    await chrome.downloads.download({ url, filename: captureName(), saveAs: true });
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 60000); // let the download read it first
+  }
 }
 
 async function copyImage() {
@@ -228,28 +234,32 @@ async function init() {
     showEmpty(`Capture failed: ${errorMsg}`);
     return;
   }
-  current = await loadCapture();
-  if (!current?.dataUrl) {
-    showEmpty();
-    return;
+  try {
+    current = await loadCapture();
+    if (!current?.dataUrl) {
+      showEmpty();
+      return;
+    }
+    const m = current.meta || {};
+    metaEl.textContent = m.pageTitle || m.pageUrl || "";
+    document.title = `Screener — ${m.pageTitle || "Editor"}`;
+
+    anno = new Annotator(stageEl);
+    anno.onChange = (canUndo, canRedo) => {
+      undoEl.disabled = !canUndo;
+      redoEl.disabled = !canRedo;
+    };
+    await anno.load(current.dataUrl);
+
+    settings = await chrome.storage.local.get({ endpoint: "", token: "" });
+    downloadEl.disabled = false;
+    copyEl.disabled = false;
+    submitEl.disabled = false;
+    wireToolbar();
+    wireShortcuts();
+  } catch (e) {
+    showEmpty("Could not open this capture: " + (e?.message || e));
   }
-  const m = current.meta || {};
-  metaEl.textContent = m.pageTitle || m.pageUrl || "";
-  document.title = `Screener — ${m.pageTitle || "Editor"}`;
-
-  anno = new Annotator(stageEl);
-  anno.onChange = (canUndo, canRedo) => {
-    undoEl.disabled = !canUndo;
-    redoEl.disabled = !canRedo;
-  };
-  await anno.load(current.dataUrl);
-
-  settings = await chrome.storage.local.get({ endpoint: "", token: "" });
-  downloadEl.disabled = false;
-  copyEl.disabled = false;
-  submitEl.disabled = false;
-  wireToolbar();
-  wireShortcuts();
 }
 
 // Keep settings fresh if the user edits Options in another tab.
