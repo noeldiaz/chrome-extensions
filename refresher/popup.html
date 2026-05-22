@@ -4,14 +4,14 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="popup.css" />
   </head>
-  <body class="invisible w-72 bg-neutral-50 text-neutral-900 dark:bg-slate-900 dark:text-slate-100">
+  <body class="invisible w-72 bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
     <div class="p-4">
       <div class="flex items-center justify-between">
-        <h1 class="text-sm font-bold uppercase tracking-wider text-neutral-700 dark:text-slate-300">Refresher</h1>
+        <h1 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Refresher</h1>
         <button
           id="theme-toggle"
           type="button"
-          class="rounded p-1 text-neutral-500 transition hover:text-neutral-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
+          class="rounded p-1 text-slate-500 transition hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
           title="Toggle dark mode"
           aria-label="Toggle dark mode"
         >
@@ -24,11 +24,11 @@
         </button>
       </div>
 
-      <div class="my-3 border-t border-neutral-200 dark:border-slate-700"></div>
+      <div class="my-3 border-t border-slate-200 dark:border-slate-700"></div>
 
       <div class="flex gap-3">
         <div class="flex-1">
-          <label for="minutes" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Minutes</label>
+          <label for="minutes" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Minutes</label>
           <input
             type="number"
             id="minutes"
@@ -37,12 +37,12 @@
             step="1"
             value="15"
             inputmode="numeric"
-            class="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
+            class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
                    dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
           />
         </div>
         <div class="flex-1">
-          <label for="seconds" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Seconds</label>
+          <label for="seconds" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Seconds</label>
           <input
             type="number"
             id="seconds"
@@ -51,14 +51,14 @@
             step="1"
             value="0"
             inputmode="numeric"
-            class="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
+            class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-right text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
                    dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
           />
         </div>
       </div>
 
       <div class="mt-3">
-        <span class="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Preset intervals</span>
+        <span class="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Preset intervals</span>
         <div class="grid grid-cols-3 gap-2" id="presets">
           <button type="button" class="preset-btn" data-seconds="30">30 Seconds</button>
           <button type="button" class="preset-btn" data-seconds="60">1 Minute</button>
@@ -81,7 +81,7 @@
         </button>
       </div>
 
-      <label for="preserveScroll" class="mt-3 flex cursor-pointer items-center gap-2 text-xs text-neutral-600 dark:text-slate-400">
+      <label for="preserveScroll" class="mt-3 flex cursor-pointer items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
         <input
           type="checkbox"
           id="preserveScroll"
@@ -90,16 +90,16 @@
         Preserve scroll position
       </label>
 
-      <p id="status" class="mt-2 text-center text-xs text-neutral-500 empty:hidden dark:text-slate-400"></p>
+      <p id="status" class="mt-2 text-center text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
 
-      <div class="my-4 border-t border-neutral-200 dark:border-slate-700"></div>
+      <div class="my-4 border-t border-slate-200 dark:border-slate-700"></div>
 
       <div class="flex items-center justify-between">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-slate-400">Active tabs</span>
-        <span id="count" class="text-[10px] font-medium tabular-nums text-neutral-400 dark:text-slate-500"></span>
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active tabs</span>
+        <span id="count" class="text-[10px] font-medium tabular-nums text-slate-400 dark:text-slate-500"></span>
       </div>
 
-      <p id="empty" class="mt-2 text-center text-xs text-neutral-400 dark:text-slate-500">No tabs refreshing yet.</p>
+      <p id="empty" class="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">No tabs refreshing yet.</p>
       <div id="list" class="mt-2 space-y-2"></div>
     </div>
     <script type="module" src="popup.js"></script>

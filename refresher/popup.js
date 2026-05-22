@@ -97,13 +97,13 @@ function stopCountdown() {
 function buildRow(tabId, t) {
   const row = document.createElement("div");
   row.className =
-    "rounded-md border border-blue-100 bg-blue-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800";
+    "rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:shadow-none";
 
   const head = document.createElement("div");
   head.className = "flex items-baseline justify-between gap-3";
 
   const title = document.createElement("div");
-  title.className = "truncate text-sm text-neutral-900 dark:text-slate-100";
+  title.className = "truncate text-sm text-slate-900 dark:text-slate-100";
   title.textContent = t.tabTitle || `Tab #${tabId}`;
   title.title = title.textContent;
 
@@ -117,7 +117,7 @@ function buildRow(tabId, t) {
   foot.className = "mt-1 flex items-center justify-between";
 
   const interval = document.createElement("span");
-  interval.className = "text-xs text-neutral-500 dark:text-slate-400";
+  interval.className = "text-xs text-slate-500 dark:text-slate-400";
   interval.textContent = `Every ${intervalLabel(t.minutes, t.seconds)}`;
 
   const actions = document.createElement("div");
@@ -140,7 +140,7 @@ function buildRow(tabId, t) {
   foot.append(interval, actions);
 
   const stats = document.createElement("div");
-  stats.className = "mt-0.5 text-[11px] tabular-nums text-neutral-400 dark:text-slate-500";
+  stats.className = "mt-0.5 text-[11px] tabular-nums text-slate-400 dark:text-slate-500";
   stats.dataset.stats = String(tabId);
   stats.dataset.count = String(t.count || 0);
   stats.dataset.last = t.lastRefresh ? String(t.lastRefresh) : "";
