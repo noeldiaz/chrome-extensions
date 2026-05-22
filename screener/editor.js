@@ -13,6 +13,10 @@ const submitEl = document.getElementById("submit");
 const undoEl = document.getElementById("undo");
 const redoEl = document.getElementById("redo");
 const deleteEl = document.getElementById("delete");
+const zoomOutEl = document.getElementById("zoomOut");
+const zoomInEl = document.getElementById("zoomIn");
+const zoomFitEl = document.getElementById("zoomFit");
+const zoomLabelEl = document.getElementById("zoomLabel");
 
 // Submit modal
 const submitModalEl = document.getElementById("submitModal");
@@ -79,6 +83,9 @@ function wireToolbar() {
   undoEl.addEventListener("click", () => anno.undo());
   redoEl.addEventListener("click", () => anno.redo());
   deleteEl.addEventListener("click", () => anno.deleteSelected());
+  zoomOutEl.addEventListener("click", () => anno.zoomBy(0.8));
+  zoomInEl.addEventListener("click", () => anno.zoomBy(1.25));
+  zoomFitEl.addEventListener("click", () => anno.fitToWindow());
 }
 
 function isTyping(e) {
@@ -95,6 +102,9 @@ function wireShortcuts() {
       return e.shiftKey ? anno.redo() : anno.undo();
     }
     if (e.key === "Delete" || e.key === "Backspace") return anno.deleteSelected();
+    if (e.key === "+" || e.key === "=") return anno.zoomBy(1.25);
+    if (e.key === "-") return anno.zoomBy(0.8);
+    if (e.key === "0") return anno.fitToWindow();
     const map = { v: "select", r: "rect", a: "arrow", p: "pen", t: "text" };
     const name = map[e.key.toLowerCase()];
     if (name) activateTool(name);
@@ -249,6 +259,7 @@ async function init() {
       undoEl.disabled = !canUndo;
       redoEl.disabled = !canRedo;
     };
+    anno.onZoom = (pct) => (zoomLabelEl.textContent = pct + "%");
     await anno.load(current.dataUrl);
 
     settings = await chrome.storage.local.get({ endpoint: "", token: "" });

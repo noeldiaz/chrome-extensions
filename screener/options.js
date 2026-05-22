@@ -17,6 +17,16 @@ function flash(message, ok = true) {
   if (ok) statusTimer = setTimeout(() => (statusEl.textContent = ""), 2500);
 }
 
+// http to a non-local host sends the bearer token in cleartext.
+function isInsecure(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" && !/^(localhost|127\.|\[?::1)/.test(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 async function save() {
   const endpoint = endpointEl.value.trim();
   const token = tokenEl.value.trim();
@@ -25,7 +35,11 @@ async function save() {
     return;
   }
   await chrome.storage.local.set({ endpoint, token });
-  flash("Saved.");
+  if (token && isInsecure(endpoint)) {
+    flash("Saved — note: http sends your token in cleartext. Use https in production.", false);
+  } else {
+    flash("Saved.");
+  }
 }
 
 async function load() {

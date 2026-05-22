@@ -1,19 +1,26 @@
 // Konva-backed annotation surface. Konva is loaded as a global (vendor/konva.min.js,
 // classic <script> before this module). Coordinates live in NATURAL image pixels;
-// the stage is scaled to fit, so exports come back at full resolution.
+// the stage is scaled to fit (× a zoom factor), so exports come back at full
+// resolution. When zoomed past the viewport, the wrap's scrollbars pan.
 
 const REDACT_FILL = "#000000";
 const TEXT_FONT_SIZE = 22; // natural px
 const HISTORY_LIMIT = 60;
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 8;
 
 export class Annotator {
   constructor(container) {
     this.container = container;
-    this.tool = "select";
-    this.color = "#ef4444";
-    this.strokeWidth = 4;
-    this.scale = 1;
+    this.tool = "arrow"; // most captures just need an arrow dropped on them
+    this.color = "#ef4444"; // red
+    this.strokeWidth = 8; // thick
+    this.zoom = 1; // user zoom, relative to fit
+    this.fitScale = 1; // scale that fits the image in the viewport
+    this.scale = 1; // fitScale * zoom — natural→display
+    this.pixelSize = 12;
     this.natural = { w: 0, h: 0 };
+    this.image = null;
     this.stage = null;
     this.imageLayer = null;
     this.annoLayer = null;
@@ -23,13 +30,16 @@ export class Annotator {
     this.history = [];
     this.hIndex = -1;
     this.textarea = null;
-    this.onChange = null; // callback(canUndo, canRedo)
+    this.onChange = null; // (canUndo, canRedo)
+    this.onZoom = null; // (percent)
   }
 
   async load(dataUrl) {
     const Konva = globalThis.Konva;
     const img = await loadImage(dataUrl);
+    this.image = img;
     this.natural = { w: img.naturalWidth, h: img.naturalHeight };
+    this.pixelSize = Math.max(8, Math.round(this.natural.w / 110)); // chunky regardless of resolution
 
     this.stage = new Konva.Stage({ container: this.container, width: 1, height: 1 });
     this.imageLayer = new Konva.Layer({ listening: false });
@@ -42,6 +52,7 @@ export class Annotator {
 
     this.fit();
     this.bindStage();
+    this.setTool(this.tool); // apply the default tool's cursor
     window.addEventListener("resize", () => this.fit());
 
     this.history = [];
@@ -49,17 +60,41 @@ export class Annotator {
     this.snapshot(); // baseline (empty) so undo can return to a clean image
   }
 
+  // --- zoom / fit ---
+
   fit() {
     // The #stage container collapses to 0×0 until Konva sizes it, so measure the
     // scrollable wrap around it instead.
     const host = this.container.parentElement || this.container;
     const availW = Math.max(64, host.clientWidth - 48);
     const availH = Math.max(64, host.clientHeight - 48);
-    const s = Math.min(availW / this.natural.w, availH / this.natural.h, 1);
-    this.scale = s || 1;
+    this.fitScale = Math.min(availW / this.natural.w, availH / this.natural.h, 1) || 1;
+    this.applyScale();
+  }
+
+  applyScale() {
+    this.scale = this.fitScale * this.zoom;
     this.stage.scale({ x: this.scale, y: this.scale });
-    this.stage.size({ width: Math.round(this.natural.w * this.scale), height: Math.round(this.natural.h * this.scale) });
+    this.stage.size({
+      width: Math.round(this.natural.w * this.scale),
+      height: Math.round(this.natural.h * this.scale),
+    });
     this.stage.batchDraw();
+    this.onZoom?.(Math.round(this.scale * 100));
+  }
+
+  setZoom(z) {
+    this.zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+    this.applyScale();
+  }
+
+  zoomBy(factor) {
+    this.setZoom(this.zoom * factor);
+  }
+
+  fitToWindow() {
+    this.zoom = 1;
+    this.fit();
   }
 
   // --- tool / style state ---
@@ -72,21 +107,24 @@ export class Annotator {
     this.container.style.cursor = selectMode ? "default" : name === "text" ? "text" : "crosshair";
   }
 
+  isImageRedact(node) {
+    return node.name() === "redact" || node.name() === "pixelate";
+  }
+
   setColor(color) {
     this.color = color;
     const sel = this.selected();
-    if (sel && sel.getClassName() !== "Image") {
-      if (sel.getClassName() === "Text") sel.fill(color);
-      else if (sel.getClassName() === "Arrow") sel.stroke(color), sel.fill(color);
-      else if (sel.name() !== "redact") sel.stroke(color);
-      this.snapshot();
-    }
+    if (!sel || sel.getClassName() === "Image" || this.isImageRedact(sel)) return;
+    if (sel.getClassName() === "Text") sel.fill(color);
+    else if (sel.getClassName() === "Arrow") sel.stroke(color), sel.fill(color);
+    else sel.stroke(color);
+    this.snapshot();
   }
 
   setStrokeWidth(w) {
     this.strokeWidth = w;
     const sel = this.selected();
-    if (sel && typeof sel.strokeWidth === "function" && sel.name() !== "redact") {
+    if (sel && typeof sel.strokeWidth === "function" && !this.isImageRedact(sel)) {
       sel.strokeWidth(w);
       this.snapshot();
     }
@@ -141,6 +179,12 @@ export class Annotator {
     for (const obj of JSON.parse(state)) {
       const node = Konva.Node.create(obj);
       this.annoLayer.add(node);
+      // Image nodes (pixelate redactions) don't serialize their bitmap or
+      // filters — re-attach and re-cache from the saved crop/size.
+      if (node.getClassName() === "Image") {
+        node.image(this.image);
+        this.applyPixelate(node);
+      }
       this.bindShape(node);
       node.listening(this.tool === "select");
     }
@@ -172,6 +216,36 @@ export class Annotator {
     this.onChange?.(this.canUndo(), this.canRedo());
   }
 
+  // --- pixelate redaction ---
+
+  // Pixelate the screenshot region the node currently covers, clamped to image
+  // bounds, then cache so the filter renders.
+  applyPixelate(node) {
+    const Konva = globalThis.Konva;
+    // Round to whole pixels — a fractional crop edge leaves a grey sub-pixel seam.
+    const x = Math.round(Math.max(0, Math.min(node.x(), this.natural.w)));
+    const y = Math.round(Math.max(0, Math.min(node.y(), this.natural.h)));
+    const w = Math.round(Math.max(1, Math.min(node.width(), this.natural.w - x)));
+    const h = Math.round(Math.max(1, Math.min(node.height(), this.natural.h - y)));
+    node.setAttrs({ x, y, width: w, height: h, crop: { x, y, width: w, height: h } });
+    node.strokeWidth(0); // drop the drag-preview border
+    node.filters([Konva.Filters.Pixelate]);
+    node.pixelSize(this.pixelSize);
+    node.cache({ pixelRatio: 1 }); // integer bounds now (rounded above) — no sub-pixel seam
+  }
+
+  // Bake any transformer scale into width/height, then re-pixelate.
+  refreshPixelate(node) {
+    const sx = node.scaleX();
+    const sy = node.scaleY();
+    if (sx !== 1 || sy !== 1) {
+      node.width(Math.max(1, node.width() * sx));
+      node.height(Math.max(1, node.height() * sy));
+      node.scale({ x: 1, y: 1 });
+    }
+    this.applyPixelate(node);
+  }
+
   // --- drawing ---
 
   bindShape(shape) {
@@ -179,11 +253,19 @@ export class Annotator {
     shape.on("dragstart", () => {
       if (this.tool === "select") this.select(shape);
     });
-    shape.on("dragend transformend", () => this.snapshot());
+    shape.on("dragend transformend", () => {
+      if (shape.name() === "pixelate") this.refreshPixelate(shape);
+      this.snapshot();
+    });
   }
 
   bindStage() {
     const Konva = globalThis.Konva;
+
+    this.stage.on("wheel", (e) => {
+      e.evt.preventDefault();
+      this.zoomBy(e.evt.deltaY > 0 ? 0.9 : 1.1);
+    });
 
     // Selection happens at the stage level off the event target — more reliable
     // than per-shape handlers, and clicks on the image fall through to the stage.
@@ -213,6 +295,19 @@ export class Annotator {
         shape = new Konva.Rect({ x: p.x, y: p.y, width: 0, height: 0, stroke: this.color, strokeWidth: this.strokeWidth });
       } else if (this.tool === "redact") {
         shape = new Konva.Rect({ x: p.x, y: p.y, width: 0, height: 0, fill: REDACT_FILL, name: "redact" });
+      } else if (this.tool === "pixelate") {
+        // A sharp crop over the same pixels is invisible while dragging, so show
+        // a border for feedback; applyPixelate drops it on release.
+        shape = new Konva.Image({
+          image: this.image,
+          x: p.x,
+          y: p.y,
+          width: 0,
+          height: 0,
+          name: "pixelate",
+          stroke: "#3b82f6",
+          strokeWidth: Math.max(1, Math.round(2 / this.scale)),
+        });
       } else if (this.tool === "arrow") {
         shape = new Konva.Arrow({
           points: [p.x, p.y, p.x, p.y],
@@ -241,7 +336,16 @@ export class Annotator {
       if (!this.drawing) return;
       const p = this.stage.getRelativePointerPosition();
       const cls = this.drawing.getClassName();
-      if (cls === "Rect") {
+      if (cls === "Image") {
+        // Normalize live and crop to the covered region — otherwise a negative
+        // drag draws the whole screenshot mirrored and squished into the box.
+        const x = Math.min(this.start.x, p.x);
+        const y = Math.min(this.start.y, p.y);
+        const w = Math.abs(p.x - this.start.x);
+        const h = Math.abs(p.y - this.start.y);
+        this.drawing.setAttrs({ x, y, width: w, height: h });
+        if (w >= 1 && h >= 1) this.drawing.crop({ x, y, width: w, height: h });
+      } else if (cls === "Rect") {
         this.drawing.width(p.x - this.start.x);
         this.drawing.height(p.y - this.start.y);
       } else if (cls === "Arrow") {
@@ -260,6 +364,7 @@ export class Annotator {
         return;
       }
       this.normalizeRect(shape);
+      if (shape.name() === "pixelate") this.applyPixelate(shape);
       this.bindShape(shape);
       this.snapshot();
     });
@@ -267,7 +372,7 @@ export class Annotator {
 
   isTooSmall(shape) {
     const cls = shape.getClassName();
-    if (cls === "Rect") return Math.abs(shape.width()) < 5 || Math.abs(shape.height()) < 5;
+    if (cls === "Rect" || cls === "Image") return Math.abs(shape.width()) < 5 || Math.abs(shape.height()) < 5;
     if (cls === "Arrow") {
       const [x1, y1, x2, y2] = shape.points();
       return Math.hypot(x2 - x1, y2 - y1) < 6;
@@ -276,9 +381,10 @@ export class Annotator {
     return false;
   }
 
-  // Konva rects can have negative width/height while dragging; flip to positive.
+  // Rects/images can have negative width/height while dragging; flip to positive.
   normalizeRect(shape) {
-    if (shape.getClassName() !== "Rect") return;
+    const cls = shape.getClassName();
+    if (cls !== "Rect" && cls !== "Image") return;
     let { x, y } = shape.position();
     let w = shape.width();
     let h = shape.height();

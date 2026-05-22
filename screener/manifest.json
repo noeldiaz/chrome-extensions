@@ -14,6 +14,12 @@
     "page": "options.html",
     "open_in_tab": true
   },
+  "commands": {
+    "capture-visible": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Capture the visible area"
+    }
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Screener",

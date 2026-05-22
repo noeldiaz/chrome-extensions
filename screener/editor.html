@@ -45,23 +45,26 @@
     <!-- Toolbar -->
     <div id="toolbar" class="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-800">
       <div class="flex items-center gap-0.5" data-tools>
-        <button class="tool-btn is-active" data-tool="select" title="Select / move (V)">
+        <button class="tool-btn" data-tool="select" title="Select / move (V)" aria-label="Select or move">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M5.5 3.2l13 7.1-5.7 1.3-1.3 5.7-6-14.1z"/></svg>
         </button>
-        <button class="tool-btn" data-tool="rect" title="Rectangle (R)">
+        <button class="tool-btn" data-tool="rect" title="Rectangle (R)" aria-label="Rectangle">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/></svg>
         </button>
-        <button class="tool-btn" data-tool="arrow" title="Arrow (A)">
+        <button class="tool-btn is-active" data-tool="arrow" title="Arrow (A)" aria-label="Arrow">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M5 19L19 5M9 5h10v10"/></svg>
         </button>
-        <button class="tool-btn" data-tool="pen" title="Pen (P)">
+        <button class="tool-btn" data-tool="pen" title="Pen (P)" aria-label="Pen">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M16.5 3.5l4 4L7 21l-4 1 1-4L16.5 3.5z"/></svg>
         </button>
-        <button class="tool-btn" data-tool="text" title="Text (T)">
+        <button class="tool-btn" data-tool="text" title="Text (T)" aria-label="Text">
           <span class="text-sm font-bold leading-none">T</span>
         </button>
-        <button class="tool-btn" data-tool="redact" title="Redact (block out)">
+        <button class="tool-btn" data-tool="redact" title="Redact — solid block" aria-label="Redact with a solid block">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><rect x="3.5" y="6.5" width="17" height="11" rx="1.5"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="pixelate" title="Redact — pixelate" aria-label="Redact by pixelating">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
         </button>
       </div>
 
@@ -80,27 +83,42 @@
 
       <div class="flex items-center gap-0.5" data-widths>
         <button class="tool-btn" data-width="2" title="Thin"><span class="block h-0.5 w-4 rounded bg-current"></span></button>
-        <button class="tool-btn is-active" data-width="4" title="Medium"><span class="block h-1 w-4 rounded bg-current"></span></button>
-        <button class="tool-btn" data-width="8" title="Thick"><span class="block h-1.5 w-4 rounded bg-current"></span></button>
+        <button class="tool-btn" data-width="4" title="Medium"><span class="block h-1 w-4 rounded bg-current"></span></button>
+        <button class="tool-btn is-active" data-width="8" title="Thick"><span class="block h-1.5 w-4 rounded bg-current"></span></button>
       </div>
 
       <span class="mx-1.5 h-5 w-px bg-slate-200 dark:bg-slate-600"></span>
 
-      <button id="undo" class="tool-btn" title="Undo (Ctrl/Cmd+Z)" disabled>
+      <button id="undo" class="tool-btn" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-1"/></svg>
       </button>
-      <button id="redo" class="tool-btn" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>
+      <button id="redo" class="tool-btn" title="Redo (Ctrl/Cmd+Shift+Z)" aria-label="Redo" disabled>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h1"/></svg>
       </button>
-      <button id="delete" class="tool-btn" title="Delete selected (Del)">
+      <button id="delete" class="tool-btn" title="Delete selected (Del)" aria-label="Delete selected">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
       </button>
+
+      <span class="mx-1.5 h-5 w-px bg-slate-200 dark:bg-slate-600"></span>
+
+      <div class="flex items-center gap-0.5">
+        <button id="zoomOut" class="tool-btn" title="Zoom out" aria-label="Zoom out">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4"><path d="M5 12h14"/></svg>
+        </button>
+        <span id="zoomLabel" class="w-10 text-center text-xs tabular-nums text-slate-500 dark:text-slate-400">100%</span>
+        <button id="zoomIn" class="tool-btn" title="Zoom in" aria-label="Zoom in">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button id="zoomFit" class="tool-btn" title="Fit to window" aria-label="Fit to window">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- Canvas area -->
-    <main id="stageWrap" class="relative flex flex-1 items-center justify-center overflow-auto p-6">
-      <div id="stage"></div>
-      <p id="empty" hidden class="text-sm text-slate-400 dark:text-slate-500">
+    <main id="stageWrap" class="relative flex flex-1 overflow-auto p-6">
+      <div id="stage" class="m-auto"></div>
+      <p id="empty" hidden class="m-auto text-sm text-slate-400 dark:text-slate-500">
         No capture to show. Take a new screenshot from the Screener popup.
       </p>
     </main>

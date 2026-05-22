@@ -11,9 +11,12 @@ Capture, annotate, and submit screenshots for tech-support tickets. Manifest V3.
     `fixed`/`sticky` elements after the first tile so headers don't repeat.
   - **Full screen** — a whole monitor or a window via `getDisplayMedia` in an
     offscreen document.
-- **Annotation editor** *(Konva)* — rectangle, arrow, freehand pen, text, and a
-  solid **redact** block for hiding sensitive info; move/resize/delete, undo/redo,
-  color and stroke width. Exports at full resolution.
+- **Annotation editor** *(Konva)* — rectangle, arrow, freehand pen, text, and two
+  **redact** modes (solid block or pixelate) for hiding sensitive info;
+  move/resize/delete, undo/redo, color and stroke width, zoom/pan. Exports at
+  full resolution.
+- **Keyboard shortcut** — `Alt+Shift+S` (configurable at `chrome://extensions/shortcuts`)
+  captures the visible area without opening the popup.
 - **Three outputs** — **Download** (PNG), **Copy** to clipboard, or **Submit
   ticket** to a Laravel endpoint with a title and description.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.

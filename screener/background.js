@@ -332,3 +332,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   return false;
 });
+
+// Keyboard shortcut (Alt+Shift+S by default) → capture the visible area. The
+// command grants activeTab for the focused tab, same as clicking the icon.
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command !== "capture-visible") return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab) return;
+  const res = await handleCapture({
+    mode: "visible",
+    tab: { id: tab.id, windowId: tab.windowId, url: tab.url || "", title: tab.title || "" },
+  }).catch((e) => ({ ok: false, error: String(e?.message || e) }));
+  if (!res?.ok && res?.error) await openEditorError(res.error); // no popup to show it in
+});
