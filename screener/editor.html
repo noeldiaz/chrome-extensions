@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Screener — Editor</title>
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body class="invisible flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <!-- Top bar -->
+    <header class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800">
+      <div class="flex items-baseline gap-3">
+        <h1 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Screener</h1>
+        <span id="meta" class="max-w-md truncate text-xs text-slate-500 dark:text-slate-400"></span>
+      </div>
+      <button
+        id="theme-toggle"
+        type="button"
+        class="rounded p-1 text-slate-500 transition hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
+        title="Toggle dark mode"
+        aria-label="Toggle dark mode"
+      >
+        <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+        </svg>
+        <svg data-theme-sun xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden h-5 w-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Canvas area -->
+    <main class="flex flex-1 items-center justify-center overflow-auto p-6">
+      <img id="shot" alt="Captured screenshot" hidden class="max-h-full max-w-full rounded-md shadow-lg ring-1 ring-slate-200 dark:ring-slate-700" />
+      <p id="empty" hidden class="text-sm text-slate-400 dark:text-slate-500">
+        No capture to show. Take a new screenshot from the Screener popup.
+      </p>
+    </main>
+
+    <!-- Action bar -->
+    <footer class="flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
+      <p id="status" class="mr-auto text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
+
+      <button id="copy" type="button" disabled
+        class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
+        Copy
+      </button>
+      <button id="submit" type="button" disabled
+        class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
+        Submit ticket
+      </button>
+      <button id="download" type="button" disabled
+        class="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-slate-800">
+        Download
+      </button>
+    </footer>
+
+    <script type="module" src="editor.js"></script>
+  </body>
+</html>

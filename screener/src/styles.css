@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source "../popup.html";
+@source "../popup.js";
+@source "../editor.html";
+@source "../editor.js";
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Capture-mode buttons in the popup */
+  .cap-btn {
+    @apply flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left transition
+           hover:border-blue-400 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-[0.99]
+           disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-white
+           dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500 dark:hover:bg-slate-700
+           dark:disabled:hover:border-slate-700 dark:disabled:hover:bg-slate-800;
+  }
+  .cap-btn-icon {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-600
+           dark:bg-blue-950 dark:text-blue-400;
+  }
+  .soon-tag {
+    @apply ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400
+           dark:bg-slate-700 dark:text-slate-400;
+  }
+}

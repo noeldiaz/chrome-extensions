@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="#1e88e5"/>
+  <!-- viewfinder corner brackets -->
+  <g fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 34 50 V 36 H 48"/>
+    <path d="M 80 36 H 94 V 50"/>
+    <path d="M 94 78 V 92 H 80"/>
+    <path d="M 48 92 H 34 V 78"/>
+  </g>
+  <!-- annotation marker stroke -->
+  <path d="M 50 74 L 78 46" fill="none" stroke="#ffc107" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="78" cy="46" r="3.5" fill="#ffc107"/>
+</svg>

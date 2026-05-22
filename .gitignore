@@ -14,4 +14,5 @@ npm-debug.log*
 # Claude Code machine-local settings (keep shared .claude/settings.json if added)
 .claude/settings.local.json
 
-# Note: compiled popup.css IS committed so the extension loads unpacked without a build step.
+# Note: each extension's compiled CSS (refresher/popup.css, screener/app.css) IS
+# committed so the extension loads unpacked without a build step.
