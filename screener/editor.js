@@ -1,5 +1,6 @@
 import { loadTheme, wireTheme } from "./theme.js";
 import { captureFilename } from "./lib.js";
+import { takeCapture } from "./idb.js";
 import { Annotator } from "./annotator.js";
 
 const stageEl = document.getElementById("stage");
@@ -11,21 +12,22 @@ const undoEl = document.getElementById("undo");
 const redoEl = document.getElementById("redo");
 const deleteEl = document.getElementById("delete");
 
-const id = new URLSearchParams(location.search).get("id");
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const errorMsg = params.get("error");
 let current = null;
 let anno = null;
 
 async function loadCapture() {
   if (!id) return null;
-  const key = "capture:" + id;
-  const obj = await chrome.storage.session.get(key);
-  const data = obj[key];
-  // Transient by design — drop it from session memory once we hold it here.
-  if (data) await chrome.storage.session.remove(key);
-  return data;
+  return takeCapture(id); // reads once and removes it — transient by design
 }
 
-function showEmpty() {
+function showEmpty(message) {
+  if (message) {
+    emptyEl.textContent = message;
+    emptyEl.classList.add("text-red-500", "dark:text-red-400");
+  }
   emptyEl.hidden = false;
   stageEl.hidden = true;
   toolbarEl.classList.add("pointer-events-none", "opacity-50");
@@ -102,6 +104,10 @@ async function download() {
 // --- boot ---
 
 async function init() {
+  if (errorMsg) {
+    showEmpty(`Capture failed: ${errorMsg}`);
+    return;
+  }
   current = await loadCapture();
   if (!current?.dataUrl) {
     showEmpty();

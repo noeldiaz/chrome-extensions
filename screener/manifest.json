@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Capture, annotate, and submit screenshots for tech-support tickets.",
   "minimum_chrome_version": "116",
-  "permissions": ["activeTab", "scripting", "storage", "downloads"],
+  "permissions": ["activeTab", "scripting", "storage", "downloads", "offscreen"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

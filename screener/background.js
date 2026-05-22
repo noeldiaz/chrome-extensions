@@ -1,8 +1,5 @@
 import { PROTECTED_URL, scaleRect, planScrollSteps } from "./lib.js";
-
-// Captured images are held in chrome.storage.session (in-memory, never written
-// to disk) and handed to the editor tab by id. The editor removes its key on load.
-const SESSION_PREFIX = "capture:";
+import { putCapture } from "./idb.js";
 
 // captureVisibleTab is rate-limited (~2/sec without broad host perms), so the
 // full-page loop waits between shots. Caps keep runaway pages bounded.
@@ -27,9 +24,14 @@ async function finalizeCapture(dataUrl, mode, tab, extra = {}) {
     ...extra,
   };
   const id = newId();
-  await chrome.storage.session.set({ [SESSION_PREFIX + id]: { dataUrl, meta } });
+  await putCapture(id, { dataUrl, meta });
   await chrome.tabs.create({ url: chrome.runtime.getURL(`editor.html?id=${id}`) });
   return { ok: true };
+}
+
+// Surface a failure the popup can't show (it closes when a picker takes focus).
+async function openEditorError(message) {
+  await chrome.tabs.create({ url: chrome.runtime.getURL(`editor.html?error=${encodeURIComponent(message)}`) });
 }
 
 // --- image helpers (service-worker OffscreenCanvas) ---
@@ -219,6 +221,23 @@ async function exec(tabId, func, args = []) {
   return res?.result;
 }
 
+// --- offscreen document (desktop capture needs a DOM the SW doesn't have) ---
+
+let offscreenCreating = null;
+
+async function ensureOffscreen() {
+  if (await chrome.offscreen.hasDocument()) return;
+  if (!offscreenCreating) {
+    offscreenCreating = chrome.offscreen.createDocument({
+      url: "offscreen.html",
+      reasons: ["DISPLAY_MEDIA"],
+      justification: "Capture a screenshot of the chosen screen or window.",
+    });
+  }
+  await offscreenCreating;
+  offscreenCreating = null;
+}
+
 // --- capture orchestration ---
 
 async function captureVisible(tab) {
@@ -256,6 +275,22 @@ async function captureFullPage(tab) {
   return finalizeCapture(dataUrl, "fullpage", tab, truncated ? { truncated: true } : {});
 }
 
+async function captureFullScreen(tab) {
+  try {
+    await ensureOffscreen();
+    const res = await chrome.runtime.sendMessage({ target: "offscreen", type: "grabFrame" });
+    if (res?.cancelled) return { ok: false, error: "Screen capture was cancelled." }; // user dismissed picker
+    if (!res?.ok) throw new Error(res?.error || "Could not capture the screen.");
+    return await finalizeCapture(res.dataUrl, "fullscreen", tab);
+  } catch (e) {
+    const message = String(e?.message || e);
+    await openEditorError(message); // popup is gone, so show it in a tab
+    return { ok: false, error: message };
+  } finally {
+    await chrome.offscreen.closeDocument().catch(() => {});
+  }
+}
+
 async function handleCapture(msg) {
   const { mode, tab } = msg;
   if (mode !== "fullscreen" && PROTECTED_URL.test(tab?.url || "")) {
@@ -268,6 +303,8 @@ async function handleCapture(msg) {
       return captureSelection(tab);
     case "fullpage":
       return captureFullPage(tab);
+    case "fullscreen":
+      return captureFullScreen(tab);
     default:
       return { ok: false, error: `${mode} capture is coming in a later build.` };
   }
