@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "QRmaker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Show a scannable QR code for the current tab's URL with one click.",
   "minimum_chrome_version": "110",
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "clipboardWrite"],
   "action": {
     "default_popup": "popup.html",
     "default_title": "QRmaker",

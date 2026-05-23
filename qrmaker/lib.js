@@ -23,10 +23,22 @@ export function ellipsize(text, max = 72) {
   return text.slice(0, head) + "…" + text.slice(text.length - tail);
 }
 
-// Largest integer module size so the QR (plus a quiet-zone margin on every side)
-// fits within targetPx. dimension is the actual canvas edge length to use.
-export function qrLayout(moduleCount, targetPx, marginModules = 4) {
-  const total = moduleCount + marginModules * 2;
-  const scale = Math.max(1, Math.floor(targetPx / total));
-  return { scale, total, dimension: total * scale, margin: marginModules };
+const pad2 = (n) => String(n).padStart(2, "0");
+
+// Build a download filename like "qr-example.com-20260523-141500.png".
+// Derives a safe slug from the URL's host (falls back to "code"), and maps the
+// qr-code-styling format name to a sensible extension (jpeg -> jpg).
+export function downloadFilename(value, format = "png", when = new Date()) {
+  let host = "code";
+  try {
+    host = new URL(value).hostname || "code";
+  } catch {
+    /* not a URL — keep the fallback */
+  }
+  const slug = host.replace(/[^a-z0-9.-]+/gi, "").replace(/^-+|-+$/g, "") || "code";
+  const stamp =
+    `${when.getFullYear()}${pad2(when.getMonth() + 1)}${pad2(when.getDate())}` +
+    `-${pad2(when.getHours())}${pad2(when.getMinutes())}${pad2(when.getSeconds())}`;
+  const ext = format === "jpeg" ? "jpg" : format;
+  return `qr-${slug}-${stamp}.${ext}`;
 }

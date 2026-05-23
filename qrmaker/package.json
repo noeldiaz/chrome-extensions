@@ -8,16 +8,16 @@
     "watch:css": "tailwindcss -i src/styles.css -o popup.css --watch",
     "lint": "eslint .",
     "test": "node --test",
-    "vendor:qr": "cp node_modules/qrcode-generator/qrcode.js vendor/qrcode.min.js"
+    "vendor:qr": "cp node_modules/qr-code-styling/lib/qr-code-styling.js vendor/qr-code-styling.js"
   },
   "dependencies": {
-    "qrcode-generator": "^1.4.4"
+    "qr-code-styling": "^1.9.2"
   },
   "devDependencies": {
-    "tailwindcss": "^4.0.0",
+    "@eslint/js": "^9.0.0",
     "@tailwindcss/cli": "^4.0.0",
     "eslint": "^9.0.0",
-    "@eslint/js": "^9.0.0",
-    "globals": "^15.0.0"
+    "globals": "^15.0.0",
+    "tailwindcss": "^4.0.0"
   }
 }

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isShareableUrl, ellipsize, qrLayout } from "../lib.js";
+import { isShareableUrl, ellipsize, downloadFilename } from "../lib.js";
 
 test("isShareableUrl accepts http and https", () => {
   assert.equal(isShareableUrl("http://example.com"), true);
@@ -37,16 +37,21 @@ test("ellipsize handles tiny max", () => {
   assert.equal(ellipsize("abcdef", 1), "…");
 });
 
-test("qrLayout fits modules plus quiet zone inside the target", () => {
-  const l = qrLayout(25, 240, 4); // total 33 modules
-  assert.equal(l.total, 33);
-  assert.equal(l.scale, 7); // floor(240/33)
-  assert.equal(l.dimension, 231);
-  assert.ok(l.dimension <= 240);
+test("downloadFilename builds a host + timestamp name", () => {
+  const when = new Date(2026, 4, 23, 14, 15, 0); // 2026-05-23 14:15:00
+  assert.equal(
+    downloadFilename("https://example.com/path?q=1", "png", when),
+    "qr-example.com-20260523-141500.png",
+  );
 });
 
-test("qrLayout never returns a scale below 1", () => {
-  const l = qrLayout(177, 100, 4); // huge code, small target
-  assert.equal(l.scale, 1);
-  assert.equal(l.dimension, 185);
+test("downloadFilename maps jpeg to a .jpg extension", () => {
+  const when = new Date(2026, 0, 2, 3, 4, 5);
+  assert.equal(downloadFilename("https://a.co", "jpeg", when), "qr-a.co-20260102-030405.jpg");
+});
+
+test("downloadFilename keeps svg and falls back when there's no host", () => {
+  const when = new Date(2026, 4, 23, 14, 15, 0);
+  assert.equal(downloadFilename("https://sub.site.org", "svg", when), "qr-sub.site.org-20260523-141500.svg");
+  assert.equal(downloadFilename("not a url", "png", when), "qr-code-20260523-141500.png");
 });
