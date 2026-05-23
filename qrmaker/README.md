@@ -31,6 +31,8 @@ Manifest V3.
   never leave the browser.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
+- **Keyboard shortcut** — open the popup with **Alt+Shift+Q** (rebind at
+  `chrome://extensions/shortcuts`).
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
 
 Non-web pages (`chrome://`, the Web Store, local files) show a short notice
