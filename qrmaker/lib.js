@@ -34,6 +34,19 @@ export function degToRad(deg) {
   return (Number(deg) || 0) * (Math.PI / 180);
 }
 
+// A match pattern covering one URL's origin, for an optional host-permission
+// request (e.g. "https://example.com/*"). Returns null for non-http(s) URLs
+// (data:/blob:/extension pages don't need a host permission).
+export function originPattern(value) {
+  try {
+    const u = new URL(value);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    return `${u.protocol}//${u.host}/*`;
+  } catch {
+    return null;
+  }
+}
+
 const pad2 = (n) => String(n).padStart(2, "0");
 
 // Build a download filename like "qr-example.com-20260523-141500.png".

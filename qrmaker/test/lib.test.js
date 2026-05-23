@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isShareableUrl, ellipsize, downloadFilename, clamp, degToRad } from "../lib.js";
+import { isShareableUrl, ellipsize, downloadFilename, clamp, degToRad, originPattern } from "../lib.js";
 
 test("isShareableUrl accepts http and https", () => {
   assert.equal(isShareableUrl("http://example.com"), true);
@@ -69,4 +69,16 @@ test("degToRad converts degrees to radians", () => {
   assert.equal(degToRad(180), Math.PI);
   assert.equal(degToRad("90"), Math.PI / 2);
   assert.equal(degToRad("bad"), 0);
+});
+
+test("originPattern builds a host match pattern for http(s)", () => {
+  assert.equal(originPattern("https://example.com/a/b?x=1"), "https://example.com/*");
+  assert.equal(originPattern("http://sub.host.org:8080/p"), "http://sub.host.org:8080/*");
+});
+
+test("originPattern returns null for non-http(s) and junk", () => {
+  assert.equal(originPattern("data:image/png;base64,AAAA"), null);
+  assert.equal(originPattern("blob:https://x/abc"), null);
+  assert.equal(originPattern("chrome://flags"), null);
+  assert.equal(originPattern("not a url"), null);
 });

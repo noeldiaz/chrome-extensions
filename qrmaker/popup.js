@@ -20,6 +20,7 @@ const downloadMenuEl = document.getElementById("downloadMenu");
 const downloadCaretEl = document.getElementById("download-caret");
 const copyEl = document.getElementById("copy");
 const advancedEl = document.getElementById("advanced");
+const scanEl = document.getElementById("scan");
 const statusEl = document.getElementById("status");
 const themeToggleEl = document.getElementById("theme-toggle");
 const moonIconEl = document.getElementById("moon-icon");
@@ -292,6 +293,15 @@ advancedEl.addEventListener("click", () => {
   const data = dataFor();
   const suffix = data ? "?data=" + encodeURIComponent(data) : "";
   chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + suffix });
+  window.close();
+});
+scanEl.addEventListener("click", () => {
+  chrome.windows.create({
+    url: chrome.runtime.getURL("result.html"),
+    type: "popup",
+    width: 460,
+    height: 560,
+  });
   window.close();
 });
 

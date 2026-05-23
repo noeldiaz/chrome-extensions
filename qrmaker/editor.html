@@ -39,15 +39,29 @@
         </div>
 
         <div class="qr-card">
-          <h2 class="qr-section-title">Presets</h2>
+          <div class="mb-3 flex items-center justify-between gap-2">
+            <h2 class="qr-section-title mb-0">Presets</h2>
+            <span id="presetStatus" aria-live="polite" class="truncate text-xs font-medium text-blue-600 transition-opacity empty:hidden dark:text-blue-400"></span>
+          </div>
           <div class="flex gap-2">
+            <button id="presetNew" type="button" title="Create a new preset" aria-label="New preset"
+              class="shrink-0 inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300
+                     dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New
+            </button>
             <select id="presetSelect" class="qr-sel flex-1">
               <option value="">— No preset —</option>
             </select>
-            <button id="presetSave" type="button"
-              class="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300
+            <button id="presetSave" type="button" title="Save changes to this preset" aria-label="Save changes to preset" disabled
+              class="shrink-0 inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-40
                      dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-              Save…
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Save
             </button>
             <button id="presetDelete" type="button" title="Delete preset" aria-label="Delete preset" disabled
               class="shrink-0 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-slate-500 transition hover:border-red-300 hover:text-red-600 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-40
@@ -228,7 +242,7 @@
 
     <div id="presetModal" class="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4" hidden>
       <div class="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl dark:bg-slate-800">
-        <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Save preset</h3>
+        <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">New preset</h3>
         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Stores the current style, colors, gradient, sizes, and selected logo.
         </p>
@@ -244,7 +258,27 @@
           </button>
           <button id="presetConfirm" type="button"
             class="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50">
-            Save
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="presetDeleteModal" class="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4" hidden>
+      <div class="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl dark:bg-slate-800">
+        <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Delete preset</h3>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Delete “<span id="presetDeleteName" class="font-medium text-slate-700 dark:text-slate-200"></span>”? This can’t be undone.
+        </p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button id="presetDeleteCancel" type="button"
+            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
+                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            Cancel
+          </button>
+          <button id="presetDeleteConfirm" type="button"
+            class="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
+            Delete
           </button>
         </div>
       </div>

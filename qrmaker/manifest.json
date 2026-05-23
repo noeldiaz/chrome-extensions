@@ -5,6 +5,7 @@
   "description": "Show a scannable QR code for the current tab's URL with one click.",
   "minimum_chrome_version": "110",
   "permissions": ["activeTab", "storage", "clipboardWrite", "contextMenus"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

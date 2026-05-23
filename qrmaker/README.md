@@ -24,6 +24,9 @@ Manifest V3.
   code too).
 - **Right-click menus** — make a code for the **page**, a **link**, a **text
   selection**, or an **image address**; opens the editor prefilled.
+- **Decode / scan** — right-click any image → **Scan QR code from this image**,
+  or use the popup's **Scan** button to read a QR from a local image file. The
+  decoded content opens in a small window with **Go to** / **Copy**.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
@@ -42,9 +45,11 @@ right-click / in-page decoding (scan a QR image back to its content).
 | `activeTab` | Read the current tab's URL when you open the popup. No install-time host access. |
 | `storage` | Remember your theme, design presets, and default preset. |
 | `clipboardWrite` | Copy the QR image to the clipboard. |
-| `contextMenus` | Add the right-click "Create QR code…" entries. |
+| `contextMenus` | Add the right-click "Create QR code…" and "Scan…" entries. |
+| `optional_host_permissions` (`http`/`https`) | Requested **only** when you scan a QR from an image hosted on another site (needed to fetch its pixels). Not requested at install; same-origin and `data:` images need no grant. |
 
-QRmaker sends nothing anywhere — the code is generated locally in the popup.
+QRmaker generates and decodes codes locally. It only reaches the network when you
+scan a cross-origin image (to fetch that one image), after you grant access.
 
 ## Develop
 
@@ -63,14 +68,16 @@ directory).
 
 ```bash
 npm run build:css && zip -r qrmaker.zip \
-  manifest.json popup.html popup.js editor.html editor.js background.js lib.js idb.js popup.css \
-  vendor/qr-code-styling.js \
+  manifest.json popup.html popup.js editor.html editor.js result.html result.js \
+  background.js lib.js idb.js popup.css \
+  vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
 
 Excludes source/tooling (`src/`, `node_modules/`, `test/`, `eslint.config.js`,
 `icon.svg`, `icons/icon512.png`, `*.md`, `package*.json`).
-`vendor/qr-code-styling.js` **is** required at runtime — include it.
+`vendor/qr-code-styling.js` and `vendor/jsqr.js` **are** required at runtime —
+include them.
 
 ## Architecture
 
@@ -79,7 +86,11 @@ Excludes source/tooling (`src/`, `node_modules/`, `test/`, `eslint.config.js`,
 - `editor.html` / `editor.js` — the advanced design editor (opens in a tab,
   prefilled via `?data=`).
 - `background.js` — service worker: right-click context menus that open the
-  editor for the page / link / selection / image.
+  editor (encode) or the scan window (decode).
+- `result.html` / `result.js` — the scan window: decodes an uploaded or
+  right-clicked image with jsQR and shows the content (Go to / Copy / Close).
+- `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
+  (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
   clamp, deg→rad), unit-tested with `node:test`.
 - `idb.js` — IndexedDB store for the editor's uploaded center-logo library.

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="popup.css" />
   </head>
-  <body class="invisible w-72 bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+  <body class="invisible w-80 bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
     <div class="p-4">
       <div class="flex items-center justify-between">
         <h1 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">QRmaker</h1>
@@ -149,6 +149,19 @@
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            </svg>
+          </button>
+          <button
+            id="scan"
+            type="button"
+            title="Scan a QR image"
+            aria-label="Scan a QR image"
+            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50
+                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 013.75 7.125v-2.25zM3.75 16.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-2.25zM15.75 4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-2.25z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6zm0 12h.008v.008H6V18zm12-12h.008v.008H18V6zm-3 7.5h1.5v1.5H15v-1.5zm0 3h1.5V18H15v-1.5zm3 0h1.5V18H18v-1.5zm0-3h1.5v1.5H18v-1.5z" />
             </svg>
           </button>
         </div>

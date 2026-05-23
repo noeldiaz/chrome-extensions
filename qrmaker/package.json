@@ -8,9 +8,11 @@
     "watch:css": "tailwindcss -i src/styles.css -o popup.css --watch",
     "lint": "eslint .",
     "test": "node --test",
-    "vendor:qr": "cp node_modules/qr-code-styling/lib/qr-code-styling.js vendor/qr-code-styling.js"
+    "vendor:qr": "cp node_modules/qr-code-styling/lib/qr-code-styling.js vendor/qr-code-styling.js",
+    "vendor:jsqr": "cp node_modules/jsqr/dist/jsQR.js vendor/jsqr.js"
   },
   "dependencies": {
+    "jsqr": "^1.4.0",
     "qr-code-styling": "^1.9.2"
   },
   "devDependencies": {

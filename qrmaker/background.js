@@ -8,6 +8,7 @@ const MENUS = [
   { id: "qr-link", title: "Create QR code for this link", contexts: ["link"], targetUrlPatterns: WEB },
   { id: "qr-selection", title: "Create QR code for selection", contexts: ["selection"] },
   { id: "qr-image", title: "Create QR code for image address", contexts: ["image"], targetUrlPatterns: WEB },
+  { id: "qr-scan-image", title: "Scan QR code from this image", contexts: ["image"] },
 ];
 
 function buildMenus() {
@@ -33,7 +34,21 @@ function dataFromInfo(info) {
   }
 }
 
+// A compact popup window for the scan result.
+function openResultWindow(query) {
+  chrome.windows.create({
+    url: chrome.runtime.getURL("result.html") + query,
+    type: "popup",
+    width: 460,
+    height: 560,
+  });
+}
+
 chrome.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId === "qr-scan-image") {
+    if (info.srcUrl) openResultWindow("?src=" + encodeURIComponent(info.srcUrl));
+    return;
+  }
   const data = dataFromInfo(info);
   if (!data) return;
   chrome.tabs.create({

@@ -51,6 +51,8 @@ const els = {
   logoSize: $("logoSize"),
   logoSizeLabel: $("logoSizeLabel"),
   presetSelect: $("presetSelect"),
+  presetStatus: $("presetStatus"),
+  presetNew: $("presetNew"),
   presetSave: $("presetSave"),
   presetDelete: $("presetDelete"),
   presetDefault: $("presetDefault"),
@@ -58,6 +60,10 @@ const els = {
   presetName: $("presetName"),
   presetCancel: $("presetCancel"),
   presetConfirm: $("presetConfirm"),
+  presetDeleteModal: $("presetDeleteModal"),
+  presetDeleteName: $("presetDeleteName"),
+  presetDeleteCancel: $("presetDeleteCancel"),
+  presetDeleteConfirm: $("presetDeleteConfirm"),
   copy: $("copy"),
   reset: $("reset"),
   status: $("status"),
@@ -68,6 +74,7 @@ const els = {
 
 let qr = null;
 let statusTimer = null;
+let presetStatusTimer = null;
 let activeLogo = null; // dataURL of the selected center logo, or null for none
 let activeLogoId = null;
 let presets = []; // [{ id, name, config }]
@@ -108,6 +115,17 @@ function flash(message, ok = true) {
   els.status.classList.toggle("dark:text-red-400", !ok);
   clearTimeout(statusTimer);
   if (ok && message) statusTimer = setTimeout(() => (els.status.textContent = ""), 2000);
+}
+
+// Inline confirmation in the Presets card header (blue for ok, red for error).
+function presetFlash(message, ok = true) {
+  els.presetStatus.textContent = message;
+  els.presetStatus.classList.toggle("text-blue-600", ok);
+  els.presetStatus.classList.toggle("dark:text-blue-400", ok);
+  els.presetStatus.classList.toggle("text-red-500", !ok);
+  els.presetStatus.classList.toggle("dark:text-red-400", !ok);
+  clearTimeout(presetStatusTimer);
+  if (message) presetStatusTimer = setTimeout(() => (els.presetStatus.textContent = ""), 2500);
 }
 
 // --- chip groups ---
@@ -312,6 +330,7 @@ function selectedPresetId() {
 
 function syncPresetControls() {
   const id = selectedPresetId();
+  els.presetSave.disabled = id == null; // Save overwrites the selected preset
   els.presetDelete.disabled = id == null;
   els.presetDefault.disabled = id == null;
   els.presetDefault.checked = id != null && id === defaultPresetId;
@@ -348,13 +367,42 @@ async function savePreset(name) {
   renderPresetOptions(id);
 }
 
+// Overwrite the currently-selected preset's config with the current options.
+async function updateSelectedPreset() {
+  const id = selectedPresetId();
+  const p = id == null ? null : presets.find((x) => x.id === id);
+  if (!p) return;
+  p.config = captureConfig();
+  await persistPresets();
+  presetFlash(`Saved “${p.name}”.`);
+}
+
 async function deleteSelectedPreset() {
   const id = selectedPresetId();
   if (id == null) return;
+  const name = presets.find((p) => p.id === id)?.name ?? "preset";
   presets = presets.filter((p) => p.id !== id);
   if (defaultPresetId === id) defaultPresetId = null;
   await persistPresets();
   renderPresetOptions("");
+  presetFlash(`Deleted “${name}”.`);
+}
+
+function openDeleteModal() {
+  const id = selectedPresetId();
+  if (id == null) return;
+  els.presetDeleteName.textContent = presets.find((p) => p.id === id)?.name ?? "preset";
+  els.presetDeleteModal.hidden = false;
+  els.presetDeleteCancel.focus(); // safer default for a destructive action
+}
+
+function closeDeleteModal() {
+  els.presetDeleteModal.hidden = true;
+}
+
+async function confirmDelete() {
+  await deleteSelectedPreset();
+  closeDeleteModal();
 }
 
 async function toggleDefault() {
@@ -363,6 +411,7 @@ async function toggleDefault() {
   defaultPresetId = els.presetDefault.checked ? id : null;
   await persistPresets();
   renderPresetOptions(id); // refresh the ★ markers
+  presetFlash(els.presetDefault.checked ? "Set as default." : "Default cleared.");
 }
 
 function openPresetModal() {
@@ -383,7 +432,7 @@ async function confirmPreset() {
   }
   await savePreset(name);
   closePresetModal();
-  flash("Preset saved.");
+  presetFlash(`Created “${name}”.`);
 }
 
 // --- render ---
@@ -522,8 +571,14 @@ els.logoFile.addEventListener("change", async () => {
 });
 
 els.presetSelect.addEventListener("change", onPresetChange);
-els.presetSave.addEventListener("click", openPresetModal);
-els.presetDelete.addEventListener("click", deleteSelectedPreset);
+els.presetNew.addEventListener("click", openPresetModal);
+els.presetSave.addEventListener("click", updateSelectedPreset);
+els.presetDelete.addEventListener("click", openDeleteModal);
+els.presetDeleteCancel.addEventListener("click", closeDeleteModal);
+els.presetDeleteConfirm.addEventListener("click", confirmDelete);
+els.presetDeleteModal.addEventListener("click", (e) => {
+  if (e.target === els.presetDeleteModal) closeDeleteModal();
+});
 els.presetDefault.addEventListener("change", toggleDefault);
 els.presetCancel.addEventListener("click", closePresetModal);
 els.presetConfirm.addEventListener("click", confirmPreset);
@@ -537,7 +592,9 @@ els.presetModal.addEventListener("click", (e) => {
   if (e.target === els.presetModal) closePresetModal();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !els.presetModal.hidden) closePresetModal();
+  if (e.key !== "Escape") return;
+  if (!els.presetModal.hidden) closePresetModal();
+  if (!els.presetDeleteModal.hidden) closeDeleteModal();
 });
 
 async function init() {
