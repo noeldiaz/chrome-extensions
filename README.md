@@ -9,6 +9,7 @@ Manifest V3 extension with its own manifest, build, version, and tests.
 chrome-extensions/
   refresher/        Periodic tab refresher (MV3)
   screener/         Screenshot capture, annotate, and ticket submit (MV3)
+  qrmaker/          QR code for the active tab's URL (MV3)
   <next-extension>/
 ```
 
@@ -21,6 +22,7 @@ new subdirectories here, not as separate repos.
 |-----------|-------------|
 | [refresher](refresher/) | Refresh chosen browser tabs on intervals you control |
 | [screener](screener/) | Capture, annotate, and submit screenshots as support tickets |
+| [qrmaker](qrmaker/) | Show a scannable QR code for the current tab's URL |
 
 ## Working in an extension
 
@@ -49,4 +51,4 @@ npm run lint       # eslint
 
 ## Requirements
 
-Node 18+ (for the built-in `node:test` runner) and a Chromium browser. Minimum Chrome version is per-extension (Refresher 110+, Screener 116+).
+Node 18+ (for the built-in `node:test` runner) and a Chromium browser. Minimum Chrome version is per-extension (Refresher 110+, Screener 116+, QRmaker 110+).

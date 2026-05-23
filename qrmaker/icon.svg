@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect x="4" y="4" width="120" height="120" rx="24" fill="#1e88e5"/>
+  <!-- three QR finder patterns -->
+  <g fill="#ffffff">
+    <path d="M18 18h32v32H18zM26 26v16h16V26z" fill-rule="evenodd"/>
+    <rect x="30" y="30" width="8" height="8"/>
+    <path d="M78 18h32v32H78zM86 26v16h16V26z" fill-rule="evenodd"/>
+    <rect x="90" y="30" width="8" height="8"/>
+    <path d="M18 78h32v32H18zM26 86v16h16V86z" fill-rule="evenodd"/>
+    <rect x="30" y="90" width="8" height="8"/>
+    <!-- scattered data modules -->
+    <rect x="62" y="62" width="10" height="10"/>
+    <rect x="80" y="62" width="10" height="10"/>
+    <rect x="98" y="62" width="10" height="10"/>
+    <rect x="62" y="80" width="10" height="10"/>
+    <rect x="80" y="80" width="10" height="10"/>
+    <rect x="62" y="98" width="10" height="10"/>
+    <rect x="98" y="80" width="10" height="10"/>
+    <rect x="80" y="98" width="10" height="10"/>
+    <rect x="98" y="98" width="10" height="10"/>
+  </g>
+</svg>
