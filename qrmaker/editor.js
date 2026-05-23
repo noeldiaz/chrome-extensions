@@ -1,4 +1,5 @@
 import { ellipsize, downloadFilename, clamp, degToRad } from "./lib.js";
+import { addLogo, getLogos, deleteLogo } from "./idb.js";
 
 const PREVIEW_SIZE = 256;
 const DEFAULTS = {
@@ -15,7 +16,9 @@ const DEFAULTS = {
   margin: 10,
   ecLevel: "M",
   size: 512,
+  logoSize: 40,
 };
+const LOGO_MAX_PX = 256; // uploads are downscaled to this before storing
 
 const $ = (id) => document.getElementById(id);
 
@@ -41,6 +44,12 @@ const els = {
   ecLevel: $("ecLevel"),
   size: $("size"),
   sizeLabel: $("sizeLabel"),
+  logoLibrary: $("logoLibrary"),
+  logoNone: $("logoNone"),
+  logoUpload: $("logoUpload"),
+  logoFile: $("logoFile"),
+  logoSize: $("logoSize"),
+  logoSizeLabel: $("logoSizeLabel"),
   copy: $("copy"),
   reset: $("reset"),
   status: $("status"),
@@ -51,6 +60,8 @@ const els = {
 
 let qr = null;
 let statusTimer = null;
+let activeLogo = null; // dataURL of the selected center logo, or null for none
+let activeLogoId = null;
 
 // --- theme ---
 
@@ -133,7 +144,93 @@ function qrOptions(size = PREVIEW_SIZE) {
     cornersSquareOptions: { color: els.colorCorners.value, type: activeChip(els.cornerStyle) },
     cornersDotOptions: { color: els.colorCorners.value },
     backgroundOptions: background(),
+    image: activeLogo || "",
+    imageOptions: {
+      imageSize: clamp(els.logoSize.value, 10, 50) / 100,
+      margin: 4,
+      hideBackgroundDots: true,
+    },
   };
+}
+
+// --- center logo ---
+
+// Read an uploaded file and downscale it to a square-bounded PNG dataURL.
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Could not read that image."));
+      img.onload = () => {
+        const scale = Math.min(1, LOGO_MAX_PX / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function markActiveTiles() {
+  els.logoNone.classList.toggle("is-active", activeLogo === null);
+  for (const tile of els.logoLibrary.querySelectorAll("[data-logo-id]")) {
+    tile.classList.toggle("is-active", Number(tile.dataset.logoId) === activeLogoId);
+  }
+}
+
+function selectLogo(dataUrl, id) {
+  activeLogo = dataUrl;
+  activeLogoId = id ?? null;
+  if (dataUrl) els.ecLevel.value = "H"; // a logo covers modules — H tolerates it
+  markActiveTiles();
+  render();
+}
+
+async function renderLibrary() {
+  const logos = await getLogos();
+  // drop previously-rendered logo tiles, keep the None + Upload buttons
+  for (const w of els.logoLibrary.querySelectorAll(".logo-wrap")) w.remove();
+  for (const { id, dataUrl } of logos) {
+    const wrap = document.createElement("div");
+    wrap.className = "logo-wrap relative";
+
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "logo-tile";
+    tile.dataset.logoId = String(id);
+    tile.title = "Use this logo";
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    img.alt = "";
+    img.className = "max-h-full max-w-full object-contain";
+    tile.appendChild(img);
+    tile.addEventListener("click", () => selectLogo(dataUrl, id));
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "logo-del";
+    del.textContent = "✕";
+    del.title = "Remove from library";
+    del.setAttribute("aria-label", "Remove logo from library");
+    del.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await deleteLogo(id);
+      if (activeLogoId === id) selectLogo(null, null);
+      await renderLibrary();
+    });
+
+    wrap.append(tile, del);
+    els.logoLibrary.appendChild(wrap);
+  }
+  markActiveTiles();
 }
 
 // --- render ---
@@ -144,6 +241,7 @@ function render() {
   els.bgColorWrap.classList.toggle("opacity-40", els.gradientOn.checked);
   els.marginLabel.textContent = clamp(els.margin.value, 0, 40) + "px";
   els.sizeLabel.textContent = clamp(els.size.value, 100, 1000) + "px";
+  els.logoSizeLabel.textContent = clamp(els.logoSize.value, 10, 50) + "%";
   els.gradRotationLabel.textContent = (Number(els.gradRotation.value) || 0) + "°";
 
   const hasData = els.content.value.trim().length > 0;
@@ -214,6 +312,10 @@ function reset() {
   els.margin.value = DEFAULTS.margin;
   els.ecLevel.value = DEFAULTS.ecLevel;
   els.size.value = DEFAULTS.size;
+  els.logoSize.value = DEFAULTS.logoSize;
+  activeLogo = null; // clear the selection, but keep the saved library
+  activeLogoId = null;
+  markActiveTiles();
   render();
 }
 
@@ -249,9 +351,31 @@ document.getElementById("dlJpg").addEventListener("click", () => download("jpeg"
 els.copy.addEventListener("click", copyImage);
 els.reset.addEventListener("click", reset);
 
-function init() {
+els.logoNone.addEventListener("click", () => selectLogo(null, null));
+els.logoUpload.addEventListener("click", () => els.logoFile.click());
+els.logoSize.addEventListener("input", render);
+els.logoFile.addEventListener("change", async () => {
+  const file = els.logoFile.files?.[0];
+  els.logoFile.value = ""; // allow re-selecting the same file later
+  if (!file) return;
+  try {
+    const dataUrl = await fileToDataUrl(file);
+    const id = await addLogo(dataUrl);
+    await renderLibrary();
+    selectLogo(dataUrl, id);
+  } catch (e) {
+    flash("Couldn't add that logo: " + (e?.message || e), false);
+  }
+});
+
+async function init() {
   const data = new URLSearchParams(location.search).get("data");
   if (data) els.content.value = data;
+  try {
+    await renderLibrary();
+  } catch (e) {
+    flash("Couldn't load saved logos: " + (e?.message || e), false);
+  }
   render();
 }
 

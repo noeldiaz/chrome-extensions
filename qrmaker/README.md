@@ -15,7 +15,8 @@ Manifest V3.
   inside / outside / background colors.
 - **Advanced editor** *(new tab)* — dot and corner style chips, separate dot /
   corner / background colors, a background **gradient** (linear or radial),
-  margin, error correction, and an export-size slider, with a live preview and
+  margin, error correction, an export-size slider, and a **center logo** you
+  upload (saved to a personal logo library), with a live preview and
   PNG / SVG / JPG / copy output.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
@@ -25,9 +26,9 @@ Non-web pages (`chrome://`, the Web Store, local files) show a short notice
 instead — but you can still switch the popup's Type to **Custom text** to encode
 anything.
 
-Planned next: a center logo (with a saved logo library), frame / "Scan Me" text,
-saved design presets, a history of created codes, and right-click context menus
-to encode links / selections / images and decode codes on the page.
+Planned next: frame / "Scan Me" text, saved design presets, a history of created
+codes, and right-click context menus to encode links / selections / images and
+decode codes on the page.
 
 ## Permissions
 
@@ -56,7 +57,7 @@ directory).
 
 ```bash
 npm run build:css && zip -r qrmaker.zip \
-  manifest.json popup.html popup.js editor.html editor.js lib.js popup.css \
+  manifest.json popup.html popup.js editor.html editor.js lib.js idb.js popup.css \
   vendor/qr-code-styling.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -73,6 +74,7 @@ Excludes source/tooling (`src/`, `node_modules/`, `test/`, `eslint.config.js`,
   prefilled via `?data=`).
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
   clamp, deg→rad), unit-tested with `node:test`.
+- `idb.js` — IndexedDB store for the editor's uploaded center-logo library.
 - `vendor/qr-code-styling.js` — vendored [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)
   (MIT; bundles qrcode-generator), loaded via classic `<script>`, no bundler.
   Renders styled codes and exports PNG / SVG / JPG / WebP.
