@@ -5,8 +5,8 @@
     <title>QRmaker — Scan</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
-  <body class="invisible min-h-screen w-full bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-    <div class="p-5">
+  <body class="invisible flex min-h-screen w-full flex-col bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div class="flex-1 p-5">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <img src="icons/icon32.png" alt="" class="h-5 w-5 shrink-0 self-center" />
@@ -80,7 +80,7 @@
         <span class="qr-cap">Content</span>
         <textarea id="content" rows="3" readonly
           class="w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"></textarea>
-        <div class="mt-3 grid grid-cols-3 gap-2">
+        <div class="mt-3 grid grid-cols-2 gap-2">
           <button id="goto" type="button" hidden
             class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
             Go to
@@ -90,11 +90,6 @@
                    dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
             Copy
           </button>
-          <button id="close" type="button"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
-                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-            Close
-          </button>
         </div>
       </div>
 
@@ -103,6 +98,15 @@
 
       <p id="status" class="mt-3 text-center text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
     </div>
+    <footer class="border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+      <div class="flex justify-end px-5 py-3">
+        <button id="winClose" type="button"
+          class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
+                 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+          Close
+        </button>
+      </div>
+    </footer>
     <script src="vendor/jsqr.js"></script>
     <script src="vendor/qr-code-styling.js"></script>
     <script type="module" src="result.js"></script>

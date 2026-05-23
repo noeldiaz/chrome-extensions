@@ -28,7 +28,8 @@ Manifest V3.
   right-click a page → **Scan QR codes on this page** (finds and decodes every QR
   rendered on it), or use the popup's **Scan** button to read a QR from a local
   image file or, with **Scan with camera**, a live webcam feed. Decoded content
-  opens in a small window with **Go to** / **Copy** per result. Camera frames and
+  opens in a small window with **Go to** / **Copy** / **Edit** (open the result
+  in the advanced editor to restyle and re-export) per result. Camera frames and
   page pixels are decoded locally and never leave the browser.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.

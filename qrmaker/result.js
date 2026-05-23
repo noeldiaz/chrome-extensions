@@ -18,7 +18,7 @@ const els = {
   content: $("content"),
   goto: $("goto"),
   copy: $("copy"),
-  close: $("close"),
+  winClose: $("winClose"),
   status: $("status"),
   themeToggle: $("theme-toggle"),
   moon: $("moon-icon"),
@@ -276,14 +276,30 @@ els.copy.addEventListener("click", async () => {
     setStatus("Copy failed: " + (e?.message || e), false);
   }
 });
-els.close.addEventListener("click", () => window.close());
+els.winClose.addEventListener("click", () => window.close());
 
 // --- page scan (list of every QR code found on the active tab) ---
 
 const ROW_BTN_GO =
-  "rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400";
-const ROW_BTN_COPY =
-  "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
+  "inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400";
+const ROW_BTN_NEU =
+  "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
+
+const SVG = 'xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4"';
+const ICON_GO = `<svg ${SVG}><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-7.5.75L21 3m0 0h-5.25M21 3v5.25" /></svg>`;
+const ICON_COPY = `<svg ${SVG}><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m10.5-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-7.5A2.25 2.25 0 018.25 18v-7.5A2.25 2.25 0 0110.5 8.25z" /></svg>`;
+const ICON_EDIT = `<svg ${SVG}><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`;
+
+// Build a row action button: an icon followed by a label. The icon HTML and
+// labels are static literals (no decoded text), so innerHTML is safe here.
+function rowButton(label, icon, className, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = className;
+  b.innerHTML = icon + "<span>" + label + "</span>";
+  b.addEventListener("click", onClick);
+  return b;
+}
 
 // A small re-encoded preview of the decoded payload (works for codes that came
 // from a <canvas> too, where there's no source image to show).
@@ -324,30 +340,33 @@ function pageRow(text) {
   body.appendChild(p);
 
   const actions = document.createElement("div");
-  actions.className = "mt-2 flex gap-2";
+  actions.className = "mt-2 flex flex-wrap gap-2";
 
   if (isShareableUrl(text)) {
-    const go = document.createElement("button");
-    go.type = "button";
-    go.textContent = "Go to";
-    go.className = ROW_BTN_GO;
-    go.addEventListener("click", () => chrome.tabs.create({ url: text }));
-    actions.appendChild(go);
+    actions.appendChild(
+      rowButton("Go to", ICON_GO, ROW_BTN_GO, () => chrome.tabs.create({ url: text })),
+    );
   }
 
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.textContent = "Copy";
-  copy.className = ROW_BTN_COPY;
-  copy.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setStatus("Copied.");
-    } catch (e) {
-      setStatus("Copy failed: " + (e?.message || e), false);
-    }
-  });
-  actions.appendChild(copy);
+  actions.appendChild(
+    rowButton("Copy", ICON_COPY, ROW_BTN_NEU, async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus("Copied.");
+      } catch (e) {
+        setStatus("Copy failed: " + (e?.message || e), false);
+      }
+    }),
+  );
+
+  // Edit: hand the decoded text to the advanced editor to restyle and re-export.
+  actions.appendChild(
+    rowButton("Edit", ICON_EDIT, ROW_BTN_NEU, () =>
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("editor.html") + "?data=" + encodeURIComponent(text),
+      }),
+    ),
+  );
 
   body.appendChild(actions);
   row.appendChild(body);

@@ -19,6 +19,7 @@ const statusEl = document.getElementById("status");
 const themeToggleEl = document.getElementById("theme-toggle");
 const moonIconEl = document.getElementById("moon-icon");
 const sunIconEl = document.getElementById("sun-icon");
+const winCloseEl = document.getElementById("winClose");
 
 const QR_SIZE = 232; // on-screen preview edge
 const DEFAULT_EXPORT = 1024; // export size when the preset doesn't specify one
@@ -301,6 +302,7 @@ for (const el of [colorDotsEl, colorCornersEl, colorBgEl]) {
   el.addEventListener("input", applyLive);
 }
 resetEl.addEventListener("click", reset);
+winCloseEl.addEventListener("click", () => window.close());
 
 async function main() {
   await loadDefaultPreset(); // seeds colours + styling base before first render

@@ -69,6 +69,7 @@ const els = {
   themeToggle: $("theme-toggle"),
   moon: $("moon-icon"),
   sun: $("sun-icon"),
+  winClose: $("winClose"),
 };
 
 let qr = null;
@@ -549,6 +550,21 @@ document.getElementById("dlSvg").addEventListener("click", () => download("svg")
 document.getElementById("dlJpg").addEventListener("click", () => download("jpeg"));
 els.copy.addEventListener("click", copyImage);
 els.reset.addEventListener("click", reset);
+
+// Footer Close: shut the editor tab (window.close() is unreliable for a tab
+// opened via chrome.tabs.create, so remove it by id, falling back if needed).
+els.winClose.addEventListener("click", async () => {
+  try {
+    const tab = await chrome.tabs.getCurrent();
+    if (tab?.id != null) {
+      await chrome.tabs.remove(tab.id);
+      return;
+    }
+  } catch {
+    /* fall back to window.close() below */
+  }
+  window.close();
+});
 
 els.logoNone.addEventListener("click", () => selectLogo(null, null));
 els.logoUpload.addEventListener("click", () => els.logoFile.click());
