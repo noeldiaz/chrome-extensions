@@ -1,5 +1,6 @@
 import { downloadFilename, clamp, degToRad } from "./lib.js";
 import { getLogos, addHistory } from "./idb.js";
+import { initTheme } from "./theme.js";
 
 const qrWrapEl = document.getElementById("qrWrap");
 const qrMountEl = document.getElementById("qrMount");
@@ -50,33 +51,6 @@ let currentUrl = ""; // the active tab's URL, used to seed the content field
 let statusTimer = null;
 let base = { ...BASE_DEFAULT }; // active styling base (preset or defaults)
 let baseLogo = null; // resolved logo dataURL from the preset, or null
-
-// --- theme (popup-only, mirrors the other extensions) ---
-
-const osThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
-
-function applyTheme(isDark) {
-  document.documentElement.classList.toggle("dark", isDark);
-  moonIconEl.classList.toggle("hidden", isDark);
-  sunIconEl.classList.toggle("hidden", !isDark);
-  document.body.classList.remove("invisible");
-}
-
-async function loadTheme() {
-  const { theme } = await chrome.storage.local.get({ theme: null });
-  applyTheme(theme === "dark" || (theme == null && osThemeMedia.matches));
-}
-
-osThemeMedia.addEventListener("change", async (e) => {
-  const { theme } = await chrome.storage.local.get({ theme: null });
-  if (theme == null) applyTheme(e.matches);
-});
-
-themeToggleEl.addEventListener("click", async () => {
-  const isDark = !document.documentElement.classList.contains("dark");
-  applyTheme(isDark);
-  await chrome.storage.local.set({ theme: isDark ? "dark" : "light" });
-});
 
 // --- status feedback ---
 
@@ -345,5 +319,5 @@ async function main() {
   updatePreview();
 }
 
-loadTheme();
+initTheme({ toggle: themeToggleEl, moon: moonIconEl, sun: sunIconEl });
 main();

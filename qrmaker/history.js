@@ -1,5 +1,6 @@
 import { degToRad } from "./lib.js";
 import { getHistory, deleteHistoryItem, clearHistory } from "./idb.js";
+import { initTheme } from "./theme.js";
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -12,33 +13,6 @@ const els = {
   moon: $("moon-icon"),
   sun: $("sun-icon"),
 };
-
-// --- theme (mirrors the other pages) ---
-
-const osThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
-
-function applyTheme(isDark) {
-  document.documentElement.classList.toggle("dark", isDark);
-  els.moon.classList.toggle("hidden", isDark);
-  els.sun.classList.toggle("hidden", !isDark);
-  document.body.classList.remove("invisible");
-}
-
-async function loadTheme() {
-  const { theme } = await chrome.storage.local.get({ theme: null });
-  applyTheme(theme === "dark" || (theme == null && osThemeMedia.matches));
-}
-
-osThemeMedia.addEventListener("change", async (e) => {
-  const { theme } = await chrome.storage.local.get({ theme: null });
-  if (theme == null) applyTheme(e.matches);
-});
-
-els.themeToggle.addEventListener("click", async () => {
-  const isDark = !document.documentElement.classList.contains("dark");
-  applyTheme(isDark);
-  await chrome.storage.local.set({ theme: isDark ? "dark" : "light" });
-});
 
 // --- rendering ---
 
@@ -195,5 +169,5 @@ els.winClose.addEventListener("click", async () => {
   window.close();
 });
 
-loadTheme();
+initTheme({ toggle: els.themeToggle, moon: els.moon, sun: els.sun });
 render();

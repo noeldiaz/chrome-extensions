@@ -5,7 +5,16 @@ export default [
   { ignores: ["vendor/**"] }, // vendored qrcode-generator UMD dist — not ours to lint
   js.configs.recommended,
   {
-    files: ["popup.js", "editor.js", "lib.js", "idb.js", "background.js", "result.js", "history.js"],
+    files: [
+      "popup.js",
+      "editor.js",
+      "lib.js",
+      "idb.js",
+      "background.js",
+      "result.js",
+      "history.js",
+      "theme.js",
+    ],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",

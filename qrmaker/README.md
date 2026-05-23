@@ -10,9 +10,10 @@ Manifest V3.
 - **Download** — save the code as **PNG**, **SVG** (vector), or **JPG** via the
   format dropdown.
 - **Copy** — copy the QR image to the clipboard (PNG) for pasting anywhere.
-- **Quick options** *(popup)* — a collapsible Options panel: content type
-  (page URL or custom text), dot style, export size, error-correction level, and
-  inside / outside / background colors.
+- **Quick colors** *(popup)* — a collapsible Options panel with inside /
+  outside / background **colors** and a Reset. Dot & corner style, gradient,
+  logo, size, and error-correction live in the advanced editor (or come from
+  your default preset).
 - **Advanced editor** *(new tab)* — dot and corner style chips, separate dot /
   corner / background colors, a background **gradient** (linear or radial),
   margin, an export-size slider, and a **center logo** you
@@ -44,9 +45,10 @@ Manifest V3.
   `chrome://extensions/shortcuts`).
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
 
-Non-web pages (`chrome://`, the Web Store, local files) show a short notice
-instead — but you can still switch the popup's Type to **Custom text** to encode
-anything.
+The popup pre-fills the active tab's URL, but the field takes **any URL or
+text** — edit it to encode whatever you like. A `chrome://` or Web Store URL
+still encodes, but a code of one can't be opened by scanning it on another
+device.
 
 ## Permissions
 
@@ -80,7 +82,7 @@ directory).
 ```bash
 npm run build:css && zip -r qrmaker.zip \
   manifest.json popup.html popup.js editor.html editor.js result.html result.js \
-  history.html history.js background.js scanpage.js lib.js idb.js popup.css \
+  history.html history.js background.js scanpage.js lib.js idb.js theme.js popup.css \
   vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -112,6 +114,7 @@ include them.
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
   clamp, deg→rad, card geometry), unit-tested with `node:test`.
+- `theme.js` — shared light/dark theme wiring (`initTheme`) used by every page.
 - `idb.js` — IndexedDB (DB `qrmaker`): the editor's uploaded center-logo library
   (`logos`) and the created-codes `history` store.
 - `vendor/qr-code-styling.js` — vendored [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)
