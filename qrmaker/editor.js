@@ -514,7 +514,9 @@ function reset() {
   activeLogo = null; // clear the selection, but keep the saved library
   activeLogoId = null;
   markActiveTiles();
+  renderPresetOptions(""); // deselect any preset — back to "— No preset —"
   render();
+  flash("Reset to defaults.");
 }
 
 function setActive(group, value) {
