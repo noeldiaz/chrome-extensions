@@ -24,6 +24,19 @@ export default [
     },
   },
   {
+    files: ["scanpage.js"], // injected classic script; uses the jsQR global from vendor/jsqr.js
+    languageOptions: {
+      ecmaVersion: 2023,
+      sourceType: "script",
+      globals: { ...globals.browser, jsQR: "readonly" },
+    },
+    rules: {
+      "no-empty": ["error", { allowEmptyCatch: true }],
+      eqeqeq: ["error", "smart"],
+      "prefer-const": "error",
+    },
+  },
+  {
     files: ["test/**/*.js"],
     languageOptions: {
       ecmaVersion: 2023,

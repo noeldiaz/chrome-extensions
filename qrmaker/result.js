@@ -14,6 +14,7 @@ const els = {
   video: $("video"),
   cameraStop: $("cameraStop"),
   result: $("result"),
+  pageList: $("pageList"),
   content: $("content"),
   goto: $("goto"),
   copy: $("copy"),
@@ -277,8 +278,88 @@ els.copy.addEventListener("click", async () => {
 });
 els.close.addEventListener("click", () => window.close());
 
+// --- page scan (list of every QR code found on the active tab) ---
+
+const ROW_BTN_GO =
+  "rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400";
+const ROW_BTN_COPY =
+  "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
+
+function pageRow(text) {
+  const row = document.createElement("div");
+  row.className = "rounded-lg border border-slate-200 p-3 dark:border-slate-700";
+
+  const p = document.createElement("p");
+  p.className = "break-all text-sm text-slate-800 dark:text-slate-100";
+  p.textContent = text;
+  row.appendChild(p);
+
+  const actions = document.createElement("div");
+  actions.className = "mt-2 flex gap-2";
+
+  if (isShareableUrl(text)) {
+    const go = document.createElement("button");
+    go.type = "button";
+    go.textContent = "Go to";
+    go.className = ROW_BTN_GO;
+    go.addEventListener("click", () => chrome.tabs.create({ url: text }));
+    actions.appendChild(go);
+  }
+
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.textContent = "Copy";
+  copy.className = ROW_BTN_COPY;
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus("Copied.");
+    } catch (e) {
+      setStatus("Copy failed: " + (e?.message || e), false);
+    }
+  });
+  actions.appendChild(copy);
+
+  row.appendChild(actions);
+  return row;
+}
+
+function renderPageResults({ results, tainted }) {
+  if (!results.length) {
+    setStatus(
+      tainted
+        ? `No readable QR codes found (${tainted} cross-site image(s) couldn't be read).`
+        : "No QR codes found on this page.",
+      false,
+    );
+    return;
+  }
+  els.pageList.replaceChildren(...results.map((r) => pageRow(r.text)));
+  els.pageList.hidden = false;
+  const skipped = tainted ? ` (${tainted} cross-site image(s) skipped)` : "";
+  setStatus(`Found ${results.length} QR code${results.length === 1 ? "" : "s"}.${skipped}`);
+}
+
+async function showPageScan() {
+  els.pick.hidden = true; // the single-image controls don't apply to a page scan
+  els.camera.hidden = true;
+  const { pageScan } = await chrome.storage.session.get({ pageScan: null });
+  await chrome.storage.session.remove("pageScan");
+  const data = pageScan || { results: [], tainted: 0 };
+  if (data.error) {
+    setStatus("Couldn't scan this page: " + data.error, false);
+    return;
+  }
+  renderPageResults(data);
+}
+
 function init() {
-  const src = new URLSearchParams(location.search).get("src");
+  const params = new URLSearchParams(location.search);
+  if (params.get("mode") === "page") {
+    showPageScan();
+    return;
+  }
+  const src = params.get("src");
   if (src) scanSrc(src);
 }
 

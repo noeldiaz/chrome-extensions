@@ -25,10 +25,11 @@ Manifest V3.
 - **Right-click menus** — make a code for the **page**, a **link**, a **text
   selection**, or an **image address**; opens the editor prefilled.
 - **Decode / scan** — right-click any image → **Scan QR code from this image**,
-  or use the popup's **Scan** button to read a QR from a local image file or,
-  with **Scan with camera**, a live webcam feed. The decoded content opens in a
-  small window with **Go to** / **Copy**. Camera frames are decoded locally and
-  never leave the browser.
+  right-click a page → **Scan QR codes on this page** (finds and decodes every QR
+  rendered on it), or use the popup's **Scan** button to read a QR from a local
+  image file or, with **Scan with camera**, a live webcam feed. Decoded content
+  opens in a small window with **Go to** / **Copy** per result. Camera frames and
+  page pixels are decoded locally and never leave the browser.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
 - **Keyboard shortcut** — open the popup with **Alt+Shift+Q** (rebind at
@@ -50,6 +51,7 @@ right-click / in-page decoding (scan a QR image back to its content).
 | `storage` | Remember your theme, design presets, and default preset. |
 | `clipboardWrite` | Copy the QR image to the clipboard. |
 | `contextMenus` | Add the right-click "Create QR code…" and "Scan…" entries. |
+| `scripting` | Inject the decoder into the current tab when you choose "Scan QR codes on this page" — paired with `activeTab`, so only that tab, only on your click. |
 | `optional_host_permissions` (`http`/`https`) | Requested **only** when you scan a QR from an image hosted on another site (needed to fetch its pixels). Not requested at install; same-origin and `data:` images need no grant. |
 
 QRmaker generates and decodes codes locally. It only reaches the network when you
@@ -73,7 +75,7 @@ directory).
 ```bash
 npm run build:css && zip -r qrmaker.zip \
   manifest.json popup.html popup.js editor.html editor.js result.html result.js \
-  background.js lib.js idb.js popup.css \
+  background.js scanpage.js lib.js idb.js popup.css \
   vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -90,9 +92,13 @@ include them.
 - `editor.html` / `editor.js` — the advanced design editor (opens in a tab,
   prefilled via `?data=`).
 - `background.js` — service worker: right-click context menus that open the
-  editor (encode) or the scan window (decode).
+  editor (encode) or the scan window (decode), and the "scan this page" action
+  that injects the decoder into the active tab.
+- `scanpage.js` — injected into the active tab (with `vendor/jsqr.js`) to find
+  and decode every QR code rendered on the page; returns the results.
 - `result.html` / `result.js` — the scan window: decodes an uploaded or
-  right-clicked image with jsQR and shows the content (Go to / Copy / Close).
+  right-clicked image with jsQR and shows the content (Go to / Copy / Close), or
+  lists every code found by a page scan.
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
