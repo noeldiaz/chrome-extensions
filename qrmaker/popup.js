@@ -219,7 +219,9 @@ for (const item of downloadMenuEl.querySelectorAll("[data-format]")) {
 }
 copyEl.addEventListener("click", copyImage);
 advancedEl.addEventListener("click", () => {
-  chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") });
+  const data = dataFor();
+  const suffix = data ? "?data=" + encodeURIComponent(data) : "";
+  chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + suffix });
   window.close();
 });
 

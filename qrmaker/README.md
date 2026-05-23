@@ -10,16 +10,24 @@ Manifest V3.
 - **Download** — save the code as **PNG**, **SVG** (vector), or **JPG** via the
   format dropdown.
 - **Copy** — copy the QR image to the clipboard (PNG) for pasting anywhere.
+- **Quick options** *(popup)* — a collapsible Options panel: content type
+  (page URL or custom text), dot style, export size, error-correction level, and
+  inside / outside / background colors.
+- **Advanced editor** *(new tab)* — dot and corner style chips, separate dot /
+  corner / background colors, a background **gradient** (linear or radial),
+  margin, error correction, and an export-size slider, with a live preview and
+  PNG / SVG / JPG / copy output.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
 
 Non-web pages (`chrome://`, the Web Store, local files) show a short notice
-instead — a QR of those can't be opened on another device.
+instead — but you can still switch the popup's Type to **Custom text** to encode
+anything.
 
-Planned next: an advanced editor (custom text, colors, gradients, dot styles,
-center logo, saved presets) and right-click context menus to encode links /
-selections / images and decode codes on the page.
+Planned next: a center logo (with a saved logo library), frame / "Scan Me" text,
+saved design presets, a history of created codes, and right-click context menus
+to encode links / selections / images and decode codes on the page.
 
 ## Permissions
 
@@ -48,7 +56,7 @@ directory).
 
 ```bash
 npm run build:css && zip -r qrmaker.zip \
-  manifest.json popup.html popup.js lib.js popup.css \
+  manifest.json popup.html popup.js editor.html editor.js lib.js popup.css \
   vendor/qr-code-styling.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -60,9 +68,11 @@ Excludes source/tooling (`src/`, `node_modules/`, `test/`, `eslint.config.js`,
 ## Architecture
 
 - `popup.html` / `popup.js` — reads the active tab, renders the QR with
-  qr-code-styling, and handles download / copy.
-- `lib.js` — pure helpers (URL gating, display truncation, download filename),
-  unit-tested with `node:test`.
+  qr-code-styling, the Options panel, and download / copy.
+- `editor.html` / `editor.js` — the advanced design editor (opens in a tab,
+  prefilled via `?data=`).
+- `lib.js` — pure helpers (URL gating, display truncation, download filename,
+  clamp, deg→rad), unit-tested with `node:test`.
 - `vendor/qr-code-styling.js` — vendored [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)
   (MIT; bundles qrcode-generator), loaded via classic `<script>`, no bundler.
   Renders styled codes and exports PNG / SVG / JPG / WebP.

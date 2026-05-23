@@ -23,6 +23,17 @@ export function ellipsize(text, max = 72) {
   return text.slice(0, head) + "…" + text.slice(text.length - tail);
 }
 
+// Clamp n into [min, max]; non-numeric input falls back to min.
+export function clamp(n, min, max) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return min;
+  return Math.min(max, Math.max(min, v));
+}
+
+export function degToRad(deg) {
+  return (Number(deg) || 0) * (Math.PI / 180);
+}
+
 const pad2 = (n) => String(n).padStart(2, "0");
 
 // Build a download filename like "qr-example.com-20260523-141500.png".

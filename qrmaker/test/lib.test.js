@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isShareableUrl, ellipsize, downloadFilename } from "../lib.js";
+import { isShareableUrl, ellipsize, downloadFilename, clamp, degToRad } from "../lib.js";
 
 test("isShareableUrl accepts http and https", () => {
   assert.equal(isShareableUrl("http://example.com"), true);
@@ -54,4 +54,19 @@ test("downloadFilename keeps svg and falls back when there's no host", () => {
   const when = new Date(2026, 4, 23, 14, 15, 0);
   assert.equal(downloadFilename("https://sub.site.org", "svg", when), "qr-sub.site.org-20260523-141500.svg");
   assert.equal(downloadFilename("not a url", "png", when), "qr-code-20260523-141500.png");
+});
+
+test("clamp keeps values within range and handles junk", () => {
+  assert.equal(clamp(5, 0, 10), 5);
+  assert.equal(clamp(-3, 0, 10), 0);
+  assert.equal(clamp(99, 0, 10), 10);
+  assert.equal(clamp("7", 0, 10), 7);
+  assert.equal(clamp("nope", 4, 10), 4);
+});
+
+test("degToRad converts degrees to radians", () => {
+  assert.equal(degToRad(0), 0);
+  assert.equal(degToRad(180), Math.PI);
+  assert.equal(degToRad("90"), Math.PI / 2);
+  assert.equal(degToRad("bad"), 0);
 });
