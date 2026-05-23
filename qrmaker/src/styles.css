@@ -6,6 +6,8 @@
 @source "../popup.js";
 @source "../editor.html";
 @source "../editor.js";
+@source "../result.html";
+@source "../result.js";
 
 @layer base {
   body {
