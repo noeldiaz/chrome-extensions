@@ -36,13 +36,13 @@
       </div>
 
       <div class="mt-3">
-        <input
+        <textarea
           id="content"
-          type="text"
+          rows="1"
           placeholder="URL or text to encode"
           aria-label="QR content"
-          class="qr-inp"
-        />
+          class="qr-inp resize-none leading-snug"
+        ></textarea>
       </div>
 
       <details id="options" class="group mt-3 rounded-lg border border-slate-300 bg-slate-200 dark:border-slate-700 dark:bg-slate-800">
@@ -55,11 +55,11 @@
         <div class="space-y-3 px-3 pb-3">
           <div class="grid grid-cols-3 gap-2">
             <label class="block">
-              <span class="qr-cap">Inside</span>
+              <span class="qr-cap">Dots</span>
               <input id="colorDots" type="color" value="#000000" aria-label="Dots color" class="qr-color" />
             </label>
             <label class="block">
-              <span class="qr-cap">Outside</span>
+              <span class="qr-cap">Corners</span>
               <input id="colorCorners" type="color" value="#000000" aria-label="Corners color" class="qr-color" />
             </label>
             <label class="block">
@@ -106,18 +106,6 @@
             </svg>
           </button>
           <button
-            id="advanced"
-            type="button"
-            title="Advanced editor"
-            aria-label="Advanced editor"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50
-                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-            </svg>
-          </button>
-          <button
             id="scan"
             type="button"
             title="Scan a QR image"
@@ -141,6 +129,18 @@
               <rect x="13" y="19" width="2" height="2" />
               <rect x="19" y="19" width="2" height="2" />
               <rect x="16" y="22" width="2" height="2" />
+            </svg>
+          </button>
+          <button
+            id="advanced"
+            type="button"
+            title="Advanced editor"
+            aria-label="Advanced editor"
+            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50
+                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
             </svg>
           </button>
         </div>

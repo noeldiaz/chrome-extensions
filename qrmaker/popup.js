@@ -22,6 +22,7 @@ const sunIconEl = document.getElementById("sun-icon");
 
 const QR_SIZE = 232; // on-screen preview edge
 const DEFAULT_EXPORT = 1024; // export size when the preset doesn't specify one
+const CONTENT_MAX_LINES = 5; // the content field grows up to this many lines, then scrolls
 // Styling base for the quick code: built-in defaults, or the user's default
 // preset once one is set. The popup's colour pickers override colours; dot /
 // corner style, error level, gradient, logo and margin all come from here.
@@ -90,6 +91,23 @@ function flash(message, ok = true) {
 
 function dataFor() {
   return contentEl.value.trim();
+}
+
+// Grow the content field to fit its text, up to CONTENT_MAX_LINES; beyond that
+// it stops growing and scrolls. The field is border-box, so scrollHeight (which
+// omits the border) must be padded by the border or it overflows by ~2px and
+// shows a scrollbar even when the text fits — hence the explicit border math.
+function autoGrow() {
+  contentEl.style.height = "auto";
+  const cs = getComputedStyle(contentEl);
+  const line = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.375;
+  const border = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+  const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  const max = Math.ceil(line * CONTENT_MAX_LINES + pad + border); // border-box cap
+  const full = contentEl.scrollHeight + border; // border-box height to show all text
+  const capped = full > max;
+  contentEl.style.height = (capped ? max : full) + "px";
+  contentEl.style.overflowY = capped ? "auto" : "hidden";
 }
 
 // Background comes from the preset gradient when one is set; otherwise the
@@ -248,6 +266,7 @@ async function copyImage() {
 // Reset returns colours to the styling base and the content to the tab URL.
 function reset() {
   contentEl.value = currentUrl;
+  autoGrow();
   seedFromBase();
   updatePreview();
 }
@@ -274,7 +293,10 @@ scanEl.addEventListener("click", () => {
   window.close();
 });
 
-contentEl.addEventListener("input", updatePreview);
+contentEl.addEventListener("input", () => {
+  autoGrow();
+  updatePreview();
+});
 for (const el of [colorDotsEl, colorCornersEl, colorBgEl]) {
   el.addEventListener("input", applyLive);
 }
@@ -290,6 +312,7 @@ async function main() {
     flash("Couldn't read this tab: " + (e?.message || e), false);
   }
   contentEl.value = currentUrl;
+  autoGrow();
   updatePreview();
 }
 
