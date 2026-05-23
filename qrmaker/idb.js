@@ -78,6 +78,7 @@ export async function addHistory(entry) {
     return await new Promise((resolve, reject) => {
       const tx = db.transaction(HISTORY, "readwrite");
       const store = tx.objectStore(HISTORY);
+      let resultId = null;
       const all = store.getAll();
       all.onsuccess = () => {
         const cfg = JSON.stringify(entry.config ?? null);
@@ -87,14 +88,32 @@ export async function addHistory(entry) {
         const rec = { ...entry, date: Date.now() };
         if (dup) {
           rec.id = dup.id;
+          resultId = dup.id;
           store.put(rec);
         } else {
-          store.add(rec);
+          const add = store.add(rec);
+          add.onsuccess = () => (resultId = add.result);
           // prune oldest beyond the cap
           const sorted = (all.result || []).slice().sort((a, b) => a.date - b.date);
           for (let i = 0; i < sorted.length + 1 - HISTORY_CAP; i++) store.delete(sorted[i].id);
         }
       };
+      tx.oncomplete = () => resolve(resultId);
+      tx.onerror = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+}
+
+// Overwrite a specific history record in place (used when a code re-opened from
+// the history is re-exported after edits — update it, don't add a new row).
+export async function updateHistoryItem(id, entry) {
+  const db = await open();
+  try {
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(HISTORY, "readwrite");
+      tx.objectStore(HISTORY).put({ ...entry, id, date: Date.now() });
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });

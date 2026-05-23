@@ -1,5 +1,12 @@
 import { ellipsize, downloadFilename, clamp, degToRad } from "./lib.js";
-import { addLogo, getLogos, deleteLogo, addHistory, getHistoryItem } from "./idb.js";
+import {
+  addLogo,
+  getLogos,
+  deleteLogo,
+  addHistory,
+  getHistoryItem,
+  updateHistoryItem,
+} from "./idb.js";
 
 const PREVIEW_SIZE = 256;
 const EC_LEVEL = "H"; // always high — codes (almost) always carry a center logo
@@ -80,6 +87,11 @@ let activeLogo = null; // dataURL of the selected center logo, or null for none
 let activeLogoId = null;
 let presets = []; // [{ id, name, config }]
 let defaultPresetId = null;
+// The history record this editor session is bound to, so re-exports update that
+// one row instead of piling up new entries. Set when opened via ?history, or on
+// the first download/copy of a fresh session.
+let historyId = null;
+let historySource = null;
 
 // --- theme ---
 
@@ -467,12 +479,19 @@ function render() {
 
 // --- export ---
 
-// Log a created code to the history (best-effort; never block the download).
+// Log a created code (best-effort; never block the download). Once a session is
+// bound to a history record (opened from history, or after the first export),
+// later exports update that same row rather than adding new ones.
 async function recordHistory() {
   const content = els.content.value.trim();
   if (!content) return;
+  const config = captureConfig();
   try {
-    await addHistory({ content, source: null, config: captureConfig() });
+    if (historyId != null) {
+      await updateHistoryItem(historyId, { content, source: historySource, config });
+    } else {
+      historyId = await addHistory({ content, source: historySource, config });
+    }
   } catch {
     /* history is non-critical */
   }
@@ -648,6 +667,8 @@ async function init() {
     try {
       const item = await getHistoryItem(Number(histId));
       if (item) {
+        historyId = item.id; // bind: edits update this record
+        historySource = item.source ?? null;
         await applyConfig(item.config);
         els.content.value = item.content;
       }
