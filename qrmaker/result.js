@@ -9,6 +9,10 @@ const els = {
   grant: $("grant"),
   pick: $("pick"),
   file: $("file"),
+  camera: $("camera"),
+  cameraView: $("cameraView"),
+  video: $("video"),
+  cameraStop: $("cameraStop"),
   result: $("result"),
   content: $("content"),
   goto: $("goto"),
@@ -156,6 +160,106 @@ els.file.addEventListener("change", async () => {
     setStatus("Couldn't read that file: " + (e?.message || e), false);
   }
 });
+
+// --- scan from the camera ---
+
+let stream = null;
+let rafId = null;
+let camCanvas = null;
+let camCtx = null;
+
+// Grab the current video frame onto a (capped, reused) canvas and run jsQR.
+function decodeVideoFrame() {
+  const vw = els.video.videoWidth;
+  const vh = els.video.videoHeight;
+  if (!vw || !vh) return null;
+  const scale = Math.min(1, DECODE_MAX / Math.max(vw, vh));
+  const w = Math.round(vw * scale);
+  const h = Math.round(vh * scale);
+  if (!camCanvas) {
+    camCanvas = document.createElement("canvas");
+    camCtx = camCanvas.getContext("2d", { willReadFrequently: true });
+  }
+  if (camCanvas.width !== w || camCanvas.height !== h) {
+    camCanvas.width = w;
+    camCanvas.height = h;
+  }
+  camCtx.drawImage(els.video, 0, 0, w, h);
+  const { data } = camCtx.getImageData(0, 0, w, h);
+  return globalThis.jsQR(data, w, h)?.data ?? null;
+}
+
+function scanLoop() {
+  if (!stream) return; // stopped
+  let text = null;
+  try {
+    text = decodeVideoFrame();
+  } catch {
+    /* a frame may not be ready yet — try again next tick */
+  }
+  if (text != null) {
+    stopCamera();
+    showResult(text);
+    return;
+  }
+  rafId = requestAnimationFrame(scanLoop);
+}
+
+async function startCamera() {
+  els.grant.hidden = true;
+  els.result.hidden = true;
+  els.thumbWrap.hidden = true;
+  pendingSrc = null;
+  setStatus("Starting camera…");
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false,
+    });
+  } catch (e) {
+    const msg =
+      e?.name === "NotAllowedError" || e?.name === "SecurityError"
+        ? "Camera access denied."
+        : e?.name === "NotFoundError"
+          ? "No camera found."
+          : "Couldn't start camera: " + (e?.message || e);
+    setStatus(msg, false);
+    return;
+  }
+  els.video.srcObject = stream;
+  els.pick.hidden = true;
+  els.camera.hidden = true;
+  els.cameraView.hidden = false;
+  setStatus("Point your camera at a QR code…");
+  try {
+    await els.video.play();
+  } catch {
+    /* the autoplay attribute handles playback */
+  }
+  rafId = requestAnimationFrame(scanLoop);
+}
+
+function stopCamera() {
+  if (rafId != null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  if (stream) {
+    for (const track of stream.getTracks()) track.stop();
+    stream = null;
+  }
+  els.video.srcObject = null;
+  els.cameraView.hidden = true;
+  els.pick.hidden = false;
+  els.camera.hidden = false;
+}
+
+els.camera.addEventListener("click", startCamera);
+els.cameraStop.addEventListener("click", () => {
+  stopCamera();
+  setStatus("");
+});
+window.addEventListener("pagehide", stopCamera); // release the camera on close
 
 // --- result actions ---
 

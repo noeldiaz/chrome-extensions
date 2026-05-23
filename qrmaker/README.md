@@ -25,8 +25,10 @@ Manifest V3.
 - **Right-click menus** — make a code for the **page**, a **link**, a **text
   selection**, or an **image address**; opens the editor prefilled.
 - **Decode / scan** — right-click any image → **Scan QR code from this image**,
-  or use the popup's **Scan** button to read a QR from a local image file. The
-  decoded content opens in a small window with **Go to** / **Copy**.
+  or use the popup's **Scan** button to read a QR from a local image file or,
+  with **Scan with camera**, a live webcam feed. The decoded content opens in a
+  small window with **Go to** / **Copy**. Camera frames are decoded locally and
+  never leave the browser.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
