@@ -35,12 +35,17 @@
         </div>
       </div>
 
-      <p
-        id="url"
-        class="mt-3 break-all text-center text-xs text-slate-500 empty:hidden dark:text-slate-400"
-      ></p>
+      <div class="mt-3">
+        <input
+          id="content"
+          type="text"
+          placeholder="URL or text to encode"
+          aria-label="QR content"
+          class="qr-inp"
+        />
+      </div>
 
-      <details id="options" class="group mt-3 rounded-lg border border-slate-200 dark:border-slate-700">
+      <details id="options" class="group mt-3 rounded-lg border border-slate-300 bg-slate-200 dark:border-slate-700 dark:bg-slate-800">
         <summary class="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 [&::-webkit-details-marker]:hidden dark:text-slate-400">
           Options
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-3.5 w-3.5 transition-transform group-open:rotate-180">
@@ -48,48 +53,6 @@
           </svg>
         </summary>
         <div class="space-y-3 px-3 pb-3">
-          <label class="block">
-            <span class="qr-cap">Type</span>
-            <select id="contentType" class="qr-sel">
-              <option value="url">Page URL</option>
-              <option value="text">Custom text</option>
-            </select>
-          </label>
-
-          <label id="contentTextWrap" class="block" hidden>
-            <span class="qr-cap">Text</span>
-            <input id="contentText" type="text" placeholder="Enter text to encode" class="qr-inp" />
-          </label>
-
-          <div class="grid grid-cols-3 gap-2">
-            <label class="block">
-              <span class="qr-cap">Style</span>
-              <select id="style" class="qr-sel">
-                <option value="classic">Classic</option>
-                <option value="rounded">Rounded</option>
-                <option value="dots">Dots</option>
-                <option value="smooth">Smooth</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="qr-cap">Size</span>
-              <select id="size" class="qr-sel">
-                <option value="small">Small</option>
-                <option value="medium" selected>Medium</option>
-                <option value="large">Large</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="qr-cap">Error</span>
-              <select id="ecLevel" class="qr-sel">
-                <option value="low">Low</option>
-                <option value="medium" selected>Medium</option>
-                <option value="quartile">Quartile</option>
-                <option value="high">High</option>
-              </select>
-            </label>
-          </div>
-
           <div class="grid grid-cols-3 gap-2">
             <label class="block">
               <span class="qr-cap">Inside</span>
@@ -162,9 +125,22 @@
             class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50
                    dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 013.75 7.125v-2.25zM3.75 16.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-2.25zM15.75 4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-2.25z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6zm0 12h.008v.008H6V18zm12-12h.008v.008H18V6zm-3 7.5h1.5v1.5H15v-1.5zm0 3h1.5V18H15v-1.5zm3 0h1.5V18H18v-1.5zm0-3h1.5v1.5H18v-1.5z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+              <!-- finder patterns (ring + center) -->
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M2 2h7v7H2V2zm1 1v5h5V3H3z" />
+              <rect x="4" y="4" width="3" height="3" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M15 2h7v7h-7V2zm1 1v5h5V3h-5z" />
+              <rect x="17" y="4" width="3" height="3" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M2 15h7v7H2v-7zm1 1v5h5v-5H3z" />
+              <rect x="4" y="17" width="3" height="3" />
+              <!-- data modules -->
+              <rect x="13" y="13" width="2" height="2" />
+              <rect x="19" y="13" width="2" height="2" />
+              <rect x="22" y="16" width="2" height="2" />
+              <rect x="16" y="16" width="2" height="2" />
+              <rect x="13" y="19" width="2" height="2" />
+              <rect x="19" y="19" width="2" height="2" />
+              <rect x="16" y="22" width="2" height="2" />
             </svg>
           </button>
         </div>

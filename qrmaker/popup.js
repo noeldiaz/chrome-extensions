@@ -1,15 +1,9 @@
-import { isShareableUrl, ellipsize, downloadFilename, clamp, degToRad } from "./lib.js";
+import { downloadFilename, clamp, degToRad } from "./lib.js";
 import { getLogos } from "./idb.js";
 
 const qrWrapEl = document.getElementById("qrWrap");
 const qrMountEl = document.getElementById("qrMount");
-const urlEl = document.getElementById("url");
-const contentTypeEl = document.getElementById("contentType");
-const contentTextWrapEl = document.getElementById("contentTextWrap");
-const contentTextEl = document.getElementById("contentText");
-const styleEl = document.getElementById("style");
-const sizeEl = document.getElementById("size");
-const ecLevelEl = document.getElementById("ecLevel");
+const contentEl = document.getElementById("content");
 const colorDotsEl = document.getElementById("colorDots");
 const colorCornersEl = document.getElementById("colorCorners");
 const colorBgEl = document.getElementById("colorBg");
@@ -27,24 +21,10 @@ const moonIconEl = document.getElementById("moon-icon");
 const sunIconEl = document.getElementById("sun-icon");
 
 const QR_SIZE = 232; // on-screen preview edge
-const EXPORT_SIZE = { small: 256, medium: 512, large: 1024 };
-const DOT_TYPE = { classic: "square", rounded: "rounded", dots: "dots", smooth: "classy-rounded" };
-const EC = { low: "L", medium: "M", quartile: "Q", high: "H" };
-// reverse maps to seed the popup's coarser controls from a saved preset config
-const REVERSE_DOT = { square: "classic", rounded: "rounded", dots: "dots", "classy-rounded": "smooth" };
-const REVERSE_EC = { L: "low", M: "medium", Q: "quartile", H: "high" };
-const DEFAULTS = {
-  contentType: "url",
-  style: "classic",
-  size: "medium",
-  ecLevel: "medium",
-  colorDots: "#000000",
-  colorCorners: "#000000",
-  colorBg: "#ffffff",
-};
+const DEFAULT_EXPORT = 1024; // export size when the preset doesn't specify one
 // Styling base for the quick code: built-in defaults, or the user's default
-// preset once one is set. The popup controls override the fields they manage;
-// corner style / gradient / logo / margin come from here (not editable here).
+// preset once one is set. The popup's colour pickers override colours; dot /
+// corner style, error level, gradient, logo and margin all come from here.
 const BASE_DEFAULT = {
   dotStyle: "square",
   cornerStyle: "square",
@@ -57,13 +37,14 @@ const BASE_DEFAULT = {
   gradType: "linear",
   gradRotation: 0,
   margin: 8,
-  ecLevel: "M",
+  ecLevel: "H",
+  size: DEFAULT_EXPORT,
   logoSize: 40,
   logoId: null,
 };
 
 let qr = null; // QRCodeStyling instance for the preview
-let currentUrl = "";
+let currentUrl = ""; // the active tab's URL, used to seed the content field
 let statusTimer = null;
 let base = { ...BASE_DEFAULT }; // active styling base (preset or defaults)
 let baseLogo = null; // resolved logo dataURL from the preset, or null
@@ -108,11 +89,11 @@ function flash(message, ok = true) {
 // --- QR options + rendering ---
 
 function dataFor() {
-  return contentTypeEl.value === "text" ? contentTextEl.value.trim() : currentUrl;
+  return contentEl.value.trim();
 }
 
 // Background comes from the preset gradient when one is set; otherwise the
-// popup's own color picker.
+// popup's own colour picker.
 function popupBackground() {
   if (base.gradientOn) {
     return {
@@ -130,17 +111,17 @@ function popupBackground() {
 }
 
 // A full QRCodeStyling option set: the styling base (preset or defaults) with
-// the popup's editable fields (dot style, colors, error level) layered on top.
+// the popup's editable colours layered on top. Dot/corner style and error level
+// come from the base — they're tuned in the advanced editor.
 function qrOptions(data, size = QR_SIZE) {
-  const style = styleEl.value;
   return {
     width: size,
     height: size,
     type: "canvas",
     data,
     margin: base.margin,
-    qrOptions: { errorCorrectionLevel: EC[ecLevelEl.value] || "M" },
-    dotsOptions: { color: colorDotsEl.value, type: DOT_TYPE[style] || "square" },
+    qrOptions: { errorCorrectionLevel: base.ecLevel || "H" },
+    dotsOptions: { color: colorDotsEl.value, type: base.dotStyle || "square" },
     cornersSquareOptions: { color: colorCornersEl.value, type: base.cornerStyle || "square" },
     cornersDotOptions: { color: colorCornersEl.value },
     backgroundOptions: popupBackground(),
@@ -149,10 +130,8 @@ function qrOptions(data, size = QR_SIZE) {
   };
 }
 
-// Seed the popup controls from the styling base so they reflect the preset.
+// Seed the popup's colour pickers from the styling base so they reflect the preset.
 function seedFromBase() {
-  styleEl.value = REVERSE_DOT[base.dotStyle] || "classic";
-  ecLevelEl.value = REVERSE_EC[base.ecLevel] || "medium";
   colorDotsEl.value = base.colorDots;
   colorCornersEl.value = base.colorCorners;
   colorBgEl.value = base.colorBg;
@@ -185,7 +164,6 @@ function hideQr(message) {
   qrWrapEl.classList.add("hidden");
   controlsEl.classList.add("hidden");
   qrMountEl.replaceChildren();
-  urlEl.textContent = "";
   flash(message, false);
 }
 
@@ -195,27 +173,20 @@ function renderQr(data) {
   qr.append(qrMountEl);
   qrWrapEl.classList.remove("hidden");
   controlsEl.classList.remove("hidden");
-  urlEl.textContent = ellipsize(data);
-  urlEl.title = data;
   flash("");
 }
 
-// Decide what (if anything) to show, then render. Called on data/type changes.
+// Decide what (if anything) to show, then render. Called on content changes.
 function updatePreview() {
-  contentTextWrapEl.hidden = contentTypeEl.value !== "text";
   const data = dataFor();
-  if (contentTypeEl.value === "url" && !isShareableUrl(data)) {
-    hideQr("Open an http(s) page, or switch Type to Custom text.");
-    return;
-  }
   if (!data) {
-    hideQr("Enter text to make a QR code.");
+    hideQr("Enter a URL or text to make a code.");
     return;
   }
   renderQr(data);
 }
 
-// Restyle/recolor the existing preview live without rebuilding (no flicker).
+// Recolour the existing preview live without rebuilding (no flicker).
 function applyLive() {
   if (!qr) return;
   qr.update(qrOptions(dataFor()));
@@ -240,10 +211,10 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Build a fresh instance at the chosen export size so the preview is undisturbed.
+// Build a fresh instance at the export size so the preview is undisturbed.
 async function rawData(format) {
   const data = dataFor();
-  const exporter = new QRCodeStyling(qrOptions(data, EXPORT_SIZE[sizeEl.value] || 512));
+  const exporter = new QRCodeStyling(qrOptions(data, base.size || DEFAULT_EXPORT));
   return { blob: await exporter.getRawData(format), data };
 }
 
@@ -274,11 +245,9 @@ async function copyImage() {
   }
 }
 
-// Reset returns to the styling base (the default preset, or built-in defaults).
+// Reset returns colours to the styling base and the content to the tab URL.
 function reset() {
-  contentTypeEl.value = DEFAULTS.contentType;
-  sizeEl.value = DEFAULTS.size;
-  contentTextEl.value = "";
+  contentEl.value = currentUrl;
   seedFromBase();
   updatePreview();
 }
@@ -305,18 +274,14 @@ scanEl.addEventListener("click", () => {
   window.close();
 });
 
-contentTypeEl.addEventListener("change", () => {
-  updatePreview();
-  if (contentTypeEl.value === "text") contentTextEl.focus();
-});
-contentTextEl.addEventListener("input", updatePreview);
-for (const el of [styleEl, ecLevelEl, colorDotsEl, colorCornersEl, colorBgEl]) {
+contentEl.addEventListener("input", updatePreview);
+for (const el of [colorDotsEl, colorCornersEl, colorBgEl]) {
   el.addEventListener("input", applyLive);
 }
 resetEl.addEventListener("click", reset);
 
 async function main() {
-  await loadDefaultPreset(); // seeds controls + styling base before first render
+  await loadDefaultPreset(); // seeds colours + styling base before first render
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     currentUrl = tab?.url || "";
@@ -324,6 +289,7 @@ async function main() {
     currentUrl = "";
     flash("Couldn't read this tab: " + (e?.message || e), false);
   }
+  contentEl.value = currentUrl;
   updatePreview();
 }
 
