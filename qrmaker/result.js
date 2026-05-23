@@ -285,14 +285,43 @@ const ROW_BTN_GO =
 const ROW_BTN_COPY =
   "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
 
+// A small re-encoded preview of the decoded payload (works for codes that came
+// from a <canvas> too, where there's no source image to show).
+function pageThumb(text) {
+  const thumb = document.createElement("div");
+  thumb.className = "shrink-0 overflow-hidden rounded bg-white p-1";
+  const mount = document.createElement("div");
+  mount.className = "h-14 w-14";
+  thumb.appendChild(mount);
+  try {
+    new QRCodeStyling({
+      width: 56,
+      height: 56,
+      type: "canvas",
+      data: text,
+      margin: 2,
+      dotsOptions: { type: "square", color: "#000000" },
+      backgroundOptions: { color: "#ffffff" },
+    }).append(mount);
+  } catch {
+    /* if re-encoding fails (e.g. payload too long) just show the empty tile */
+  }
+  return thumb;
+}
+
 function pageRow(text) {
   const row = document.createElement("div");
-  row.className = "rounded-lg border border-slate-200 p-3 dark:border-slate-700";
+  row.className =
+    "flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800";
+  row.appendChild(pageThumb(text));
+
+  const body = document.createElement("div");
+  body.className = "min-w-0 flex-1";
 
   const p = document.createElement("p");
   p.className = "break-all text-sm text-slate-800 dark:text-slate-100";
   p.textContent = text;
-  row.appendChild(p);
+  body.appendChild(p);
 
   const actions = document.createElement("div");
   actions.className = "mt-2 flex gap-2";
@@ -320,7 +349,8 @@ function pageRow(text) {
   });
   actions.appendChild(copy);
 
-  row.appendChild(actions);
+  body.appendChild(actions);
+  row.appendChild(body);
   return row;
 }
 
