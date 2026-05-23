@@ -50,6 +50,14 @@ const els = {
   logoFile: $("logoFile"),
   logoSize: $("logoSize"),
   logoSizeLabel: $("logoSizeLabel"),
+  presetSelect: $("presetSelect"),
+  presetSave: $("presetSave"),
+  presetDelete: $("presetDelete"),
+  presetDefault: $("presetDefault"),
+  presetModal: $("presetModal"),
+  presetName: $("presetName"),
+  presetCancel: $("presetCancel"),
+  presetConfirm: $("presetConfirm"),
   copy: $("copy"),
   reset: $("reset"),
   status: $("status"),
@@ -62,6 +70,8 @@ let qr = null;
 let statusTimer = null;
 let activeLogo = null; // dataURL of the selected center logo, or null for none
 let activeLogoId = null;
+let presets = []; // [{ id, name, config }]
+let defaultPresetId = null;
 
 // --- theme ---
 
@@ -233,6 +243,149 @@ async function renderLibrary() {
   markActiveTiles();
 }
 
+// --- presets ---
+
+// The full editor state, minus the content (which comes from the active tab /
+// query string). The logo is stored by its IndexedDB id, not the image bytes.
+function captureConfig() {
+  return {
+    dotStyle: activeChip(els.dotStyle),
+    cornerStyle: activeChip(els.cornerStyle),
+    colorDots: els.colorDots.value,
+    colorCorners: els.colorCorners.value,
+    colorBg: els.colorBg.value,
+    gradientOn: els.gradientOn.checked,
+    gradColor1: els.gradColor1.value,
+    gradColor2: els.gradColor2.value,
+    gradType: els.gradType.value,
+    gradRotation: Number(els.gradRotation.value) || 0,
+    margin: clamp(els.margin.value, 0, 40),
+    ecLevel: els.ecLevel.value,
+    size: clamp(els.size.value, 100, 1000),
+    logoSize: clamp(els.logoSize.value, 10, 50),
+    logoId: activeLogoId,
+  };
+}
+
+async function applyConfig(cfg) {
+  if (!cfg) return;
+  setActive(els.dotStyle, cfg.dotStyle || DEFAULTS.dotStyle);
+  setActive(els.cornerStyle, cfg.cornerStyle || DEFAULTS.cornerStyle);
+  els.colorDots.value = cfg.colorDots ?? DEFAULTS.colorDots;
+  els.colorCorners.value = cfg.colorCorners ?? DEFAULTS.colorCorners;
+  els.colorBg.value = cfg.colorBg ?? DEFAULTS.colorBg;
+  els.gradientOn.checked = !!cfg.gradientOn;
+  els.gradColor1.value = cfg.gradColor1 ?? DEFAULTS.gradColor1;
+  els.gradColor2.value = cfg.gradColor2 ?? DEFAULTS.gradColor2;
+  els.gradType.value = cfg.gradType ?? DEFAULTS.gradType;
+  els.gradRotation.value = cfg.gradRotation ?? DEFAULTS.gradRotation;
+  els.margin.value = cfg.margin ?? DEFAULTS.margin;
+  els.ecLevel.value = cfg.ecLevel ?? DEFAULTS.ecLevel;
+  els.size.value = cfg.size ?? DEFAULTS.size;
+  els.logoSize.value = cfg.logoSize ?? DEFAULTS.logoSize;
+  // resolve the logo by id; it may have been deleted from the library
+  if (cfg.logoId != null) {
+    const found = (await getLogos()).find((l) => l.id === cfg.logoId);
+    activeLogo = found ? found.dataUrl : null;
+    activeLogoId = found ? found.id : null;
+  } else {
+    activeLogo = null;
+    activeLogoId = null;
+  }
+  markActiveTiles();
+  render();
+}
+
+async function loadPresets() {
+  const stored = await chrome.storage.local.get({ presets: [], defaultPresetId: null });
+  presets = Array.isArray(stored.presets) ? stored.presets : [];
+  defaultPresetId = stored.defaultPresetId;
+}
+
+async function persistPresets() {
+  await chrome.storage.local.set({ presets, defaultPresetId });
+}
+
+function selectedPresetId() {
+  return els.presetSelect.value ? Number(els.presetSelect.value) : null;
+}
+
+function syncPresetControls() {
+  const id = selectedPresetId();
+  els.presetDelete.disabled = id == null;
+  els.presetDefault.disabled = id == null;
+  els.presetDefault.checked = id != null && id === defaultPresetId;
+}
+
+function renderPresetOptions(selectedId = "") {
+  els.presetSelect.replaceChildren();
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "— No preset —";
+  els.presetSelect.appendChild(none);
+  for (const p of presets) {
+    const opt = document.createElement("option");
+    opt.value = String(p.id);
+    opt.textContent = p.id === defaultPresetId ? `★ ${p.name}` : p.name;
+    els.presetSelect.appendChild(opt);
+  }
+  els.presetSelect.value = selectedId == null ? "" : String(selectedId);
+  syncPresetControls();
+}
+
+async function onPresetChange() {
+  syncPresetControls();
+  const id = selectedPresetId();
+  if (id == null) return;
+  const p = presets.find((x) => x.id === id);
+  if (p) await applyConfig(p.config);
+}
+
+async function savePreset(name) {
+  const id = Date.now();
+  presets.push({ id, name, config: captureConfig() });
+  await persistPresets();
+  renderPresetOptions(id);
+}
+
+async function deleteSelectedPreset() {
+  const id = selectedPresetId();
+  if (id == null) return;
+  presets = presets.filter((p) => p.id !== id);
+  if (defaultPresetId === id) defaultPresetId = null;
+  await persistPresets();
+  renderPresetOptions("");
+}
+
+async function toggleDefault() {
+  const id = selectedPresetId();
+  if (id == null) return;
+  defaultPresetId = els.presetDefault.checked ? id : null;
+  await persistPresets();
+  renderPresetOptions(id); // refresh the ★ markers
+}
+
+function openPresetModal() {
+  els.presetName.value = "";
+  els.presetModal.hidden = false;
+  els.presetName.focus();
+}
+
+function closePresetModal() {
+  els.presetModal.hidden = true;
+}
+
+async function confirmPreset() {
+  const name = els.presetName.value.trim();
+  if (!name) {
+    els.presetName.focus();
+    return;
+  }
+  await savePreset(name);
+  closePresetModal();
+  flash("Preset saved.");
+}
+
 // --- render ---
 
 function render() {
@@ -368,14 +521,41 @@ els.logoFile.addEventListener("change", async () => {
   }
 });
 
+els.presetSelect.addEventListener("change", onPresetChange);
+els.presetSave.addEventListener("click", openPresetModal);
+els.presetDelete.addEventListener("click", deleteSelectedPreset);
+els.presetDefault.addEventListener("change", toggleDefault);
+els.presetCancel.addEventListener("click", closePresetModal);
+els.presetConfirm.addEventListener("click", confirmPreset);
+els.presetName.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    confirmPreset();
+  }
+});
+els.presetModal.addEventListener("click", (e) => {
+  if (e.target === els.presetModal) closePresetModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !els.presetModal.hidden) closePresetModal();
+});
+
 async function init() {
-  const data = new URLSearchParams(location.search).get("data");
-  if (data) els.content.value = data;
   try {
     await renderLibrary();
   } catch (e) {
     flash("Couldn't load saved logos: " + (e?.message || e), false);
   }
+  try {
+    await loadPresets();
+    renderPresetOptions(defaultPresetId ?? "");
+    const def = defaultPresetId != null ? presets.find((p) => p.id === defaultPresetId) : null;
+    if (def) await applyConfig(def.config);
+  } catch (e) {
+    flash("Couldn't load presets: " + (e?.message || e), false);
+  }
+  const data = new URLSearchParams(location.search).get("data");
+  if (data) els.content.value = data;
   render();
 }
 

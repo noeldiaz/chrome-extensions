@@ -1,4 +1,5 @@
-import { isShareableUrl, ellipsize, downloadFilename } from "./lib.js";
+import { isShareableUrl, ellipsize, downloadFilename, clamp, degToRad } from "./lib.js";
+import { getLogos } from "./idb.js";
 
 const qrWrapEl = document.getElementById("qrWrap");
 const qrMountEl = document.getElementById("qrMount");
@@ -28,6 +29,9 @@ const QR_SIZE = 232; // on-screen preview edge
 const EXPORT_SIZE = { small: 256, medium: 512, large: 1024 };
 const DOT_TYPE = { classic: "square", rounded: "rounded", dots: "dots", smooth: "classy-rounded" };
 const EC = { low: "L", medium: "M", quartile: "Q", high: "H" };
+// reverse maps to seed the popup's coarser controls from a saved preset config
+const REVERSE_DOT = { square: "classic", rounded: "rounded", dots: "dots", "classy-rounded": "smooth" };
+const REVERSE_EC = { L: "low", M: "medium", Q: "quartile", H: "high" };
 const DEFAULTS = {
   contentType: "url",
   style: "classic",
@@ -37,10 +41,31 @@ const DEFAULTS = {
   colorCorners: "#000000",
   colorBg: "#ffffff",
 };
+// Styling base for the quick code: built-in defaults, or the user's default
+// preset once one is set. The popup controls override the fields they manage;
+// corner style / gradient / logo / margin come from here (not editable here).
+const BASE_DEFAULT = {
+  dotStyle: "square",
+  cornerStyle: "square",
+  colorDots: "#000000",
+  colorCorners: "#000000",
+  colorBg: "#ffffff",
+  gradientOn: false,
+  gradColor1: "#1e88e5",
+  gradColor2: "#ffffff",
+  gradType: "linear",
+  gradRotation: 0,
+  margin: 8,
+  ecLevel: "M",
+  logoSize: 40,
+  logoId: null,
+};
 
 let qr = null; // QRCodeStyling instance for the preview
 let currentUrl = "";
 let statusTimer = null;
+let base = { ...BASE_DEFAULT }; // active styling base (preset or defaults)
+let baseLogo = null; // resolved logo dataURL from the preset, or null
 
 // --- theme (popup-only, mirrors the other extensions) ---
 
@@ -85,8 +110,26 @@ function dataFor() {
   return contentTypeEl.value === "text" ? contentTextEl.value.trim() : currentUrl;
 }
 
-// A full QRCodeStyling option set from the current control values. Kept black-on
-// a chosen background; the "outside" picker drives both corner squares + dots.
+// Background comes from the preset gradient when one is set; otherwise the
+// popup's own color picker.
+function popupBackground() {
+  if (base.gradientOn) {
+    return {
+      gradient: {
+        type: base.gradType,
+        rotation: degToRad(base.gradRotation),
+        colorStops: [
+          { offset: 0, color: base.gradColor1 },
+          { offset: 1, color: base.gradColor2 },
+        ],
+      },
+    };
+  }
+  return { color: colorBgEl.value };
+}
+
+// A full QRCodeStyling option set: the styling base (preset or defaults) with
+// the popup's editable fields (dot style, colors, error level) layered on top.
 function qrOptions(data, size = QR_SIZE) {
   const style = styleEl.value;
   return {
@@ -94,16 +137,46 @@ function qrOptions(data, size = QR_SIZE) {
     height: size,
     type: "canvas",
     data,
-    margin: 8,
+    margin: base.margin,
     qrOptions: { errorCorrectionLevel: EC[ecLevelEl.value] || "M" },
     dotsOptions: { color: colorDotsEl.value, type: DOT_TYPE[style] || "square" },
-    cornersSquareOptions: {
-      color: colorCornersEl.value,
-      type: style === "classic" ? "square" : "extra-rounded",
-    },
+    cornersSquareOptions: { color: colorCornersEl.value, type: base.cornerStyle || "square" },
     cornersDotOptions: { color: colorCornersEl.value },
-    backgroundOptions: { color: colorBgEl.value },
+    backgroundOptions: popupBackground(),
+    image: baseLogo || "",
+    imageOptions: { imageSize: clamp(base.logoSize, 10, 50) / 100, margin: 4, hideBackgroundDots: true },
   };
+}
+
+// Seed the popup controls from the styling base so they reflect the preset.
+function seedFromBase() {
+  styleEl.value = REVERSE_DOT[base.dotStyle] || "classic";
+  ecLevelEl.value = REVERSE_EC[base.ecLevel] || "medium";
+  colorDotsEl.value = base.colorDots;
+  colorCornersEl.value = base.colorCorners;
+  colorBgEl.value = base.colorBg;
+}
+
+// Adopt the user's default preset (if any) as the styling base.
+async function loadDefaultPreset() {
+  try {
+    const { presets, defaultPresetId } = await chrome.storage.local.get({
+      presets: [],
+      defaultPresetId: null,
+    });
+    const def =
+      defaultPresetId != null && Array.isArray(presets)
+        ? presets.find((p) => p.id === defaultPresetId)
+        : null;
+    if (def?.config) base = { ...BASE_DEFAULT, ...def.config };
+    if (base.logoId != null) {
+      const found = (await getLogos()).find((l) => l.id === base.logoId);
+      baseLogo = found ? found.dataUrl : null;
+    }
+  } catch {
+    /* fall back to BASE_DEFAULT */
+  }
+  seedFromBase();
 }
 
 function hideQr(message) {
@@ -200,15 +273,12 @@ async function copyImage() {
   }
 }
 
+// Reset returns to the styling base (the default preset, or built-in defaults).
 function reset() {
   contentTypeEl.value = DEFAULTS.contentType;
-  styleEl.value = DEFAULTS.style;
   sizeEl.value = DEFAULTS.size;
-  ecLevelEl.value = DEFAULTS.ecLevel;
-  colorDotsEl.value = DEFAULTS.colorDots;
-  colorCornersEl.value = DEFAULTS.colorCorners;
-  colorBgEl.value = DEFAULTS.colorBg;
   contentTextEl.value = "";
+  seedFromBase();
   updatePreview();
 }
 
@@ -236,6 +306,7 @@ for (const el of [styleEl, ecLevelEl, colorDotsEl, colorCornersEl, colorBgEl]) {
 resetEl.addEventListener("click", reset);
 
 async function main() {
+  await loadDefaultPreset(); // seeds controls + styling base before first render
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     currentUrl = tab?.url || "";

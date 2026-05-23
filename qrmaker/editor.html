@@ -39,19 +39,50 @@
         </div>
 
         <div class="qr-card">
-          <h2 class="qr-section-title">Style</h2>
-          <span class="qr-cap">Dot style</span>
-          <div id="dotStyle" class="mb-3 flex flex-wrap gap-2">
-            <button type="button" class="chip is-active" data-value="square">Square</button>
-            <button type="button" class="chip" data-value="rounded">Rounded</button>
-            <button type="button" class="chip" data-value="dots">Dots</button>
-            <button type="button" class="chip" data-value="classy-rounded">Classy</button>
+          <h2 class="qr-section-title">Presets</h2>
+          <div class="flex gap-2">
+            <select id="presetSelect" class="qr-sel flex-1">
+              <option value="">— No preset —</option>
+            </select>
+            <button id="presetSave" type="button"
+              class="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300
+                     dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+              Save…
+            </button>
+            <button id="presetDelete" type="button" title="Delete preset" aria-label="Delete preset" disabled
+              class="shrink-0 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-slate-500 transition hover:border-red-300 hover:text-red-600 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-40
+                     dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
           </div>
-          <span class="qr-cap">Corner style</span>
-          <div id="cornerStyle" class="flex flex-wrap gap-2">
-            <button type="button" class="chip is-active" data-value="square">Square</button>
-            <button type="button" class="chip" data-value="extra-rounded">Rounded</button>
-            <button type="button" class="chip" data-value="dot">Dots</button>
+          <label class="mt-2 flex cursor-pointer items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <input id="presetDefault" type="checkbox" class="h-3.5 w-3.5 accent-blue-600 disabled:opacity-40" disabled />
+            Use as default (loaded on open)
+          </label>
+        </div>
+
+        <div class="qr-card">
+          <h2 class="qr-section-title">Style</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="qr-cap">Dot style</span>
+              <div id="dotStyle" class="flex flex-wrap gap-2">
+                <button type="button" class="chip is-active" data-value="square">Square</button>
+                <button type="button" class="chip" data-value="rounded">Rounded</button>
+                <button type="button" class="chip" data-value="dots">Dots</button>
+                <button type="button" class="chip" data-value="classy-rounded">Classy</button>
+              </div>
+            </div>
+            <div>
+              <span class="qr-cap">Corner style</span>
+              <div id="cornerStyle" class="flex flex-wrap gap-2">
+                <button type="button" class="chip is-active" data-value="square">Square</button>
+                <button type="button" class="chip" data-value="extra-rounded">Rounded</button>
+                <button type="button" class="chip" data-value="dot">Dots</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -194,6 +225,31 @@
         <p id="status" class="mt-3 text-center text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
       </aside>
     </main>
+
+    <div id="presetModal" class="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4" hidden>
+      <div class="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl dark:bg-slate-800">
+        <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Save preset</h3>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Stores the current style, colors, gradient, sizes, and selected logo.
+        </p>
+        <label class="mt-3 block">
+          <span class="qr-cap">Name</span>
+          <input id="presetName" type="text" placeholder="My design" maxlength="40" class="qr-inp" />
+        </label>
+        <div class="mt-4 flex justify-end gap-2">
+          <button id="presetCancel" type="button"
+            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
+                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            Cancel
+          </button>
+          <button id="presetConfirm" type="button"
+            class="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50">
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script src="vendor/qr-code-styling.js"></script>
     <script type="module" src="editor.js"></script>
   </body>

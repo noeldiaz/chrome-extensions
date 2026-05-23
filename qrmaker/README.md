@@ -18,6 +18,9 @@ Manifest V3.
   margin, error correction, an export-size slider, and a **center logo** you
   upload (saved to a personal logo library), with a live preview and
   PNG / SVG / JPG / copy output.
+- **Design presets** *(editor)* — save the whole design (style, colors,
+  gradient, sizes, logo) as a named preset, reapply it from a dropdown, and mark
+  one as the **default** that loads automatically.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
@@ -26,9 +29,9 @@ Non-web pages (`chrome://`, the Web Store, local files) show a short notice
 instead — but you can still switch the popup's Type to **Custom text** to encode
 anything.
 
-Planned next: frame / "Scan Me" text, saved design presets, a history of created
-codes, and right-click context menus to encode links / selections / images and
-decode codes on the page.
+Planned next: frame / "Scan Me" text, a history of created codes, and
+right-click context menus to encode links / selections / images and decode
+codes on the page.
 
 ## Permissions
 
