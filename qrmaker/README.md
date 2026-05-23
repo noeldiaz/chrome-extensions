@@ -20,7 +20,10 @@ Manifest V3.
   PNG / SVG / JPG / copy output.
 - **Design presets** *(editor)* — save the whole design (style, colors,
   gradient, sizes, logo) as a named preset, reapply it from a dropdown, and mark
-  one as the **default** that loads automatically.
+  one as the **default** that loads automatically (and styles the popup's quick
+  code too).
+- **Right-click menus** — make a code for the **page**, a **link**, a **text
+  selection**, or an **image address**; opens the editor prefilled.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
@@ -30,16 +33,16 @@ instead — but you can still switch the popup's Type to **Custom text** to enco
 anything.
 
 Planned next: frame / "Scan Me" text, a history of created codes, and
-right-click context menus to encode links / selections / images and decode
-codes on the page.
+right-click / in-page decoding (scan a QR image back to its content).
 
 ## Permissions
 
 | Permission | Why |
 |------------|-----|
 | `activeTab` | Read the current tab's URL when you open the popup. No install-time host access. |
-| `storage` | Remember your light/dark theme choice. |
+| `storage` | Remember your theme, design presets, and default preset. |
 | `clipboardWrite` | Copy the QR image to the clipboard. |
+| `contextMenus` | Add the right-click "Create QR code…" entries. |
 
 QRmaker sends nothing anywhere — the code is generated locally in the popup.
 
@@ -60,7 +63,7 @@ directory).
 
 ```bash
 npm run build:css && zip -r qrmaker.zip \
-  manifest.json popup.html popup.js editor.html editor.js lib.js idb.js popup.css \
+  manifest.json popup.html popup.js editor.html editor.js background.js lib.js idb.js popup.css \
   vendor/qr-code-styling.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -75,6 +78,8 @@ Excludes source/tooling (`src/`, `node_modules/`, `test/`, `eslint.config.js`,
   qr-code-styling, the Options panel, and download / copy.
 - `editor.html` / `editor.js` — the advanced design editor (opens in a tab,
   prefilled via `?data=`).
+- `background.js` — service worker: right-click context menus that open the
+  editor for the page / link / selection / image.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
   clamp, deg→rad), unit-tested with `node:test`.
 - `idb.js` — IndexedDB store for the editor's uploaded center-logo library.
