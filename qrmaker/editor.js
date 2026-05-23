@@ -2,6 +2,7 @@ import { ellipsize, downloadFilename, clamp, degToRad } from "./lib.js";
 import { addLogo, getLogos, deleteLogo } from "./idb.js";
 
 const PREVIEW_SIZE = 256;
+const EC_LEVEL = "H"; // always high — codes (almost) always carry a center logo
 const DEFAULTS = {
   dotStyle: "square",
   cornerStyle: "square",
@@ -14,7 +15,6 @@ const DEFAULTS = {
   gradType: "linear",
   gradRotation: 0,
   margin: 10,
-  ecLevel: "M",
   size: 512,
   logoSize: 40,
 };
@@ -41,7 +41,6 @@ const els = {
   gradRotationLabel: $("gradRotationLabel"),
   margin: $("margin"),
   marginLabel: $("marginLabel"),
-  ecLevel: $("ecLevel"),
   size: $("size"),
   sizeLabel: $("sizeLabel"),
   logoLibrary: $("logoLibrary"),
@@ -167,7 +166,7 @@ function qrOptions(size = PREVIEW_SIZE) {
     type: "canvas",
     data: els.content.value,
     margin: clamp(els.margin.value, 0, 40),
-    qrOptions: { errorCorrectionLevel: els.ecLevel.value },
+    qrOptions: { errorCorrectionLevel: EC_LEVEL },
     dotsOptions: { color: els.colorDots.value, type: activeChip(els.dotStyle) },
     cornersSquareOptions: { color: els.colorCorners.value, type: activeChip(els.cornerStyle) },
     cornersDotOptions: { color: els.colorCorners.value },
@@ -217,7 +216,6 @@ function markActiveTiles() {
 function selectLogo(dataUrl, id) {
   activeLogo = dataUrl;
   activeLogoId = id ?? null;
-  if (dataUrl) els.ecLevel.value = "H"; // a logo covers modules — H tolerates it
   markActiveTiles();
   render();
 }
@@ -278,7 +276,7 @@ function captureConfig() {
     gradType: els.gradType.value,
     gradRotation: Number(els.gradRotation.value) || 0,
     margin: clamp(els.margin.value, 0, 40),
-    ecLevel: els.ecLevel.value,
+    ecLevel: EC_LEVEL,
     size: clamp(els.size.value, 100, 1000),
     logoSize: clamp(els.logoSize.value, 10, 50),
     logoId: activeLogoId,
@@ -298,7 +296,6 @@ async function applyConfig(cfg) {
   els.gradType.value = cfg.gradType ?? DEFAULTS.gradType;
   els.gradRotation.value = cfg.gradRotation ?? DEFAULTS.gradRotation;
   els.margin.value = cfg.margin ?? DEFAULTS.margin;
-  els.ecLevel.value = cfg.ecLevel ?? DEFAULTS.ecLevel;
   els.size.value = cfg.size ?? DEFAULTS.size;
   els.logoSize.value = cfg.logoSize ?? DEFAULTS.logoSize;
   // resolve the logo by id; it may have been deleted from the library
@@ -512,7 +509,6 @@ function reset() {
   els.gradType.value = DEFAULTS.gradType;
   els.gradRotation.value = DEFAULTS.gradRotation;
   els.margin.value = DEFAULTS.margin;
-  els.ecLevel.value = DEFAULTS.ecLevel;
   els.size.value = DEFAULTS.size;
   els.logoSize.value = DEFAULTS.logoSize;
   activeLogo = null; // clear the selection, but keep the saved library
@@ -541,7 +537,6 @@ for (const el of [
   els.gradType,
   els.gradRotation,
   els.margin,
-  els.ecLevel,
   els.size,
 ]) {
   el.addEventListener("input", render);

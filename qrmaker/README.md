@@ -15,7 +15,7 @@ Manifest V3.
   inside / outside / background colors.
 - **Advanced editor** *(new tab)* — dot and corner style chips, separate dot /
   corner / background colors, a background **gradient** (linear or radial),
-  margin, error correction, an export-size slider, and a **center logo** you
+  margin, an export-size slider, and a **center logo** you
   upload (saved to a personal logo library), with a live preview and
   PNG / SVG / JPG / copy output.
 - **Design presets** *(editor)* — save the whole design (style, colors,
