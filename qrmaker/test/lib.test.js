@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isShareableUrl, ellipsize, downloadFilename, clamp, degToRad, originPattern } from "../lib.js";
+import {
+  isShareableUrl,
+  ellipsize,
+  downloadFilename,
+  clamp,
+  degToRad,
+  originPattern,
+  cardLayout,
+} from "../lib.js";
 
 test("isShareableUrl accepts http and https", () => {
   assert.equal(isShareableUrl("http://example.com"), true);
@@ -81,4 +89,26 @@ test("originPattern returns null for non-http(s) and junk", () => {
   assert.equal(originPattern("blob:https://x/abc"), null);
   assert.equal(originPattern("chrome://flags"), null);
   assert.equal(originPattern("not a url"), null);
+});
+
+test("cardLayout frames the QR with padding and a quiet-zone tile", () => {
+  const z = cardLayout(512, 0);
+  assert.equal(z.width, z.tile + z.pad * 2);
+  assert.equal(z.height, z.pad * 2 + z.tile); // no caption block
+  assert.ok(z.tile > 512); // tile adds a white quiet zone around the code
+  assert.equal(z.captionH, 0);
+});
+
+test("cardLayout adds height per caption line", () => {
+  const none = cardLayout(512, 0);
+  const two = cardLayout(512, 2);
+  assert.ok(two.height > none.height);
+  assert.equal(two.captionH, 2 * two.lineH + two.gap);
+  assert.equal(two.height, two.pad + two.captionH + two.tile + two.pad);
+});
+
+test("cardLayout clamps the size to the export range", () => {
+  assert.equal(cardLayout(99999, 0).S, 1000);
+  assert.equal(cardLayout(1, 0).S, 100);
+  assert.equal(cardLayout("nope", 0).S, 100);
 });

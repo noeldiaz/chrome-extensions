@@ -18,10 +18,13 @@ Manifest V3.
   margin, an export-size slider, and a **center logo** you
   upload (saved to a personal logo library), with a live preview and
   PNG / SVG / JPG / copy output.
+- **Frame / "Scan me" card** *(editor)* — wrap the code in a printable card: a
+  caption above it (your text, any color) on a solid or **gradient** background,
+  with the code on a white rounded tile. Exports as PNG / JPG (or copy).
 - **Design presets** *(editor)* — save the whole design (style, colors,
-  gradient, sizes, logo) as a named preset, reapply it from a dropdown, and mark
-  one as the **default** that loads automatically (and styles the popup's quick
-  code too).
+  gradient, sizes, logo, and frame) as a named preset, reapply it from a
+  dropdown, and mark one as the **default** that loads automatically (and styles
+  the popup's quick code too).
 - **Right-click menus** — make a code for the **page**, a **link**, a **text
   selection**, or an **image address**; opens the editor prefilled.
 - **Decode / scan** — right-click any image → **Scan QR code from this image**,
@@ -44,9 +47,6 @@ Manifest V3.
 Non-web pages (`chrome://`, the Web Store, local files) show a short notice
 instead — but you can still switch the popup's Type to **Custom text** to encode
 anything.
-
-Planned next: frame / "Scan Me" text, a history of created codes, and
-right-click / in-page decoding (scan a QR image back to its content).
 
 ## Permissions
 
@@ -95,7 +95,8 @@ include them.
 - `popup.html` / `popup.js` — reads the active tab, renders the QR with
   qr-code-styling, the Options panel, and download / copy.
 - `editor.html` / `editor.js` — the advanced design editor (opens in a tab,
-  prefilled via `?data=`).
+  prefilled via `?data=`). Also composites the optional "Scan me" card (caption
+  + background + white code tile) to a canvas for PNG / JPG export.
 - `background.js` — service worker: right-click context menus that open the
   editor (encode) or the scan window (decode), and the "scan this page" action
   that injects the decoder into the active tab.
@@ -110,7 +111,7 @@ include them.
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
-  clamp, deg→rad), unit-tested with `node:test`.
+  clamp, deg→rad, card geometry), unit-tested with `node:test`.
 - `idb.js` — IndexedDB (DB `qrmaker`): the editor's uploaded center-logo library
   (`logos`) and the created-codes `history` store.
 - `vendor/qr-code-styling.js` — vendored [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)

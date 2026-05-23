@@ -47,6 +47,27 @@ export function originPattern(value) {
   }
 }
 
+// Geometry for the exported "Scan me" card: a rounded frame holding a caption
+// over the QR on a white rounded tile. All sizes derive from the QR module size
+// S (px) so the look scales with the export size. `lines` is the number of
+// wrapped caption lines (0 = no caption). Pure, so it's unit-tested without a
+// canvas; the compositor in editor.js draws to exactly these coordinates.
+export function cardLayout(size, lines = 0) {
+  const S = clamp(size, 100, 1000);
+  const pad = Math.round(S * 0.11); // outer card padding
+  const tilePad = Math.round(S * 0.06); // white quiet-zone tile around the QR
+  const tileRadius = Math.round(S * 0.05);
+  const cardRadius = Math.round(S * 0.08);
+  const font = Math.round(S * 0.082); // caption font size
+  const lineH = Math.round(font * 1.25);
+  const tile = S + tilePad * 2;
+  const gap = lines > 0 ? Math.round(S * 0.05) : 0; // caption-to-tile gap
+  const captionH = lines > 0 ? lines * lineH + gap : 0;
+  const width = tile + pad * 2;
+  const height = pad + captionH + tile + pad;
+  return { S, pad, tilePad, tileRadius, cardRadius, font, lineH, tile, gap, captionH, width, height };
+}
+
 const pad2 = (n) => String(n).padStart(2, "0");
 
 // Build a download filename like "qr-example.com-20260523-141500.png".

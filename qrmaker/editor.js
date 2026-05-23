@@ -1,4 +1,4 @@
-import { ellipsize, downloadFilename, clamp, degToRad } from "./lib.js";
+import { ellipsize, downloadFilename, clamp, degToRad, cardLayout } from "./lib.js";
 import {
   addLogo,
   getLogos,
@@ -24,7 +24,18 @@ const DEFAULTS = {
   margin: 10,
   size: 512,
   logoSize: 40,
+  cardOn: false,
+  cardText: "",
+  cardTextColor: "#ffffff",
+  cardBg: "#0e7490",
+  cardGradOn: true,
+  cardGradColor1: "#155e75",
+  cardGradColor2: "#0891b2",
+  cardGradType: "linear",
+  cardGradRotation: 135,
 };
+const FONT_STACK =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 const LOGO_MAX_PX = 256; // uploads are downscaled to this before storing
 
 const $ = (id) => document.getElementById(id);
@@ -50,6 +61,23 @@ const els = {
   marginLabel: $("marginLabel"),
   size: $("size"),
   sizeLabel: $("sizeLabel"),
+  cardOn: $("cardOn"),
+  cardFields: $("cardFields"),
+  cardText: $("cardText"),
+  cardTextColor: $("cardTextColor"),
+  cardBg: $("cardBg"),
+  cardBgWrap: $("cardBgWrap"),
+  cardGradOn: $("cardGradOn"),
+  cardGradFields: $("cardGradFields"),
+  cardGradColor1: $("cardGradColor1"),
+  cardGradColor2: $("cardGradColor2"),
+  cardGradType: $("cardGradType"),
+  cardGradRotation: $("cardGradRotation"),
+  cardGradRotationLabel: $("cardGradRotationLabel"),
+  previewCard: $("previewCard"),
+  previewCaption: $("previewCaption"),
+  previewTile: $("previewTile"),
+  dlSvg: $("dlSvg"),
   logoLibrary: $("logoLibrary"),
   logoNone: $("logoNone"),
   logoUpload: $("logoUpload"),
@@ -294,6 +322,15 @@ function captureConfig() {
     size: clamp(els.size.value, 100, 1000),
     logoSize: clamp(els.logoSize.value, 10, 50),
     logoId: activeLogoId,
+    cardOn: els.cardOn.checked,
+    cardText: els.cardText.value,
+    cardTextColor: els.cardTextColor.value,
+    cardBg: els.cardBg.value,
+    cardGradOn: els.cardGradOn.checked,
+    cardGradColor1: els.cardGradColor1.value,
+    cardGradColor2: els.cardGradColor2.value,
+    cardGradType: els.cardGradType.value,
+    cardGradRotation: Number(els.cardGradRotation.value) || 0,
   };
 }
 
@@ -312,6 +349,15 @@ async function applyConfig(cfg) {
   els.margin.value = cfg.margin ?? DEFAULTS.margin;
   els.size.value = cfg.size ?? DEFAULTS.size;
   els.logoSize.value = cfg.logoSize ?? DEFAULTS.logoSize;
+  els.cardOn.checked = !!cfg.cardOn;
+  els.cardText.value = cfg.cardText ?? DEFAULTS.cardText;
+  els.cardTextColor.value = cfg.cardTextColor ?? DEFAULTS.cardTextColor;
+  els.cardBg.value = cfg.cardBg ?? DEFAULTS.cardBg;
+  els.cardGradOn.checked = cfg.cardGradOn ?? DEFAULTS.cardGradOn;
+  els.cardGradColor1.value = cfg.cardGradColor1 ?? DEFAULTS.cardGradColor1;
+  els.cardGradColor2.value = cfg.cardGradColor2 ?? DEFAULTS.cardGradColor2;
+  els.cardGradType.value = cfg.cardGradType ?? DEFAULTS.cardGradType;
+  els.cardGradRotation.value = cfg.cardGradRotation ?? DEFAULTS.cardGradRotation;
   // resolve the logo by id; it may have been deleted from the library
   if (cfg.logoId != null) {
     const found = (await getLogos()).find((l) => l.id === cfg.logoId);
@@ -457,6 +503,18 @@ function render() {
   els.logoSizeLabel.textContent = clamp(els.logoSize.value, 10, 50) + "%";
   els.gradRotationLabel.textContent = (Number(els.gradRotation.value) || 0) + "°";
 
+  // card / frame
+  els.cardFields.hidden = !els.cardOn.checked;
+  els.cardGradFields.hidden = !els.cardGradOn.checked;
+  els.cardBgWrap.classList.toggle("opacity-40", els.cardGradOn.checked);
+  els.cardGradRotationLabel.textContent = (Number(els.cardGradRotation.value) || 0) + "°";
+  // a card is a raster composite — SVG can't carry it
+  els.dlSvg.disabled = els.cardOn.checked;
+  els.dlSvg.classList.toggle("cursor-not-allowed", els.cardOn.checked);
+  els.dlSvg.classList.toggle("opacity-40", els.cardOn.checked);
+  els.dlSvg.title = els.cardOn.checked ? "Turn off the card to export SVG (code-only)" : "";
+  updateCardPreview();
+
   const hasData = els.content.value.trim().length > 0;
   els.empty.hidden = hasData;
   els.mount.classList.toggle("hidden", !hasData);
@@ -475,6 +533,172 @@ function render() {
     qr.append(els.mount);
   }
   document.title = "QRmaker — " + ellipsize(els.content.value.trim(), 40);
+}
+
+// --- card / frame ---
+
+// CSS background string for the live preview (solid or gradient). Mirrors the
+// canvas gradient in makeCardGradient closely enough for a faithful preview.
+function cardCssBackground() {
+  const c1 = els.cardGradColor1.value;
+  const c2 = els.cardGradColor2.value;
+  if (!els.cardGradOn.checked) return els.cardBg.value;
+  if (els.cardGradType.value === "radial") return `radial-gradient(circle at center, ${c1}, ${c2})`;
+  return `linear-gradient(${Number(els.cardGradRotation.value) || 0}deg, ${c1}, ${c2})`;
+}
+
+// Style the preview panel as the export card when enabled; otherwise leave the
+// plain white panel. Inline styles win over the panel's Tailwind bg classes and
+// are cleared when the card is off.
+function updateCardPreview() {
+  if (!els.cardOn.checked) {
+    els.previewCard.style.background = "";
+    els.previewTile.style.background = "";
+    els.previewTile.style.padding = "";
+    els.previewTile.classList.remove("rounded-xl");
+    els.previewCaption.hidden = true;
+    return;
+  }
+  els.previewCard.style.background = cardCssBackground();
+  els.previewTile.style.background = "#ffffff";
+  els.previewTile.style.padding = "12px";
+  els.previewTile.classList.add("rounded-xl");
+  const text = els.cardText.value.trim();
+  els.previewCaption.hidden = !text;
+  els.previewCaption.textContent = text;
+  els.previewCaption.style.color = els.cardTextColor.value;
+  els.previewCaption.style.fontSize = Math.round(PREVIEW_SIZE * 0.082) + "px";
+}
+
+// Build a canvas gradient spanning the whole card.
+function makeCardGradient(ctx, w, h) {
+  const c1 = els.cardGradColor1.value;
+  const c2 = els.cardGradColor2.value;
+  let g;
+  if (els.cardGradType.value === "radial") {
+    g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) / 2);
+  } else {
+    const a = degToRad(els.cardGradRotation.value);
+    const half = (Math.abs(Math.cos(a)) * w + Math.abs(Math.sin(a)) * h) / 2;
+    g = ctx.createLinearGradient(
+      w / 2 - Math.cos(a) * half,
+      h / 2 - Math.sin(a) * half,
+      w / 2 + Math.cos(a) * half,
+      h / 2 + Math.sin(a) * half,
+    );
+  }
+  g.addColorStop(0, c1);
+  g.addColorStop(1, c2);
+  return g;
+}
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Greedy word-wrap to fit maxWidth (ctx must already have the caption font set).
+// Honors explicit newlines in the caption.
+function wrapCaption(ctx, text, maxWidth) {
+  const lines = [];
+  for (const para of text.split(/\r?\n/)) {
+    const words = para.split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      lines.push("");
+      continue;
+    }
+    let line = words[0];
+    for (let i = 1; i < words.length; i++) {
+      const test = line + " " + words[i];
+      if (ctx.measureText(test).width <= maxWidth) line = test;
+      else {
+        lines.push(line);
+        line = words[i];
+      }
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+
+function blobToImage(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not render the code image."));
+    };
+    img.src = url;
+  });
+}
+
+// Composite the "Scan me" card to a raster Blob: gradient/solid background,
+// wrapped caption on top, and the QR on a white rounded tile. Geometry comes
+// from lib.cardLayout so it stays in sync with the unit tests.
+async function renderCard(format) {
+  const size = clamp(els.size.value, 100, 1000);
+  const qrImg = await blobToImage(await new QRCodeStyling(qrOptions(size)).getRawData("png"));
+
+  // measure caption against the tile width to know the line count, then lay out
+  const tileW = size + Math.round(size * 0.06) * 2;
+  const probe = document.createElement("canvas").getContext("2d");
+  probe.font = `600 ${Math.round(size * 0.082)}px ${FONT_STACK}`;
+  const text = els.cardText.value.trim();
+  const lines = text ? wrapCaption(probe, text, tileW) : [];
+  const L = cardLayout(size, lines.length);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = L.width;
+  canvas.height = L.height;
+  const ctx = canvas.getContext("2d");
+
+  // JPEG has no alpha: fill white behind so the rounded corners aren't black
+  if (format === "jpeg") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, L.width, L.height);
+  }
+
+  // card background
+  ctx.fillStyle = els.cardGradOn.checked ? makeCardGradient(ctx, L.width, L.height) : els.cardBg.value;
+  roundRectPath(ctx, 0, 0, L.width, L.height, L.cardRadius);
+  ctx.fill();
+
+  // caption
+  if (lines.length) {
+    ctx.fillStyle = els.cardTextColor.value;
+    ctx.font = `600 ${L.font}px ${FONT_STACK}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    let y = L.pad + L.font;
+    for (const line of lines) {
+      if (line) ctx.fillText(line, L.width / 2, y);
+      y += L.lineH;
+    }
+  }
+
+  // white tile + QR
+  const tileX = L.pad;
+  const tileY = L.pad + L.captionH;
+  ctx.fillStyle = "#ffffff";
+  roundRectPath(ctx, tileX, tileY, L.tile, L.tile, L.tileRadius);
+  ctx.fill();
+  ctx.drawImage(qrImg, tileX + L.tilePad, tileY + L.tilePad, size, size);
+
+  const mime = format === "jpeg" ? "image/jpeg" : "image/png";
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Export failed."))), mime, 0.92);
+  });
 }
 
 // --- export ---
@@ -505,8 +729,9 @@ async function exporter(format) {
 
 async function download(format) {
   if (!qr) return;
+  if (els.cardOn.checked && format === "svg") return; // card is raster-only; button is disabled
   try {
-    const blob = await exporter(format);
+    const blob = els.cardOn.checked ? await renderCard(format) : await exporter(format);
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
@@ -522,7 +747,7 @@ async function download(format) {
 async function copyImage() {
   if (!qr) return;
   try {
-    const blob = await exporter("png");
+    const blob = els.cardOn.checked ? await renderCard("png") : await exporter("png");
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
     flash("Copied to clipboard.");
     recordHistory();
@@ -545,6 +770,15 @@ function reset() {
   els.margin.value = DEFAULTS.margin;
   els.size.value = DEFAULTS.size;
   els.logoSize.value = DEFAULTS.logoSize;
+  els.cardOn.checked = DEFAULTS.cardOn;
+  els.cardText.value = DEFAULTS.cardText;
+  els.cardTextColor.value = DEFAULTS.cardTextColor;
+  els.cardBg.value = DEFAULTS.cardBg;
+  els.cardGradOn.checked = DEFAULTS.cardGradOn;
+  els.cardGradColor1.value = DEFAULTS.cardGradColor1;
+  els.cardGradColor2.value = DEFAULTS.cardGradColor2;
+  els.cardGradType.value = DEFAULTS.cardGradType;
+  els.cardGradRotation.value = DEFAULTS.cardGradRotation;
   activeLogo = null; // clear the selection, but keep the saved library
   activeLogoId = null;
   markActiveTiles();
@@ -574,6 +808,15 @@ for (const el of [
   els.gradRotation,
   els.margin,
   els.size,
+  els.cardOn,
+  els.cardText,
+  els.cardTextColor,
+  els.cardBg,
+  els.cardGradOn,
+  els.cardGradColor1,
+  els.cardGradColor2,
+  els.cardGradType,
+  els.cardGradRotation,
 ]) {
   el.addEventListener("input", render);
 }
