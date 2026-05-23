@@ -23,6 +23,16 @@
   .qr-cap {
     @apply mb-1 block text-[10px] font-medium text-slate-500 dark:text-slate-400;
   }
+  /* Hide an element's own scrollbar (it stays scrollable via wheel/trackpad).
+     Used on the action popup, which caps at 600px tall and would otherwise show
+     a bar when Options is expanded. scrollbar-width isn't inherited, so a child
+     like the content textarea keeps its own bar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .qr-sel,
   .qr-inp {
     @apply w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
