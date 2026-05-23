@@ -1,5 +1,5 @@
 import { ellipsize, downloadFilename, clamp, degToRad } from "./lib.js";
-import { addLogo, getLogos, deleteLogo } from "./idb.js";
+import { addLogo, getLogos, deleteLogo, addHistory, getHistoryItem } from "./idb.js";
 
 const PREVIEW_SIZE = 256;
 const EC_LEVEL = "H"; // always high — codes (almost) always carry a center logo
@@ -66,6 +66,7 @@ const els = {
   copy: $("copy"),
   reset: $("reset"),
   status: $("status"),
+  history: $("history"),
   themeToggle: $("theme-toggle"),
   moon: $("moon-icon"),
   sun: $("sun-icon"),
@@ -466,6 +467,17 @@ function render() {
 
 // --- export ---
 
+// Log a created code to the history (best-effort; never block the download).
+async function recordHistory() {
+  const content = els.content.value.trim();
+  if (!content) return;
+  try {
+    await addHistory({ content, source: null, config: captureConfig() });
+  } catch {
+    /* history is non-critical */
+  }
+}
+
 async function exporter(format) {
   const size = clamp(els.size.value, 100, 1000);
   const inst = new QRCodeStyling(qrOptions(size));
@@ -482,6 +494,7 @@ async function download(format) {
     a.download = downloadFilename(els.content.value.trim(), format);
     a.click();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+    recordHistory();
   } catch (e) {
     flash("Download failed: " + (e?.message || e), false);
   }
@@ -493,6 +506,7 @@ async function copyImage() {
     const blob = await exporter("png");
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
     flash("Copied to clipboard.");
+    recordHistory();
   } catch (e) {
     flash("Copy failed: " + (e?.message || e), false);
   }
@@ -550,6 +564,9 @@ document.getElementById("dlSvg").addEventListener("click", () => download("svg")
 document.getElementById("dlJpg").addEventListener("click", () => download("jpeg"));
 els.copy.addEventListener("click", copyImage);
 els.reset.addEventListener("click", reset);
+els.history.addEventListener("click", () =>
+  chrome.tabs.create({ url: chrome.runtime.getURL("history.html") }),
+);
 
 // Footer Close: shut the editor tab (window.close() is unreliable for a tab
 // opened via chrome.tabs.create, so remove it by id, falling back if needed).
@@ -624,8 +641,23 @@ async function init() {
   } catch (e) {
     flash("Couldn't load presets: " + (e?.message || e), false);
   }
-  const data = new URLSearchParams(location.search).get("data");
-  if (data) els.content.value = data;
+  const params = new URLSearchParams(location.search);
+  const histId = params.get("history");
+  if (histId != null) {
+    // re-opened from the history page: restore its content + style
+    try {
+      const item = await getHistoryItem(Number(histId));
+      if (item) {
+        await applyConfig(item.config);
+        els.content.value = item.content;
+      }
+    } catch (e) {
+      flash("Couldn't load that code: " + (e?.message || e), false);
+    }
+  } else {
+    const data = params.get("data");
+    if (data) els.content.value = data;
+  }
   render();
 }
 

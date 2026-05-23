@@ -31,6 +31,10 @@ Manifest V3.
   opens in a small window with **Go to** / **Copy** / **Edit** (open the result
   in the advanced editor to restyle and re-export) per result. Camera frames and
   page pixels are decoded locally and never leave the browser.
+- **History** — every code you download or copy is logged (content, source,
+  date) to a **History** page (clock icon in the popup/editor, or right-click the
+  toolbar icon). Re-open any past code in the editor to tweak it, delete rows, or
+  clear all. Kept locally in IndexedDB, capped at the newest 200.
 - **Always scannable** — rendered black-on-white on a card regardless of the
   popup's light/dark theme, with a proper quiet-zone margin.
 - **Keyboard shortcut** — open the popup with **Alt+Shift+Q** (rebind at
@@ -76,7 +80,7 @@ directory).
 ```bash
 npm run build:css && zip -r qrmaker.zip \
   manifest.json popup.html popup.js editor.html editor.js result.html result.js \
-  background.js scanpage.js lib.js idb.js popup.css \
+  history.html history.js background.js scanpage.js lib.js idb.js popup.css \
   vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -100,11 +104,15 @@ include them.
 - `result.html` / `result.js` — the scan window: decodes an uploaded or
   right-clicked image with jsQR and shows the content (Go to / Copy / Close), or
   lists every code found by a page scan.
+- `history.html` / `history.js` — the History page: lists created codes (from
+  the `history` IndexedDB store) with re-encoded previews, re-open in editor,
+  delete, and clear-all.
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
   clamp, deg→rad), unit-tested with `node:test`.
-- `idb.js` — IndexedDB store for the editor's uploaded center-logo library.
+- `idb.js` — IndexedDB (DB `qrmaker`): the editor's uploaded center-logo library
+  (`logos`) and the created-codes `history` store.
 - `vendor/qr-code-styling.js` — vendored [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)
   (MIT; bundles qrcode-generator), loaded via classic `<script>`, no bundler.
   Renders styled codes and exports PNG / SVG / JPG / WebP.

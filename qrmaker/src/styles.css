@@ -8,6 +8,8 @@
 @source "../editor.js";
 @source "../result.html";
 @source "../result.js";
+@source "../history.html";
+@source "../history.js";
 
 @layer base {
   body {

@@ -10,6 +10,7 @@ const MENUS = [
   { id: "qr-image", title: "Create QR code for image address", contexts: ["image"], targetUrlPatterns: WEB },
   { id: "qr-scan-image", title: "Scan QR code from this image", contexts: ["image"] },
   { id: "qr-scan-page", title: "Scan QR codes on this page", contexts: ["page"], documentUrlPatterns: WEB },
+  { id: "qr-history", title: "View created QR codes", contexts: ["action"] },
 ];
 
 function buildMenus() {
@@ -65,6 +66,10 @@ async function scanPageAndShow(tabId) {
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "qr-history") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("history.html") });
+    return;
+  }
   if (info.menuItemId === "qr-scan-page") {
     scanPageAndShow(tab?.id);
     return;

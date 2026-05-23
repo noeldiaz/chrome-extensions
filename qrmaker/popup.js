@@ -1,5 +1,5 @@
 import { downloadFilename, clamp, degToRad } from "./lib.js";
-import { getLogos } from "./idb.js";
+import { getLogos, addHistory } from "./idb.js";
 
 const qrWrapEl = document.getElementById("qrWrap");
 const qrMountEl = document.getElementById("qrMount");
@@ -16,6 +16,7 @@ const copyEl = document.getElementById("copy");
 const advancedEl = document.getElementById("advanced");
 const scanEl = document.getElementById("scan");
 const statusEl = document.getElementById("status");
+const historyEl = document.getElementById("history");
 const themeToggleEl = document.getElementById("theme-toggle");
 const moonIconEl = document.getElementById("moon-icon");
 const sunIconEl = document.getElementById("sun-icon");
@@ -236,6 +237,28 @@ async function rawData(format) {
   return { blob: await exporter.getRawData(format), data };
 }
 
+// The styling base plus the popup's editable colours — the same shape the
+// editor stores, so a history entry re-opens there faithfully.
+function historyConfig() {
+  return {
+    ...base,
+    colorDots: colorDotsEl.value,
+    colorCorners: colorCornersEl.value,
+    colorBg: colorBgEl.value,
+  };
+}
+
+// Log a created code (best-effort; never block the download/copy).
+async function recordHistory() {
+  const content = dataFor();
+  if (!content) return;
+  try {
+    await addHistory({ content, source: currentUrl || null, config: historyConfig() });
+  } catch {
+    /* history is non-critical */
+  }
+}
+
 async function download(format) {
   if (!qr) return;
   setMenuOpen(false);
@@ -247,6 +270,7 @@ async function download(format) {
     a.download = downloadFilename(data, format);
     a.click();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+    recordHistory();
   } catch (e) {
     flash("Download failed: " + (e?.message || e), false);
   }
@@ -258,6 +282,7 @@ async function copyImage() {
     const { blob } = await rawData("png"); // clipboard images are PNG
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
     flash("Copied to clipboard.");
+    recordHistory();
   } catch (e) {
     flash("Copy failed: " + (e?.message || e), false);
   }
@@ -290,6 +315,10 @@ scanEl.addEventListener("click", () => {
     width: 460,
     height: 300, // result.js grows/shrinks the window to fit its content
   });
+  window.close();
+});
+historyEl.addEventListener("click", () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL("history.html") });
   window.close();
 });
 
