@@ -289,7 +289,7 @@ scanEl.addEventListener("click", () => {
     url: chrome.runtime.getURL("result.html"),
     type: "popup",
     width: 460,
-    height: 560,
+    height: 300, // result.js grows/shrinks the window to fit its content
   });
   window.close();
 });

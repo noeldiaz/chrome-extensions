@@ -402,14 +402,46 @@ async function showPageScan() {
   renderPageResults(data);
 }
 
+// --- size the window to its content ---
+
+const WIN_MIN_H = 220; // never shrink below the header + a couple of buttons
+const WIN_MAX_H = 680; // beyond this the body scrolls instead of growing
+
+let fitQueued = false;
+
+// Resize the host popup window so its viewport matches the body's natural
+// height — the window grows and shrinks with the content (camera view, result
+// list, etc.) instead of sitting at a fixed, mostly-empty size. No-ops when the
+// page isn't in its own window (e.g. if it were ever opened as a tab).
+function fitWindow() {
+  if (fitQueued) return;
+  fitQueued = true;
+  requestAnimationFrame(async () => {
+    fitQueued = false;
+    try {
+      const frame = window.outerHeight - window.innerHeight; // title bar + borders
+      const target = Math.min(Math.max(document.body.offsetHeight + frame, WIN_MIN_H), WIN_MAX_H);
+      const win = await chrome.windows.getCurrent();
+      if (win?.id != null && Math.abs((win.height ?? 0) - target) > 2) {
+        await chrome.windows.update(win.id, { height: Math.round(target) });
+      }
+    } catch {
+      /* not a popup window — nothing to resize */
+    }
+  });
+}
+
 function init() {
   const params = new URLSearchParams(location.search);
   if (params.get("mode") === "page") {
     showPageScan();
-    return;
+  } else {
+    const src = params.get("src");
+    if (src) scanSrc(src);
   }
-  const src = params.get("src");
-  if (src) scanSrc(src);
+  // Re-fit whenever the content's height changes. Resizing the window doesn't
+  // change the body's height, so this can't loop.
+  new ResizeObserver(fitWindow).observe(document.body);
 }
 
 loadTheme();
