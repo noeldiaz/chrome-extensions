@@ -102,10 +102,12 @@ function buildRow(tabId, t) {
   const head = document.createElement("div");
   head.className = "flex items-baseline justify-between gap-3";
 
+  const label = t.tabTitle || `Tab #${tabId}`;
+
   const title = document.createElement("div");
   title.className = "truncate text-sm text-slate-900 dark:text-slate-100";
-  title.textContent = t.tabTitle || `Tab #${tabId}`;
-  title.title = title.textContent;
+  title.textContent = label;
+  title.title = label;
 
   const countdown = document.createElement("div");
   countdown.className = "shrink-0 text-sm font-medium tabular-nums text-blue-700 dark:text-blue-400";
@@ -127,13 +129,16 @@ function buildRow(tabId, t) {
   go.type = "button";
   go.className = "text-xs text-blue-600 hover:underline dark:text-blue-400";
   go.textContent = "Go";
-  go.title = "Switch to tab";
+  go.title = `Switch to ${label}`;
+  go.setAttribute("aria-label", `Switch to ${label}`);
   go.addEventListener("click", () => jumpToTab(tabId));
 
   const stop = document.createElement("button");
   stop.type = "button";
   stop.className = "text-xs text-red-600 hover:underline dark:text-red-400";
   stop.textContent = "Stop";
+  stop.title = `Stop refreshing ${label}`;
+  stop.setAttribute("aria-label", `Stop refreshing ${label}`);
   stop.addEventListener("click", () => stopTarget(tabId));
 
   actions.append(go, stop);
