@@ -2,6 +2,7 @@
   "name": "qrmaker",
   "version": "0.2.1",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build:css": "tailwindcss -i src/styles.css -o popup.css --minify",

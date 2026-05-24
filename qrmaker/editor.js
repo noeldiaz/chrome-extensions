@@ -153,7 +153,11 @@ function wireChips(group, onChange) {
   group.addEventListener("click", (e) => {
     const chip = e.target.closest(".chip");
     if (!chip || !group.contains(chip)) return;
-    for (const c of group.querySelectorAll(".chip")) c.classList.toggle("is-active", c === chip);
+    for (const c of group.querySelectorAll(".chip")) {
+      const on = c === chip;
+      c.classList.toggle("is-active", on);
+      c.setAttribute("aria-pressed", String(on));
+    }
     onChange();
   });
 }
@@ -227,9 +231,13 @@ function fileToDataUrl(file) {
 }
 
 function markActiveTiles() {
-  els.logoNone.classList.toggle("is-active", activeLogo === null);
+  const noneOn = activeLogo === null;
+  els.logoNone.classList.toggle("is-active", noneOn);
+  els.logoNone.setAttribute("aria-pressed", String(noneOn));
   for (const tile of els.logoLibrary.querySelectorAll("[data-logo-id]")) {
-    tile.classList.toggle("is-active", Number(tile.dataset.logoId) === activeLogoId);
+    const on = Number(tile.dataset.logoId) === activeLogoId;
+    tile.classList.toggle("is-active", on);
+    tile.setAttribute("aria-pressed", String(on));
   }
 }
 
@@ -494,22 +502,36 @@ function render() {
   updateCardPreview();
 
   const hasData = els.content.value.trim().length > 0;
-  els.empty.hidden = hasData;
-  els.mount.classList.toggle("hidden", !hasData);
   if (!hasData) {
     qr = null;
     els.mount.replaceChildren();
+    els.mount.classList.add("hidden");
+    els.empty.textContent = "Enter content to generate a code.";
+    els.empty.hidden = false;
     return;
   }
 
   const opts = qrOptions();
-  if (qr) {
-    qr.update(opts);
-  } else {
-    qr = new QRCodeStyling(opts);
+  try {
+    // qrcode-generator throws "code length overflow" synchronously when the
+    // payload exceeds the symbol's capacity at this error-correction level.
+    if (qr) {
+      qr.update(opts);
+    } else {
+      qr = new QRCodeStyling(opts);
+      els.mount.replaceChildren();
+      qr.append(els.mount);
+    }
+  } catch {
+    qr = null;
     els.mount.replaceChildren();
-    qr.append(els.mount);
+    els.mount.classList.add("hidden");
+    els.empty.textContent = "Too long to encode — try shortening the text.";
+    els.empty.hidden = false;
+    return;
   }
+  els.empty.hidden = true;
+  els.mount.classList.remove("hidden");
   document.title = "QRmaker — " + ellipsize(els.content.value.trim(), 40);
 }
 
@@ -766,7 +788,11 @@ function reset() {
 }
 
 function setActive(group, value) {
-  for (const c of group.querySelectorAll(".chip")) c.classList.toggle("is-active", c.dataset.value === value);
+  for (const c of group.querySelectorAll(".chip")) {
+    const on = c.dataset.value === value;
+    c.classList.toggle("is-active", on);
+    c.setAttribute("aria-pressed", String(on));
+  }
 }
 
 // --- wiring ---

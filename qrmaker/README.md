@@ -127,3 +127,8 @@ include them.
 
 Vanilla JS (ES module). qr-code-styling is the only runtime dependency,
 vendored locally.
+
+## License
+
+QRmaker is [MIT](LICENSE) licensed. The vendored libraries keep their own
+licenses: qr-code-styling (MIT) and jsQR (Apache-2.0).

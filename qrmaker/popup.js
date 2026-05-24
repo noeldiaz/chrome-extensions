@@ -161,7 +161,14 @@ function hideQr(message) {
 }
 
 function renderQr(data) {
-  qr = new QRCodeStyling(qrOptions(data));
+  try {
+    // qrcode-generator throws "code length overflow" synchronously when the
+    // payload exceeds the symbol's capacity at this error-correction level.
+    qr = new QRCodeStyling(qrOptions(data));
+  } catch {
+    hideQr("Too long to encode — try shortening the text.");
+    return;
+  }
   qrMountEl.replaceChildren();
   qr.append(qrMountEl);
   qrWrapEl.classList.remove("hidden");
