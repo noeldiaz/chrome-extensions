@@ -71,6 +71,12 @@ const els = {
   vcOrg: $("vcOrg"),
   vcTitle: $("vcTitle"),
   vcUrl: $("vcUrl"),
+  vcStreet: $("vcStreet"),
+  vcCity: $("vcCity"),
+  vcRegion: $("vcRegion"),
+  vcZip: $("vcZip"),
+  vcCountry: $("vcCountry"),
+  vcNote: $("vcNote"),
   // email
   emailTo: $("emailTo"),
   emailSubject: $("emailSubject"),
@@ -222,6 +228,12 @@ function structuredFields() {
         org: els.vcOrg.value,
         title: els.vcTitle.value,
         url: els.vcUrl.value,
+        street: els.vcStreet.value,
+        city: els.vcCity.value,
+        region: els.vcRegion.value,
+        zip: els.vcZip.value,
+        country: els.vcCountry.value,
+        note: els.vcNote.value,
       };
     case "email":
       return { to: els.emailTo.value, subject: els.emailSubject.value, body: els.emailBody.value };
@@ -280,6 +292,12 @@ function applyStructured(kind, f) {
     els.vcOrg.value = f.org || "";
     els.vcTitle.value = f.title || "";
     els.vcUrl.value = f.url || "";
+    els.vcStreet.value = f.street || "";
+    els.vcCity.value = f.city || "";
+    els.vcRegion.value = f.region || "";
+    els.vcZip.value = f.zip || "";
+    els.vcCountry.value = f.country || "";
+    els.vcNote.value = f.note || "";
   } else if (kind === "email") {
     els.emailTo.value = f.to || "";
     els.emailSubject.value = f.subject || "";
@@ -954,6 +972,12 @@ for (const el of [
   els.vcOrg,
   els.vcTitle,
   els.vcUrl,
+  els.vcStreet,
+  els.vcCity,
+  els.vcRegion,
+  els.vcZip,
+  els.vcCountry,
+  els.vcNote,
   els.emailTo,
   els.emailSubject,
   els.emailBody,

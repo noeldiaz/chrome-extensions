@@ -94,7 +94,8 @@ const escapeVCard = (s) =>
     .replace(/([\\,;])/g, "\\$1")
     .replace(/\r?\n/g, "\\n");
 
-// Contact card (vCard 3.0). Needs at least a name, org, phone, or email.
+// Contact card (vCard 3.0). Needs at least a name, org, phone, or email; the
+// address (ADR) and note are optional add-ons.
 export function buildVCard({
   firstName = "",
   lastName = "",
@@ -103,6 +104,12 @@ export function buildVCard({
   org = "",
   title = "",
   url = "",
+  street = "",
+  city = "",
+  region = "",
+  zip = "",
+  country = "",
+  note = "",
 } = {}) {
   const fn = [firstName, lastName].map(trim).filter(Boolean).join(" ");
   if (!fn && !trim(org) && !trim(phone) && !trim(email)) return "";
@@ -113,7 +120,15 @@ export function buildVCard({
   if (trim(title)) lines.push(`TITLE:${escapeVCard(title)}`);
   if (trim(phone)) lines.push(`TEL:${escapeVCard(phone)}`);
   if (trim(email)) lines.push(`EMAIL:${escapeVCard(email)}`);
+  // ADR components: po-box;extended;street;locality;region;postal-code;country
+  // (the first two are conventionally left empty).
+  if ([street, city, region, zip, country].some((v) => trim(v))) {
+    lines.push(
+      `ADR:;;${escapeVCard(street)};${escapeVCard(city)};${escapeVCard(region)};${escapeVCard(zip)};${escapeVCard(country)}`,
+    );
+  }
   if (trim(url)) lines.push(`URL:${escapeVCard(url)}`);
+  if (trim(note)) lines.push(`NOTE:${escapeVCard(note)}`);
   lines.push("END:VCARD");
   return lines.join("\n");
 }

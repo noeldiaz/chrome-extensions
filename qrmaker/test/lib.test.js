@@ -154,6 +154,27 @@ test("buildVCard falls back to org for FN and needs at least one key field", () 
   assert.equal(buildVCard({}), "");
 });
 
+test("buildVCard adds ADR and NOTE when those fields are set", () => {
+  const out = buildVCard({
+    firstName: "Ada",
+    street: "1 Main St",
+    city: "Townsville",
+    region: "CA",
+    zip: "90001",
+    country: "USA",
+    note: "Met at the QR conf",
+  });
+  assert.ok(out.includes("ADR:;;1 Main St;Townsville;CA;90001;USA"));
+  assert.ok(out.includes("NOTE:Met at the QR conf"));
+});
+
+test("buildVCard emits a partial ADR and still needs a key field", () => {
+  const out = buildVCard({ email: "a@b.io", city: "Townsville" });
+  assert.ok(out.includes("ADR:;;;Townsville;;;"));
+  // address / note alone (no name/org/phone/email) is not a valid card
+  assert.equal(buildVCard({ city: "Nowhere", note: "x" }), "");
+});
+
 test("buildEmail builds a percent-encoded mailto", () => {
   assert.equal(buildEmail({ to: "a@b.io" }), "mailto:a@b.io");
   assert.equal(
