@@ -69,7 +69,8 @@ Build CSS, then zip only the runtime files:
 npm run build:css && zip -r screener.zip \
   manifest.json popup.html popup.js editor.html editor.js \
   options.html options.js background.js offscreen.html offscreen.js \
-  theme.js lib.js idb.js annotator.js app.css \
+  theme.js lib.js idb.js annotator.js i18n.js app.css \
+  _locales/ \
   vendor/konva.min.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -90,6 +91,11 @@ Excludes source/tooling/docs (`src/`, `node_modules/`, `test/`,
 - `annotator.js` — Konva engine: layers, tools, undo/redo, full-res export.
 - `options.html` / `options.js` — endpoint URL and bearer token.
 - `theme.js` — shared light/dark controller.
+- `i18n.js` / `_locales/` — localization helper and message catalogs. `i18n.js`
+  applies the catalog to each page at load (`data-i18n` → `textContent`,
+  `data-i18n-attr` → attributes) and exposes `t()` for JS strings; the manifest
+  `name`/`description` resolve from `_locales/<lang>/messages.json` via
+  `__MSG_*__`. `en` is the default locale.
 - `lib.js` — pure helpers (filenames, crop scaling, scroll planning, URL
   validation), unit-tested with `node:test`.
 - `idb.js` — IndexedDB capture handoff (read-once, delete).

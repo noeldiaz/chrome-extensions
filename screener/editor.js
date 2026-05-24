@@ -1,4 +1,5 @@
 import { loadTheme, wireTheme } from "./theme.js";
+import { localize, t } from "./i18n.js";
 import { captureFilename, originPatternFromUrl } from "./lib.js";
 import { takeCapture } from "./idb.js";
 import { Annotator } from "./annotator.js";
@@ -148,9 +149,9 @@ async function copyImage() {
   try {
     const blob = await annotatedBlob();
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    flash("Copied to clipboard.");
+    flash(t("copiedToClipboard"));
   } catch (e) {
-    flash("Copy failed: " + (e?.message || e), false);
+    flash(t("errCopy", [e?.message || String(e)]), false);
   }
 }
 
@@ -164,7 +165,7 @@ function setSubmitStatus(message, ok = true) {
 
 function openSubmit() {
   if (!anno) return;
-  setSubmitStatus(settings.endpoint ? "" : "Set a ticket endpoint in Settings first.", !!settings.endpoint);
+  setSubmitStatus(settings.endpoint ? "" : t("setEndpointFirst"), !!settings.endpoint);
   ticketTitleEl.value = current?.meta?.pageTitle || "";
   submitModalEl.hidden = false;
   ticketTitleEl.focus();
@@ -177,17 +178,17 @@ function closeSubmit() {
 
 async function doSubmit() {
   const title = ticketTitleEl.value.trim();
-  if (!title) return setSubmitStatus("Title is required.", false);
-  if (!settings.endpoint) return setSubmitStatus("Set a ticket endpoint in Settings first.", false);
+  if (!title) return setSubmitStatus(t("titleRequired"), false);
+  if (!settings.endpoint) return setSubmitStatus(t("setEndpointFirst"), false);
   const origin = originPatternFromUrl(settings.endpoint);
-  if (!origin) return setSubmitStatus("Endpoint URL is invalid — check Settings.", false);
+  if (!origin) return setSubmitStatus(t("endpointInvalid"), false);
 
   // permissions.request must be the first await so the user gesture survives.
   const granted = await chrome.permissions.request({ origins: [origin] });
-  if (!granted) return setSubmitStatus("Permission to reach the endpoint was denied.", false);
+  if (!granted) return setSubmitStatus(t("permissionDenied"), false);
 
   submitSendEl.disabled = true;
-  setSubmitStatus("Sending…");
+  setSubmitStatus(t("sending"));
   try {
     const m = current?.meta || {};
     const fd = new FormData();
@@ -219,7 +220,7 @@ async function doSubmit() {
         /* empty/non-JSON body is fine */
       }
       const ref = data.url || (data.id != null ? `#${data.id}` : "");
-      setSubmitStatus(`Ticket submitted${ref ? " — " + ref : ""}.`);
+      setSubmitStatus(t("ticketSubmitted", [ref ? " — " + ref : ""]));
       setTimeout(closeSubmit, 1600);
     } else {
       let msg = "";
@@ -228,10 +229,10 @@ async function doSubmit() {
       } catch {
         /* ignore */
       }
-      setSubmitStatus(`Submit failed (${res.status})${msg ? ": " + msg : ""}.`, false);
+      setSubmitStatus(t("submitFailedStatus", [String(res.status), msg ? ": " + msg : ""]), false);
     }
   } catch (e) {
-    setSubmitStatus("Submit failed: " + (e?.message || e), false);
+    setSubmitStatus(t("errSubmit", [e?.message || String(e)]), false);
   } finally {
     submitSendEl.disabled = false;
   }
@@ -241,7 +242,7 @@ async function doSubmit() {
 
 async function init() {
   if (errorMsg) {
-    showEmpty(`Capture failed: ${errorMsg}`);
+    showEmpty(t("editorCaptureFailed", [errorMsg]));
     return;
   }
   try {
@@ -269,7 +270,7 @@ async function init() {
     wireToolbar();
     wireShortcuts();
   } catch (e) {
-    showEmpty("Could not open this capture: " + (e?.message || e));
+    showEmpty(t("couldNotOpenCapture", [e?.message || String(e)]));
   }
 }
 
@@ -314,6 +315,7 @@ ticketDescEl.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeSubmit();
 });
 
+localize();
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();
 init();

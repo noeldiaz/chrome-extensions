@@ -64,7 +64,7 @@ async function cropToSelection(dataUrl, sel) {
   const { sx, sy, sw, sh } = scaleRect(sel, sel.dpr || 1, { w: bmp.width, h: bmp.height });
   if (sw < 1 || sh < 1) {
     bmp.close();
-    throw new Error("Selection was too small.");
+    throw new Error(chrome.i18n.getMessage("selectionTooSmall"));
   }
   const canvas = new OffscreenCanvas(sw, sh);
   canvas.getContext("2d").drawImage(bmp, sx, sy, sw, sh, 0, 0, sw, sh);
@@ -295,7 +295,7 @@ async function captureFullScreen(tab) {
     await ensureOffscreen();
     const res = await chrome.runtime.sendMessage({ target: "offscreen", type: "grabFrame" });
     if (res?.cancelled) return { ok: false, error: "Screen capture was cancelled." }; // user dismissed picker
-    if (!res?.ok) throw new Error(res?.error || "Could not capture the screen.");
+    if (!res?.ok) throw new Error(res?.error || chrome.i18n.getMessage("couldNotCaptureScreen"));
     return await finalizeCapture(res.dataUrl, "fullscreen", tab);
   } catch (e) {
     return surfaceError(e); // popup is gone, so show it in a tab
@@ -307,7 +307,7 @@ async function captureFullScreen(tab) {
 async function handleCapture(msg) {
   const { mode, tab } = msg;
   if (mode !== "fullscreen" && PROTECTED_URL.test(tab?.url || "")) {
-    return { ok: false, error: "Can't capture this page." };
+    return { ok: false, error: chrome.i18n.getMessage("cantCapturePage") };
   }
   switch (mode) {
     case "visible":
@@ -319,7 +319,7 @@ async function handleCapture(msg) {
     case "fullscreen":
       return captureFullScreen(tab);
     default:
-      return { ok: false, error: `${mode} capture is coming in a later build.` };
+      return { ok: false, error: chrome.i18n.getMessage("modeNotSupported", [mode]) };
   }
 }
 

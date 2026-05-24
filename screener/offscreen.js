@@ -2,6 +2,8 @@
 // window via getDisplayMedia (the SW has no DOM, and a desktopCapture streamId
 // can't be consumed here). The SW just triggers it and stores the result.
 
+import { t } from "./i18n.js";
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.target !== "offscreen") return false;
   if (msg.type === "grabFrame") {
@@ -81,7 +83,7 @@ function waitFor(cond, timeoutMs) {
     const start = Date.now();
     const tick = () => {
       if (cond()) return resolve();
-      if (Date.now() - start > timeoutMs) return reject(new Error("Timed out waiting for a video frame."));
+      if (Date.now() - start > timeoutMs) return reject(new Error(t("videoFrameTimeout")));
       setTimeout(tick, 30);
     };
     tick();

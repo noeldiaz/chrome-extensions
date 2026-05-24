@@ -1,4 +1,5 @@
 import { loadTheme, wireTheme } from "./theme.js";
+import { localize, t } from "./i18n.js";
 import { PROTECTED_URL } from "./lib.js";
 
 const statusEl = document.getElementById("status");
@@ -16,11 +17,11 @@ async function capture(mode) {
   // Full-screen targets the monitor, not the page, so it's allowed even on
   // chrome:// tabs. The page-based modes are not.
   if (mode !== "fullscreen" && PROTECTED_URL.test(tab.url || "")) {
-    statusEl.textContent = "Can't capture this page.";
+    statusEl.textContent = t("cantCapturePage");
     return;
   }
 
-  statusEl.textContent = mode === "fullpage" ? "Capturing full page…" : "";
+  statusEl.textContent = mode === "fullpage" ? t("capturingFullPage") : "";
   const send = chrome.runtime.sendMessage({
     type: "capture",
     mode,
@@ -36,7 +37,7 @@ async function capture(mode) {
 
   const res = await send;
   if (!res?.ok) {
-    statusEl.textContent = res?.error || "Capture failed.";
+    statusEl.textContent = res?.error || t("captureFailed");
     return;
   }
   window.close(); // editor tab is opening
@@ -48,5 +49,6 @@ capturesEl.addEventListener("click", (e) => {
 });
 
 document.getElementById("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+localize();
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();

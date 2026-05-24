@@ -1,0 +1,129 @@
+{
+  "appName": { "message": "Screener" },
+  "appDesc": {
+    "message": "Capture, annotate, and submit screenshots for tech-support tickets."
+  },
+
+  "themeToggle": { "message": "Toggle dark mode" },
+  "settings": { "message": "Settings" },
+  "close": { "message": "Close" },
+  "copy": { "message": "Copy" },
+  "cancel": { "message": "Cancel" },
+
+  "capVisible": { "message": "Visible area" },
+  "capVisibleDesc": { "message": "What you see right now" },
+  "capSelection": { "message": "Selected area" },
+  "capSelectionDesc": { "message": "Drag to pick a region" },
+  "capFullpage": { "message": "Full page" },
+  "capFullpageDesc": { "message": "Top to bottom, scrolled" },
+  "capFullscreen": { "message": "Full screen" },
+  "capFullscreenDesc": { "message": "Whole monitor or a window" },
+
+  "titleEditor": { "message": "Screener — Editor" },
+
+  "toolSelectTitle": { "message": "Select / move (V)" },
+  "toolSelectAria": { "message": "Select or move" },
+  "toolRectTitle": { "message": "Rectangle (R)" },
+  "toolRectAria": { "message": "Rectangle" },
+  "toolArrowTitle": { "message": "Arrow (A)" },
+  "toolArrowAria": { "message": "Arrow" },
+  "toolPenTitle": { "message": "Pen (P)" },
+  "toolPenAria": { "message": "Pen" },
+  "toolTextTitle": { "message": "Text (T)" },
+  "toolTextAria": { "message": "Text" },
+  "toolRedactTitle": { "message": "Redact — solid block" },
+  "toolRedactAria": { "message": "Redact with a solid block" },
+  "toolPixelateTitle": { "message": "Redact — pixelate" },
+  "toolPixelateAria": { "message": "Redact by pixelating" },
+
+  "colorRed": { "message": "Red" },
+  "colorAmber": { "message": "Amber" },
+  "colorGreen": { "message": "Green" },
+  "colorBlue": { "message": "Blue" },
+  "colorBlack": { "message": "Black" },
+  "colorWhite": { "message": "White" },
+
+  "widthThin": { "message": "Thin" },
+  "widthMedium": { "message": "Medium" },
+  "widthThick": { "message": "Thick" },
+
+  "undoTitle": { "message": "Undo (Ctrl/Cmd+Z)" },
+  "undoAria": { "message": "Undo" },
+  "redoTitle": { "message": "Redo (Ctrl/Cmd+Shift+Z)" },
+  "redoAria": { "message": "Redo" },
+  "deleteTitle": { "message": "Delete selected (Del)" },
+  "deleteAria": { "message": "Delete selected" },
+
+  "zoomOut": { "message": "Zoom out" },
+  "zoomIn": { "message": "Zoom in" },
+  "zoomFit": { "message": "Fit to window" },
+
+  "emptyCapture": { "message": "No capture to show. Take a new screenshot from the Screener popup." },
+
+  "submitTicket": { "message": "Submit ticket" },
+  "download": { "message": "Download" },
+
+  "modalTitle": { "message": "Title" },
+  "modalDescription": { "message": "Description" },
+  "send": { "message": "Send" },
+
+  "titleOptions": { "message": "Screener — Options" },
+  "h1Options": { "message": "Screener — Options" },
+  "endpointLabel": { "message": "Ticket endpoint URL" },
+  "endpointPlaceholder": { "message": "https://your-app.test/api/tickets" },
+  "tokenLabel": { "message": "Bearer token" },
+  "tokenOptional": { "message": "(optional)" },
+  "tokenPlaceholder": { "message": "Sent as Authorization: Bearer …" },
+  "save": { "message": "Save" },
+  "whatGetsSentTitle": { "message": "What gets sent" },
+
+  "copiedToClipboard": { "message": "Copied to clipboard." },
+  "errCopy": {
+    "message": "Copy failed: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "capturingFullPage": { "message": "Capturing full page…" },
+  "captureFailed": { "message": "Capture failed." },
+  "cantCapturePage": { "message": "Can't capture this page." },
+  "selectionTooSmall": { "message": "Selection was too small." },
+  "couldNotCaptureScreen": { "message": "Could not capture the screen." },
+  "modeNotSupported": {
+    "message": "$mode$ capture is coming in a later build.",
+    "placeholders": { "mode": { "content": "$1" } }
+  },
+
+  "setEndpointFirst": { "message": "Set a ticket endpoint in Settings first." },
+  "titleRequired": { "message": "Title is required." },
+  "endpointInvalid": { "message": "Endpoint URL is invalid — check Settings." },
+  "permissionDenied": { "message": "Permission to reach the endpoint was denied." },
+  "sending": { "message": "Sending…" },
+  "ticketSubmitted": {
+    "message": "Ticket submitted$ref$.",
+    "placeholders": { "ref": { "content": "$1" } }
+  },
+  "submitFailedStatus": {
+    "message": "Submit failed ($status$)$detail$.",
+    "placeholders": { "status": { "content": "$1" }, "detail": { "content": "$2" } }
+  },
+  "errSubmit": {
+    "message": "Submit failed: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "editorCaptureFailed": {
+    "message": "Capture failed: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "couldNotOpenCapture": {
+    "message": "Could not open this capture: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "couldNotLoadImage": { "message": "Could not load the captured image." },
+  "videoFrameTimeout": { "message": "Timed out waiting for a video frame." },
+
+  "saved": { "message": "Saved." },
+  "savedInsecure": { "message": "Saved — note: http sends your token in cleartext. Use https in production." },
+  "enterValidUrl": { "message": "Enter a valid http(s) URL." }
+}

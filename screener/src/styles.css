@@ -9,6 +9,7 @@
 @source "../annotator.js";
 @source "../options.html";
 @source "../options.js";
+@source "../i18n.js";
 
 @layer base {
   body {

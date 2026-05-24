@@ -1,4 +1,5 @@
 import { loadTheme, wireTheme } from "./theme.js";
+import { localize, t } from "./i18n.js";
 import { isValidHttpUrl } from "./lib.js";
 
 const endpointEl = document.getElementById("endpoint");
@@ -31,14 +32,14 @@ async function save() {
   const endpoint = endpointEl.value.trim();
   const token = tokenEl.value.trim();
   if (endpoint && !isValidHttpUrl(endpoint)) {
-    flash("Enter a valid http(s) URL.", false);
+    flash(t("enterValidUrl"), false);
     return;
   }
   await chrome.storage.local.set({ endpoint, token });
   if (token && isInsecure(endpoint)) {
-    flash("Saved — note: http sends your token in cleartext. Use https in production.", false);
+    flash(t("savedInsecure"), false);
   } else {
-    flash("Saved.");
+    flash(t("saved"));
   }
 }
 
@@ -71,6 +72,7 @@ document.getElementById("winClose").addEventListener("click", async () => {
   window.close();
 });
 
+localize();
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();
 load();

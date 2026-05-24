@@ -3,6 +3,8 @@
 // the stage is scaled to fit (× a zoom factor), so exports come back at full
 // resolution. When zoomed past the viewport, the wrap's scrollbars pan.
 
+import { t } from "./i18n.js";
+
 const REDACT_FILL = "#000000";
 const TEXT_FONT_SIZE = 22; // natural px
 const HISTORY_LIMIT = 60;
@@ -498,7 +500,7 @@ function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Could not load the captured image."));
+    img.onerror = () => reject(new Error(t("couldNotLoadImage")));
     img.src = src;
   });
 }

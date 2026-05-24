@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Screener",
+  "name": "__MSG_appName__",
   "version": "0.1.0",
-  "description": "Capture, annotate, and submit screenshots for tech-support tickets.",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
   "minimum_chrome_version": "116",
   "permissions": ["activeTab", "scripting", "storage", "downloads", "offscreen", "clipboardWrite"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
