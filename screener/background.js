@@ -1,5 +1,6 @@
 import { PROTECTED_URL, scaleRect, planScrollSteps } from "./lib.js";
 import { putCapture, purgeStale } from "./idb.js";
+import { FEATURES } from "./build-config.js";
 
 // captureVisibleTab is rate-limited (~2/sec without broad host perms), so the
 // full-page loop waits between shots. Caps keep runaway pages bounded.
@@ -317,7 +318,8 @@ async function handleCapture(msg) {
     case "fullpage":
       return captureFullPage(tab);
     case "fullscreen":
-      return captureFullScreen(tab);
+      if (FEATURES.fullscreenCapture) return captureFullScreen(tab);
+      return { ok: false, error: chrome.i18n.getMessage("modeNotSupported", ["fullscreen"]) };
     default:
       return { ok: false, error: chrome.i18n.getMessage("modeNotSupported", [mode]) };
   }

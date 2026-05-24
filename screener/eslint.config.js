@@ -5,7 +5,7 @@ export default [
   { ignores: ["vendor/**"] }, // vendored Konva UMD dist — not ours to lint
   js.configs.recommended,
   {
-    files: ["popup.js", "background.js", "editor.js", "options.js", "offscreen.js", "content.js", "theme.js", "lib.js", "annotator.js", "idb.js", "i18n.js"],
+    files: ["popup.js", "background.js", "editor.js", "options.js", "offscreen.js", "content.js", "theme.js", "lib.js", "annotator.js", "idb.js", "i18n.js", "build-config.js"],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",

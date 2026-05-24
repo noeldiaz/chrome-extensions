@@ -1,5 +1,6 @@
 import { loadTheme, wireTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
+import { FEATURES } from "./build-config.js";
 import { captureFilename, originPatternFromUrl } from "./lib.js";
 import { takeCapture } from "./idb.js";
 import { Annotator } from "./annotator.js";
@@ -138,7 +139,15 @@ async function download() {
   // Blob URL, not a data: URL — large captures exceed the downloads URL limit.
   const url = URL.createObjectURL(await annotatedBlob());
   try {
-    await chrome.downloads.download({ url, filename: captureName(), saveAs: true });
+    if (FEATURES.nativeDownloads && chrome.downloads?.download) {
+      await chrome.downloads.download({ url, filename: captureName(), saveAs: true });
+    } else {
+      // Safari (no chrome.downloads): a normal anchor download from this tab page.
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = captureName();
+      a.click();
+    }
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 60000); // let the download read it first
   }

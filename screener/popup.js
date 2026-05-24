@@ -1,5 +1,6 @@
 import { loadTheme, wireTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
+import { FEATURES } from "./build-config.js";
 import { PROTECTED_URL } from "./lib.js";
 
 const statusEl = document.getElementById("status");
@@ -49,6 +50,8 @@ capturesEl.addEventListener("click", (e) => {
 });
 
 document.getElementById("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+// Targets without offscreen capture (e.g. Safari) don't offer full-screen.
+if (!FEATURES.fullscreenCapture) document.querySelector('[data-mode="fullscreen"]')?.remove();
 localize();
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();
