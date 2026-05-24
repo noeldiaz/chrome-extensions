@@ -10,6 +10,7 @@
 @source "../result.js";
 @source "../history.html";
 @source "../history.js";
+@source "../icons.js";
 
 @layer base {
   body {
@@ -52,6 +53,18 @@
   }
   .qr-card {
     @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800;
+  }
+  /* JS-built row action buttons, shared by result.js and history.js. */
+  .qr-btn-primary {
+    @apply inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400;
+  }
+  .qr-btn-neutral {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
+           dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700;
+  }
+  .qr-btn-del {
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white p-1.5 text-slate-500 shadow-sm transition hover:border-red-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300
+           dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-red-500 dark:hover:bg-red-950 dark:hover:text-red-300;
   }
   .qr-section-title {
     @apply mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400;

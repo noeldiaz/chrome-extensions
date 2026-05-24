@@ -161,6 +161,10 @@ function wireChips(group, onChange) {
 // --- QR options ---
 
 function background() {
+  // Inside a card the code sits on a white quiet-zone tile, so its own
+  // background (colour/gradient) is dropped — keeps the tile clean and the code
+  // scannable instead of stacking a second background behind it.
+  if (els.cardOn.checked) return { color: "#ffffff", gradient: null };
   // gradient: null is required so toggling off clears a previously-merged gradient.
   if (!els.gradientOn.checked) return { color: els.colorBg.value, gradient: null };
   return {

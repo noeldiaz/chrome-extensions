@@ -187,21 +187,46 @@ function applyLive() {
 
 // --- download format menu ---
 
+const menuItems = () => [...downloadMenuEl.querySelectorAll('[role="menuitem"]')];
+
 function setMenuOpen(open) {
+  // Don't strand keyboard focus on an item we're about to hide.
+  const refocus = !open && downloadMenuEl.contains(document.activeElement);
   downloadMenuEl.hidden = !open;
   downloadEl.setAttribute("aria-expanded", String(open));
   downloadCaretEl.classList.toggle("rotate-180", open);
+  if (refocus) downloadEl.focus();
 }
 
 downloadEl.addEventListener("click", () => setMenuOpen(downloadMenuEl.hidden));
+// Open with the arrow keys, landing focus on the first/last format (menu pattern).
+downloadEl.addEventListener("keydown", (e) => {
+  if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+  e.preventDefault();
+  setMenuOpen(true);
+  (e.key === "ArrowDown" ? menuItems()[0] : menuItems().at(-1))?.focus();
+});
+// Roving focus inside the open menu. The formats sit in a row, so accept both
+// axes (Down/Right = next, Up/Left = prev) plus Home/End.
+downloadMenuEl.addEventListener("keydown", (e) => {
+  const items = menuItems();
+  const i = items.indexOf(document.activeElement);
+  if (i === -1) return;
+  let next = null;
+  if (e.key === "ArrowDown" || e.key === "ArrowRight") next = (i + 1) % items.length;
+  else if (e.key === "ArrowUp" || e.key === "ArrowLeft") next = (i - 1 + items.length) % items.length;
+  else if (e.key === "Home") next = 0;
+  else if (e.key === "End") next = items.length - 1;
+  if (next === null) return;
+  e.preventDefault();
+  items[next].focus();
+});
+
 document.addEventListener("click", (e) => {
   if (!controlsEl.contains(e.target)) setMenuOpen(false);
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !downloadMenuEl.hidden) {
-    setMenuOpen(false);
-    downloadEl.focus();
-  }
+  if (e.key === "Escape" && !downloadMenuEl.hidden) setMenuOpen(false);
 });
 
 // Build a fresh instance at the export size so the preview is undisturbed.

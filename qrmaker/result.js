@@ -1,5 +1,6 @@
 import { isShareableUrl, originPattern } from "./lib.js";
 import { initTheme } from "./theme.js";
+import { iconOpenExternal, iconCopy, iconEdit } from "./icons.js";
 
 const DECODE_MAX = 1024; // cap the decode canvas; jsQR is slow on huge images
 
@@ -254,16 +255,6 @@ els.winClose.addEventListener("click", () => window.close());
 
 // --- page scan (list of every QR code found on the active tab) ---
 
-const ROW_BTN_GO =
-  "inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400";
-const ROW_BTN_NEU =
-  "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
-
-const SVG = 'xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4"';
-const ICON_GO = `<svg ${SVG}><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-7.5.75L21 3m0 0h-5.25M21 3v5.25" /></svg>`;
-const ICON_COPY = `<svg ${SVG}><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m10.5-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-7.5A2.25 2.25 0 018.25 18v-7.5A2.25 2.25 0 0110.5 8.25z" /></svg>`;
-const ICON_EDIT = `<svg ${SVG}><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`;
-
 // Build a row action button: an icon followed by a label. The icon HTML and
 // labels are static literals (no decoded text), so innerHTML is safe here.
 function rowButton(label, icon, className, onClick) {
@@ -318,12 +309,12 @@ function pageRow(text) {
 
   if (isShareableUrl(text)) {
     actions.appendChild(
-      rowButton("Go to", ICON_GO, ROW_BTN_GO, () => chrome.tabs.create({ url: text })),
+      rowButton("Go to", iconOpenExternal, "qr-btn-primary", () => chrome.tabs.create({ url: text })),
     );
   }
 
   actions.appendChild(
-    rowButton("Copy", ICON_COPY, ROW_BTN_NEU, async () => {
+    rowButton("Copy", iconCopy, "qr-btn-neutral", async () => {
       try {
         await navigator.clipboard.writeText(text);
         setStatus("Copied.");
@@ -335,7 +326,7 @@ function pageRow(text) {
 
   // Edit: hand the decoded text to the advanced editor to restyle and re-export.
   actions.appendChild(
-    rowButton("Edit", ICON_EDIT, ROW_BTN_NEU, () =>
+    rowButton("Edit", iconEdit, "qr-btn-neutral", () =>
       chrome.tabs.create({
         url: chrome.runtime.getURL("editor.html") + "?data=" + encodeURIComponent(text),
       }),

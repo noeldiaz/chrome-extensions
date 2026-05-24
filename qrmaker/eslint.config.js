@@ -14,6 +14,7 @@ export default [
       "result.js",
       "history.js",
       "theme.js",
+      "icons.js",
     ],
     languageOptions: {
       ecmaVersion: 2023,

@@ -62,7 +62,8 @@ device.
 | `optional_host_permissions` (`http`/`https`) | Requested **only** when you scan a QR from an image hosted on another site (needed to fetch its pixels). Not requested at install; same-origin and `data:` images need no grant. |
 
 QRmaker generates and decodes codes locally. It only reaches the network when you
-scan a cross-origin image (to fetch that one image), after you grant access.
+scan a cross-origin image (to fetch that one image), after you grant access. See
+[PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
 ## Develop
 
@@ -82,7 +83,7 @@ directory).
 ```bash
 npm run build:css && zip -r qrmaker.zip \
   manifest.json popup.html popup.js editor.html editor.js result.html result.js \
-  history.html history.js background.js scanpage.js lib.js idb.js theme.js popup.css \
+  history.html history.js background.js scanpage.js lib.js idb.js theme.js icons.js popup.css \
   vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -115,6 +116,8 @@ include them.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
   clamp, deg→rad, card geometry), unit-tested with `node:test`.
 - `theme.js` — shared light/dark theme wiring (`initTheme`) used by every page.
+- `icons.js` — shared inline SVG icon strings for the JS-built rows in the scan
+  and history pages.
 - `idb.js` — IndexedDB (DB `qrmaker`): the editor's uploaded center-logo library
   (`logos`) and the created-codes `history` store.
 - `vendor/qr-code-styling.js` — vendored [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)
