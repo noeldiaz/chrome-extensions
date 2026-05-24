@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "QRmaker",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Make, style, and scan QR codes — encode the current tab, any link or text; decode codes from images, the page, or your camera.",
   "minimum_chrome_version": "110",
   "permissions": ["activeTab", "storage", "clipboardWrite", "contextMenus", "scripting"],

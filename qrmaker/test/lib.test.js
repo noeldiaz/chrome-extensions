@@ -8,6 +8,12 @@ import {
   degToRad,
   originPattern,
   cardLayout,
+  buildWifi,
+  buildVCard,
+  buildEmail,
+  buildSms,
+  buildTel,
+  buildGeo,
 } from "../lib.js";
 
 test("isShareableUrl accepts http and https", () => {
@@ -111,4 +117,62 @@ test("cardLayout clamps the size to the export range", () => {
   assert.equal(cardLayout(99999, 0).S, 1000);
   assert.equal(cardLayout(1, 0).S, 100);
   assert.equal(cardLayout("nope", 0).S, 100);
+});
+
+// --- structured payload builders ---
+
+test("buildWifi encodes the network and escapes reserved chars", () => {
+  assert.equal(
+    buildWifi({ ssid: "Home", password: "secret", encryption: "WPA" }),
+    "WIFI:T:WPA;S:Home;P:secret;;",
+  );
+  assert.equal(buildWifi({ ssid: "Cafe;1", password: 'p:a"s' }), 'WIFI:T:WPA;S:Cafe\\;1;P:p\\:a\\"s;;');
+  assert.equal(buildWifi({ ssid: "Net", hidden: true }), "WIFI:T:WPA;S:Net;H:true;;");
+});
+
+test("buildWifi drops the password for an open network and needs an SSID", () => {
+  assert.equal(buildWifi({ ssid: "Open", password: "ignored", encryption: "nopass" }), "WIFI:T:nopass;S:Open;;");
+  assert.equal(buildWifi({ ssid: "  ", password: "x" }), "");
+  assert.equal(buildWifi({}), "");
+});
+
+test("buildVCard emits vCard 3.0 with the supplied fields", () => {
+  const out = buildVCard({ firstName: "Ada", lastName: "Lovelace", email: "ada@x.io", org: "Analytical" });
+  assert.ok(out.startsWith("BEGIN:VCARD\nVERSION:3.0\n"));
+  assert.ok(out.includes("N:Lovelace;Ada;;;"));
+  assert.ok(out.includes("FN:Ada Lovelace"));
+  assert.ok(out.includes("EMAIL:ada@x.io"));
+  assert.ok(out.includes("ORG:Analytical"));
+  assert.ok(out.endsWith("END:VCARD"));
+});
+
+test("buildVCard falls back to org for FN and needs at least one key field", () => {
+  const orgOnly = buildVCard({ org: "ACME, Inc." });
+  assert.ok(orgOnly.includes("FN:ACME\\, Inc."));
+  assert.ok(orgOnly.includes("ORG:ACME\\, Inc."));
+  assert.equal(buildVCard({ title: "Engineer", url: "https://x.io" }), "");
+  assert.equal(buildVCard({}), "");
+});
+
+test("buildEmail builds a percent-encoded mailto", () => {
+  assert.equal(buildEmail({ to: "a@b.io" }), "mailto:a@b.io");
+  assert.equal(
+    buildEmail({ to: "a@b.io", subject: "Hi there", body: "Line one" }),
+    "mailto:a@b.io?subject=Hi%20there&body=Line%20one",
+  );
+  assert.equal(buildEmail({ subject: "no recipient" }), "");
+});
+
+test("buildSms uses SMSTO with an optional message", () => {
+  assert.equal(buildSms({ number: "+15551234" }), "SMSTO:+15551234");
+  assert.equal(buildSms({ number: "+15551234", message: "hi" }), "SMSTO:+15551234:hi");
+  assert.equal(buildSms({ message: "no number" }), "");
+});
+
+test("buildTel and buildGeo encode or reject", () => {
+  assert.equal(buildTel({ number: "+15551234" }), "tel:+15551234");
+  assert.equal(buildTel({}), "");
+  assert.equal(buildGeo({ lat: "37.77", lng: "-122.41" }), "geo:37.77,-122.41");
+  assert.equal(buildGeo({ lat: "nope", lng: "1" }), "");
+  assert.equal(buildGeo({}), "");
 });

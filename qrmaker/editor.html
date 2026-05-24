@@ -49,9 +49,139 @@
       <section class="space-y-6">
         <div class="qr-card">
           <h2 class="qr-section-title">Content</h2>
-          <textarea id="content" rows="3" placeholder="URL or text to encode"
-            class="w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
-                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"></textarea>
+          <label class="block">
+            <span class="qr-cap">Type</span>
+            <select id="qrType" class="qr-sel">
+              <option value="text">Text / URL</option>
+              <option value="wifi">Wi-Fi network</option>
+              <option value="vcard">Contact card</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+              <option value="tel">Phone</option>
+              <option value="geo">Location</option>
+            </select>
+          </label>
+
+          <!-- text / url -->
+          <div class="qr-fields mt-3" data-type="text">
+            <textarea id="content" rows="3" placeholder="URL or text to encode"
+              class="w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
+                     dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"></textarea>
+          </div>
+
+          <!-- wi-fi -->
+          <div class="qr-fields mt-3 space-y-3" data-type="wifi" hidden>
+            <label class="block">
+              <span class="qr-cap">Network name (SSID)</span>
+              <input id="wifiSsid" type="text" class="qr-inp" />
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block">
+                <span class="qr-cap">Password</span>
+                <input id="wifiPass" type="text" class="qr-inp" />
+              </label>
+              <label class="block">
+                <span class="qr-cap">Security</span>
+                <select id="wifiEnc" class="qr-sel">
+                  <option value="WPA">WPA/WPA2</option>
+                  <option value="WEP">WEP</option>
+                  <option value="nopass">None (open)</option>
+                </select>
+              </label>
+            </div>
+            <label class="flex cursor-pointer items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+              <input id="wifiHidden" type="checkbox" class="h-3.5 w-3.5 accent-blue-600" />
+              Hidden network
+            </label>
+          </div>
+
+          <!-- contact / vcard -->
+          <div class="qr-fields mt-3 space-y-3" data-type="vcard" hidden>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block">
+                <span class="qr-cap">First name</span>
+                <input id="vcFirst" type="text" class="qr-inp" />
+              </label>
+              <label class="block">
+                <span class="qr-cap">Last name</span>
+                <input id="vcLast" type="text" class="qr-inp" />
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block">
+                <span class="qr-cap">Phone</span>
+                <input id="vcPhone" type="tel" class="qr-inp" />
+              </label>
+              <label class="block">
+                <span class="qr-cap">Email</span>
+                <input id="vcEmail" type="email" class="qr-inp" />
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block">
+                <span class="qr-cap">Organization</span>
+                <input id="vcOrg" type="text" class="qr-inp" />
+              </label>
+              <label class="block">
+                <span class="qr-cap">Title</span>
+                <input id="vcTitle" type="text" class="qr-inp" />
+              </label>
+            </div>
+            <label class="block">
+              <span class="qr-cap">Website</span>
+              <input id="vcUrl" type="url" class="qr-inp" />
+            </label>
+          </div>
+
+          <!-- email -->
+          <div class="qr-fields mt-3 space-y-3" data-type="email" hidden>
+            <label class="block">
+              <span class="qr-cap">To</span>
+              <input id="emailTo" type="email" class="qr-inp" />
+            </label>
+            <label class="block">
+              <span class="qr-cap">Subject</span>
+              <input id="emailSubject" type="text" class="qr-inp" />
+            </label>
+            <label class="block">
+              <span class="qr-cap">Body</span>
+              <textarea id="emailBody" rows="3" class="qr-inp resize-y leading-snug"></textarea>
+            </label>
+          </div>
+
+          <!-- sms -->
+          <div class="qr-fields mt-3 space-y-3" data-type="sms" hidden>
+            <label class="block">
+              <span class="qr-cap">Phone number</span>
+              <input id="smsNumber" type="tel" class="qr-inp" />
+            </label>
+            <label class="block">
+              <span class="qr-cap">Message</span>
+              <textarea id="smsMessage" rows="2" class="qr-inp resize-y leading-snug"></textarea>
+            </label>
+          </div>
+
+          <!-- phone -->
+          <div class="qr-fields mt-3" data-type="tel" hidden>
+            <label class="block">
+              <span class="qr-cap">Phone number</span>
+              <input id="telNumber" type="tel" class="qr-inp" />
+            </label>
+          </div>
+
+          <!-- location -->
+          <div class="qr-fields mt-3" data-type="geo" hidden>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block">
+                <span class="qr-cap">Latitude</span>
+                <input id="geoLat" type="text" inputmode="decimal" placeholder="37.7749" class="qr-inp" />
+              </label>
+              <label class="block">
+                <span class="qr-cap">Longitude</span>
+                <input id="geoLng" type="text" inputmode="decimal" placeholder="-122.4194" class="qr-inp" />
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="qr-card">

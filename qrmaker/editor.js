@@ -1,4 +1,16 @@
-import { ellipsize, downloadFilename, clamp, degToRad, cardLayout } from "./lib.js";
+import {
+  ellipsize,
+  downloadFilename,
+  clamp,
+  degToRad,
+  cardLayout,
+  buildWifi,
+  buildVCard,
+  buildEmail,
+  buildSms,
+  buildTel,
+  buildGeo,
+} from "./lib.js";
 import {
   addLogo,
   getLogos,
@@ -45,6 +57,32 @@ const els = {
   mount: $("qrMount"),
   empty: $("empty"),
   content: $("content"),
+  qrType: $("qrType"),
+  // wi-fi
+  wifiSsid: $("wifiSsid"),
+  wifiPass: $("wifiPass"),
+  wifiEnc: $("wifiEnc"),
+  wifiHidden: $("wifiHidden"),
+  // contact / vcard
+  vcFirst: $("vcFirst"),
+  vcLast: $("vcLast"),
+  vcPhone: $("vcPhone"),
+  vcEmail: $("vcEmail"),
+  vcOrg: $("vcOrg"),
+  vcTitle: $("vcTitle"),
+  vcUrl: $("vcUrl"),
+  // email
+  emailTo: $("emailTo"),
+  emailSubject: $("emailSubject"),
+  emailBody: $("emailBody"),
+  // sms
+  smsNumber: $("smsNumber"),
+  smsMessage: $("smsMessage"),
+  // phone
+  telNumber: $("telNumber"),
+  // location
+  geoLat: $("geoLat"),
+  geoLng: $("geoLng"),
   dotStyle: $("dotStyle"),
   cornerStyle: $("cornerStyle"),
   colorDots: $("colorDots"),
@@ -162,6 +200,101 @@ function wireChips(group, onChange) {
   });
 }
 
+// --- structured types ---
+
+// Snapshot of the active type's form fields. Also persisted to history so a
+// re-opened code can rebuild its form. Returns null for plain text / URL.
+function structuredFields() {
+  switch (els.qrType.value) {
+    case "wifi":
+      return {
+        ssid: els.wifiSsid.value,
+        password: els.wifiPass.value,
+        encryption: els.wifiEnc.value,
+        hidden: els.wifiHidden.checked,
+      };
+    case "vcard":
+      return {
+        firstName: els.vcFirst.value,
+        lastName: els.vcLast.value,
+        phone: els.vcPhone.value,
+        email: els.vcEmail.value,
+        org: els.vcOrg.value,
+        title: els.vcTitle.value,
+        url: els.vcUrl.value,
+      };
+    case "email":
+      return { to: els.emailTo.value, subject: els.emailSubject.value, body: els.emailBody.value };
+    case "sms":
+      return { number: els.smsNumber.value, message: els.smsMessage.value };
+    case "tel":
+      return { number: els.telNumber.value };
+    case "geo":
+      return { lat: els.geoLat.value, lng: els.geoLng.value };
+    default:
+      return null;
+  }
+}
+
+// The encoded payload for the active type. Text / URL uses the textarea as-is;
+// structured types compose their scheme string from the form fields.
+function payload() {
+  switch (els.qrType.value) {
+    case "wifi":
+      return buildWifi(structuredFields());
+    case "vcard":
+      return buildVCard(structuredFields());
+    case "email":
+      return buildEmail(structuredFields());
+    case "sms":
+      return buildSms(structuredFields());
+    case "tel":
+      return buildTel(structuredFields());
+    case "geo":
+      return buildGeo(structuredFields());
+    default:
+      return els.content.value;
+  }
+}
+
+// Show only the field group matching the active type.
+function showTypeFields() {
+  for (const g of document.querySelectorAll(".qr-fields")) {
+    g.hidden = g.dataset.type !== els.qrType.value;
+  }
+}
+
+// Rebuild a structured form from a stored snapshot (history re-open).
+function applyStructured(kind, f) {
+  els.qrType.value = kind;
+  if (kind === "wifi") {
+    els.wifiSsid.value = f.ssid || "";
+    els.wifiPass.value = f.password || "";
+    els.wifiEnc.value = f.encryption || "WPA";
+    els.wifiHidden.checked = !!f.hidden;
+  } else if (kind === "vcard") {
+    els.vcFirst.value = f.firstName || "";
+    els.vcLast.value = f.lastName || "";
+    els.vcPhone.value = f.phone || "";
+    els.vcEmail.value = f.email || "";
+    els.vcOrg.value = f.org || "";
+    els.vcTitle.value = f.title || "";
+    els.vcUrl.value = f.url || "";
+  } else if (kind === "email") {
+    els.emailTo.value = f.to || "";
+    els.emailSubject.value = f.subject || "";
+    els.emailBody.value = f.body || "";
+  } else if (kind === "sms") {
+    els.smsNumber.value = f.number || "";
+    els.smsMessage.value = f.message || "";
+  } else if (kind === "tel") {
+    els.telNumber.value = f.number || "";
+  } else if (kind === "geo") {
+    els.geoLat.value = f.lat || "";
+    els.geoLng.value = f.lng || "";
+  }
+}
+
 // --- QR options ---
 
 function background() {
@@ -188,7 +321,7 @@ function qrOptions(size = PREVIEW_SIZE) {
     width: size,
     height: size,
     type: "canvas",
-    data: els.content.value,
+    data: payload(),
     margin: clamp(els.margin.value, 0, 40),
     qrOptions: { errorCorrectionLevel: EC_LEVEL },
     dotsOptions: { color: els.colorDots.value, type: activeChip(els.dotStyle) },
@@ -500,13 +633,18 @@ function render() {
   els.dlSvg.classList.toggle("opacity-40", els.cardOn.checked);
   els.dlSvg.title = els.cardOn.checked ? "Turn off the card to export SVG (code-only)" : "";
   updateCardPreview();
+  showTypeFields();
 
-  const hasData = els.content.value.trim().length > 0;
+  const data = payload();
+  const hasData = data.trim().length > 0;
   if (!hasData) {
     qr = null;
     els.mount.replaceChildren();
     els.mount.classList.add("hidden");
-    els.empty.textContent = "Enter content to generate a code.";
+    els.empty.textContent =
+      els.qrType.value === "text"
+        ? "Enter content to generate a code."
+        : "Fill in the fields to generate a code.";
     els.empty.hidden = false;
     return;
   }
@@ -532,7 +670,7 @@ function render() {
   }
   els.empty.hidden = true;
   els.mount.classList.remove("hidden");
-  document.title = "QRmaker — " + ellipsize(els.content.value.trim(), 40);
+  document.title = "QRmaker — " + ellipsize(data.trim(), 40);
 }
 
 // --- card / frame ---
@@ -707,14 +845,16 @@ async function renderCard(format) {
 // bound to a history record (opened from history, or after the first export),
 // later exports update that same row rather than adding new ones.
 async function recordHistory() {
-  const content = els.content.value.trim();
+  const content = payload().trim();
   if (!content) return;
   const config = captureConfig();
+  const kind = els.qrType.value;
+  const fields = structuredFields(); // null for plain text / URL
   try {
     if (historyId != null) {
-      await updateHistoryItem(historyId, { content, source: historySource, config });
+      await updateHistoryItem(historyId, { content, source: historySource, config, kind, fields });
     } else {
-      historyId = await addHistory({ content, source: historySource, config });
+      historyId = await addHistory({ content, source: historySource, config, kind, fields });
     }
   } catch {
     /* history is non-critical */
@@ -735,7 +875,7 @@ async function download(format) {
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = downloadFilename(els.content.value.trim(), format);
+    a.download = downloadFilename(payload().trim(), format);
     a.click();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
     recordHistory();
@@ -801,7 +941,27 @@ wireChips(els.dotStyle, render);
 wireChips(els.cornerStyle, render);
 
 els.content.addEventListener("input", render);
+els.qrType.addEventListener("change", render);
 for (const el of [
+  els.wifiSsid,
+  els.wifiPass,
+  els.wifiEnc,
+  els.wifiHidden,
+  els.vcFirst,
+  els.vcLast,
+  els.vcPhone,
+  els.vcEmail,
+  els.vcOrg,
+  els.vcTitle,
+  els.vcUrl,
+  els.emailTo,
+  els.emailSubject,
+  els.emailBody,
+  els.smsNumber,
+  els.smsMessage,
+  els.telNumber,
+  els.geoLat,
+  els.geoLng,
   els.colorDots,
   els.colorCorners,
   els.colorBg,
@@ -917,7 +1077,12 @@ async function init() {
         historyId = item.id; // bind: edits update this record
         historySource = item.source ?? null;
         await applyConfig(item.config);
-        els.content.value = item.content;
+        if (item.kind && item.kind !== "text" && item.fields) {
+          applyStructured(item.kind, item.fields); // rebuild the structured form
+        } else {
+          els.qrType.value = "text";
+          els.content.value = item.content;
+        }
       }
     } catch (e) {
       flash("Couldn't load that code: " + (e?.message || e), false);

@@ -68,6 +68,84 @@ export function cardLayout(size, lines = 0) {
   return { S, pad, tilePad, tileRadius, cardRadius, font, lineH, tile, gap, captionH, width, height };
 }
 
+// --- structured QR payload builders ---
+// Each turns a plain field object into the string a scanner recognizes for that
+// type. Pure + unit-tested. Returns "" when the essential field is missing, so
+// the editor naturally shows its empty state. Whitespace-only fields are dropped.
+
+const trim = (v) => String(v ?? "").trim();
+
+// Escape the Wi-Fi / MeCard reserved characters: \ ; , : "
+const escapeWifi = (s) => String(s ?? "").replace(/([\\;,:"])/g, "\\$1");
+
+// Wi-Fi network join: WIFI:T:WPA;S:ssid;P:password;H:true;;
+export function buildWifi({ ssid = "", password = "", encryption = "WPA", hidden = false } = {}) {
+  if (!trim(ssid)) return "";
+  const enc = ["WPA", "WEP", "nopass"].includes(encryption) ? encryption : "WPA";
+  const parts = [`T:${enc}`, `S:${escapeWifi(ssid)}`];
+  if (enc !== "nopass" && password) parts.push(`P:${escapeWifi(password)}`);
+  if (hidden) parts.push("H:true");
+  return `WIFI:${parts.join(";")};;`;
+}
+
+// Escape vCard reserved characters: \ , ; and newlines.
+const escapeVCard = (s) =>
+  String(s ?? "")
+    .replace(/([\\,;])/g, "\\$1")
+    .replace(/\r?\n/g, "\\n");
+
+// Contact card (vCard 3.0). Needs at least a name, org, phone, or email.
+export function buildVCard({
+  firstName = "",
+  lastName = "",
+  phone = "",
+  email = "",
+  org = "",
+  title = "",
+  url = "",
+} = {}) {
+  const fn = [firstName, lastName].map(trim).filter(Boolean).join(" ");
+  if (!fn && !trim(org) && !trim(phone) && !trim(email)) return "";
+  const lines = ["BEGIN:VCARD", "VERSION:3.0"];
+  lines.push(`N:${escapeVCard(lastName)};${escapeVCard(firstName)};;;`);
+  lines.push(`FN:${escapeVCard(fn || org)}`);
+  if (trim(org)) lines.push(`ORG:${escapeVCard(org)}`);
+  if (trim(title)) lines.push(`TITLE:${escapeVCard(title)}`);
+  if (trim(phone)) lines.push(`TEL:${escapeVCard(phone)}`);
+  if (trim(email)) lines.push(`EMAIL:${escapeVCard(email)}`);
+  if (trim(url)) lines.push(`URL:${escapeVCard(url)}`);
+  lines.push("END:VCARD");
+  return lines.join("\n");
+}
+
+// Email: mailto:addr?subject=..&body=.. (percent-encoded, so spaces are %20).
+export function buildEmail({ to = "", subject = "", body = "" } = {}) {
+  if (!trim(to)) return "";
+  const params = [];
+  if (trim(subject)) params.push("subject=" + encodeURIComponent(subject));
+  if (trim(body)) params.push("body=" + encodeURIComponent(body));
+  return `mailto:${trim(to)}${params.length ? "?" + params.join("&") : ""}`;
+}
+
+// SMS: SMSTO:number:message (the most broadly-supported SMS scheme).
+export function buildSms({ number = "", message = "" } = {}) {
+  if (!trim(number)) return "";
+  return trim(message) ? `SMSTO:${trim(number)}:${message}` : `SMSTO:${trim(number)}`;
+}
+
+// Phone dial: tel:number
+export function buildTel({ number = "" } = {}) {
+  return trim(number) ? `tel:${trim(number)}` : "";
+}
+
+// Geo coordinate: geo:lat,lng (both must parse as finite numbers).
+export function buildGeo({ lat = "", lng = "" } = {}) {
+  const a = parseFloat(lat);
+  const b = parseFloat(lng);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return "";
+  return `geo:${a},${b}`;
+}
+
 const pad2 = (n) => String(n).padStart(2, "0");
 
 // Build a download filename like "qr-example.com-20260523-141500.png".

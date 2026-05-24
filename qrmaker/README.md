@@ -19,6 +19,11 @@ Manifest V3.
   margin, an export-size slider, and a **center logo** you
   upload (saved to a personal logo library), with a live preview and
   PNG / SVG / JPG / copy output.
+- **Structured types** *(editor)* — pick a **Type** to encode more than plain
+  text: a **Wi-Fi** network (SSID / password / security / hidden), a **contact
+  card** (vCard), an **email** (mailto), an **SMS**, a **phone** number, or a
+  **map location** (geo). The matching fields appear and compose the payload for
+  you, and re-opening one from History rebuilds its form.
 - **Frame / "Scan me" card** *(editor)* — wrap the code in a printable card: a
   caption above it (your text, any color) on a solid or **gradient** background,
   with the code on a white rounded tile. Exports as PNG / JPG (or copy).
@@ -98,8 +103,10 @@ include them.
 - `popup.html` / `popup.js` — reads the active tab, renders the QR with
   qr-code-styling, the Options panel, and download / copy.
 - `editor.html` / `editor.js` — the advanced design editor (opens in a tab,
-  prefilled via `?data=`). Also composites the optional "Scan me" card (caption
-  + background + white code tile) to a canvas for PNG / JPG export.
+  prefilled via `?data=`). Hosts the structured-type forms (Wi-Fi, vCard, email,
+  SMS, phone, location) that compose the payload via `lib.js` builders. Also
+  composites the optional "Scan me" card (caption + background + white code tile)
+  to a canvas for PNG / JPG export.
 - `background.js` — service worker: right-click context menus that open the
   editor (encode) or the scan window (decode), and the "scan this page" action
   that injects the decoder into the active tab.
@@ -114,7 +121,8 @@ include them.
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
-  clamp, deg→rad, card geometry), unit-tested with `node:test`.
+  clamp, deg→rad, card geometry, and the structured-type payload builders for
+  Wi-Fi / vCard / email / SMS / tel / geo), unit-tested with `node:test`.
 - `theme.js` — shared light/dark theme wiring (`initTheme`) used by every page.
 - `icons.js` — shared inline SVG icon strings for the JS-built rows in the scan
   and history pages.
