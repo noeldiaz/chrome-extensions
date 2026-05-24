@@ -7,6 +7,9 @@ node_modules/
 # Distributable build artifacts — rebuildable from source, attach to releases instead
 *.zip
 
+# Per-target build output (chrome/safari/…) + generated Safari Xcode wrappers
+dist/
+
 # Logs
 *.log
 npm-debug.log*
