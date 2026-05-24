@@ -5,8 +5,8 @@
     <title>Screener — Options</title>
     <link rel="stylesheet" href="app.css" />
   </head>
-  <body class="invisible min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-    <div class="mx-auto max-w-xl p-6">
+  <body class="invisible flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div class="mx-auto w-full max-w-xl flex-1 p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <img src="icons/icon32.png" alt="" class="h-5 w-5 shrink-0 self-center" />
@@ -71,6 +71,14 @@
         <p>A <code>multipart/form-data</code> POST with: <code>title</code>, <code>description</code>, <code>screenshot</code> (PNG file), <code>page_url</code>, and <code>meta</code> (JSON). The bearer token, if set, goes in the <code>Authorization</code> header. The token is stored locally in this browser and never sent anywhere except your endpoint.</p>
       </div>
     </div>
+    <footer class="border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+      <div class="mx-auto flex w-full max-w-xl justify-end px-6 py-3">
+        <button id="winClose" type="button"
+          class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+          Close
+        </button>
+      </div>
+    </footer>
     <script type="module" src="options.js"></script>
   </body>
 </html>

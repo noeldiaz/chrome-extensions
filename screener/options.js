@@ -58,6 +58,19 @@ for (const el of [endpointEl, tokenEl]) {
   });
 }
 
+document.getElementById("winClose").addEventListener("click", async () => {
+  try {
+    const tab = await chrome.tabs.getCurrent();
+    if (tab?.id != null) {
+      await chrome.tabs.remove(tab.id);
+      return;
+    }
+  } catch {
+    /* fall back to window.close() */
+  }
+  window.close();
+});
+
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();
 load();
