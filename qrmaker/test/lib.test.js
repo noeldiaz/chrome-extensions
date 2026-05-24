@@ -14,6 +14,14 @@ import {
   buildSms,
   buildTel,
   buildGeo,
+  detectType,
+  parseWifi,
+  parseVCard,
+  parseEmail,
+  parseSms,
+  parseTel,
+  parseGeo,
+  parseStructured,
 } from "../lib.js";
 
 test("isShareableUrl accepts http and https", () => {
@@ -196,4 +204,65 @@ test("buildTel and buildGeo encode or reject", () => {
   assert.equal(buildGeo({ lat: "37.77", lng: "-122.41" }), "geo:37.77,-122.41");
   assert.equal(buildGeo({ lat: "nope", lng: "1" }), "");
   assert.equal(buildGeo({}), "");
+});
+
+// --- structured parsers (decode -> edit) ---
+
+test("detectType recognizes each structured scheme", () => {
+  assert.equal(detectType("WIFI:T:WPA;S:x;;"), "wifi");
+  assert.equal(detectType("BEGIN:VCARD\nEND:VCARD"), "vcard");
+  assert.equal(detectType("mailto:a@b.io"), "email");
+  assert.equal(detectType("SMSTO:123:hi"), "sms");
+  assert.equal(detectType("tel:123"), "tel");
+  assert.equal(detectType("geo:1,2"), "geo");
+  assert.equal(detectType("https://x.io"), "text");
+});
+
+test("parseWifi inverts buildWifi including escaping", () => {
+  const f = { ssid: "Cafe;1", password: 'p:a"s', encryption: "WPA", hidden: true };
+  assert.deepEqual(parseWifi(buildWifi(f)), f);
+  assert.deepEqual(parseWifi("WIFI:T:nopass;S:Open;;"), {
+    ssid: "Open",
+    password: "",
+    encryption: "nopass",
+    hidden: false,
+  });
+});
+
+test("parseVCard inverts buildVCard across all fields", () => {
+  const f = {
+    firstName: "Ada",
+    lastName: "Lovelace",
+    phone: "+1",
+    email: "a@x.io",
+    org: "ACME, Inc.",
+    title: "Eng",
+    url: "https://x.io",
+    street: "1 Main St",
+    city: "Town",
+    region: "CA",
+    zip: "90001",
+    country: "USA",
+    note: "hi\nthere",
+  };
+  assert.deepEqual(parseVCard(buildVCard(f)), f);
+});
+
+test("parseEmail / parseSms / parseTel / parseGeo invert their builders", () => {
+  assert.deepEqual(parseEmail(buildEmail({ to: "a@b.io", subject: "Hi there", body: "Line one" })), {
+    to: "a@b.io",
+    subject: "Hi there",
+    body: "Line one",
+  });
+  assert.deepEqual(parseSms(buildSms({ number: "+15551234", message: "hi" })), {
+    number: "+15551234",
+    message: "hi",
+  });
+  assert.deepEqual(parseTel(buildTel({ number: "+15551234" })), { number: "+15551234" });
+  assert.deepEqual(parseGeo(buildGeo({ lat: "37.77", lng: "-122.41" })), { lat: "37.77", lng: "-122.41" });
+});
+
+test("parseStructured dispatches by kind", () => {
+  assert.equal(parseStructured("wifi", "WIFI:T:WPA;S:Net;;").ssid, "Net");
+  assert.equal(parseStructured("text", "anything"), null);
 });

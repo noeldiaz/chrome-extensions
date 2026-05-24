@@ -161,6 +161,174 @@ export function buildGeo({ lat = "", lng = "" } = {}) {
   return `geo:${a},${b}`;
 }
 
+// --- structured payload parsers (invert the builders for decode → edit) ---
+
+// Split on an unescaped delimiter, keeping backslash escapes intact.
+function splitRaw(s, delim) {
+  const out = [];
+  let cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === "\\" && i + 1 < s.length) {
+      cur += c + s[i + 1];
+      i++;
+      continue;
+    }
+    if (c === delim) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+
+const unesc = (s) => String(s).replace(/\\(.)/g, "$1"); // Wi-Fi: \x -> x
+const vUnesc = (s) => String(s).replace(/\\([\\,;nN])/g, (_, c) => (/[nN]/.test(c) ? "\n" : c));
+const dec = (s) => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+};
+
+// Which structured type a decoded payload looks like ("text" if none).
+export function detectType(text) {
+  const t = String(text ?? "");
+  if (/^WIFI:/i.test(t)) return "wifi";
+  if (/^BEGIN:VCARD/i.test(t)) return "vcard";
+  if (/^mailto:/i.test(t)) return "email";
+  if (/^SMSTO:/i.test(t) || /^sms:/i.test(t)) return "sms";
+  if (/^tel:/i.test(t)) return "tel";
+  if (/^geo:/i.test(t)) return "geo";
+  return "text";
+}
+
+export function parseWifi(text) {
+  const body = String(text ?? "")
+    .replace(/^WIFI:/i, "")
+    .replace(/;+\s*$/, "");
+  const f = { ssid: "", password: "", encryption: "WPA", hidden: false };
+  for (const seg of splitRaw(body, ";")) {
+    if (!seg) continue;
+    const parts = splitRaw(seg, ":");
+    const key = parts[0].toUpperCase();
+    const val = unesc(parts.slice(1).join(":"));
+    if (key === "S") f.ssid = val;
+    else if (key === "P") f.password = val;
+    else if (key === "T") f.encryption = ["WPA", "WEP", "nopass"].includes(val) ? val : "WPA";
+    else if (key === "H") f.hidden = /^true$/i.test(val);
+  }
+  return f;
+}
+
+export function parseVCard(text) {
+  const f = {
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    org: "",
+    title: "",
+    url: "",
+    street: "",
+    city: "",
+    region: "",
+    zip: "",
+    country: "",
+    note: "",
+  };
+  let fn = "";
+  for (const raw of String(text ?? "").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || /^(BEGIN|END|VERSION):/i.test(line)) continue;
+    const ci = line.indexOf(":");
+    if (ci === -1) continue;
+    const prop = line.slice(0, ci).split(";")[0].toUpperCase(); // strip TYPE= params
+    const value = line.slice(ci + 1);
+    if (prop === "N") {
+      const c = splitRaw(value, ";").map(vUnesc);
+      f.lastName = c[0] || "";
+      f.firstName = c[1] || "";
+    } else if (prop === "FN") fn = vUnesc(value);
+    else if (prop === "ORG") f.org = vUnesc(splitRaw(value, ";")[0] || "");
+    else if (prop === "TITLE") f.title = vUnesc(value);
+    else if (prop === "TEL") f.phone = f.phone || vUnesc(value);
+    else if (prop === "EMAIL") f.email = f.email || vUnesc(value);
+    else if (prop === "URL") f.url = vUnesc(value);
+    else if (prop === "NOTE") f.note = vUnesc(value);
+    else if (prop === "ADR") {
+      const c = splitRaw(value, ";").map(vUnesc); // ;;street;city;region;zip;country
+      f.street = c[2] || "";
+      f.city = c[3] || "";
+      f.region = c[4] || "";
+      f.zip = c[5] || "";
+      f.country = c[6] || "";
+    }
+  }
+  if (!f.firstName && !f.lastName && fn) f.firstName = fn;
+  return f;
+}
+
+export function parseEmail(text) {
+  const t = String(text ?? "").replace(/^mailto:/i, "");
+  const qi = t.indexOf("?");
+  const f = { to: dec(qi === -1 ? t : t.slice(0, qi)), subject: "", body: "" };
+  if (qi !== -1) {
+    const params = new URLSearchParams(t.slice(qi + 1));
+    f.subject = params.get("subject") || "";
+    f.body = params.get("body") || "";
+  }
+  return f;
+}
+
+export function parseSms(text) {
+  const t = String(text ?? "");
+  if (/^SMSTO:/i.test(t)) {
+    const rest = t.replace(/^SMSTO:/i, "");
+    const ci = rest.indexOf(":");
+    return ci === -1 ? { number: rest, message: "" } : { number: rest.slice(0, ci), message: rest.slice(ci + 1) };
+  }
+  const rest = t.replace(/^sms:/i, "");
+  const qi = rest.indexOf("?");
+  if (qi === -1) return { number: rest, message: "" };
+  return { number: rest.slice(0, qi), message: new URLSearchParams(rest.slice(qi + 1)).get("body") || "" };
+}
+
+export function parseTel(text) {
+  return { number: String(text ?? "").replace(/^tel:/i, "") };
+}
+
+export function parseGeo(text) {
+  const m = String(text ?? "")
+    .replace(/^geo:/i, "")
+    .split(/[;,]/);
+  return { lat: m[0] || "", lng: m[1] || "" };
+}
+
+// Parse a decoded payload of a known kind into the builder's field object.
+export function parseStructured(kind, text) {
+  switch (kind) {
+    case "wifi":
+      return parseWifi(text);
+    case "vcard":
+      return parseVCard(text);
+    case "email":
+      return parseEmail(text);
+    case "sms":
+      return parseSms(text);
+    case "tel":
+      return parseTel(text);
+    case "geo":
+      return parseGeo(text);
+    default:
+      return null;
+  }
+}
+
 const pad2 = (n) => String(n).padStart(2, "0");
 
 // Build a download filename like "qr-example.com-20260523-141500.png".

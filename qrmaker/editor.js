@@ -10,6 +10,7 @@ import {
   buildSms,
   buildTel,
   buildGeo,
+  parseStructured,
 } from "./lib.js";
 import {
   addLogo,
@@ -1147,11 +1148,14 @@ async function init() {
     }
   } else {
     const data = params.get("data");
-    if (data) els.content.value = data;
-    // ?type= (from the popup's "More types" shortcut) preselects a structured type
-    const type = params.get("type");
-    if (type && ["text", "wifi", "vcard", "email", "sms", "tel", "geo"].includes(type)) {
-      els.qrType.value = type;
+    const type = params.get("type"); // popup "More types" shortcut, or a scan → Edit
+    const structured = ["wifi", "vcard", "email", "sms", "tel", "geo"];
+    if (type && structured.includes(type)) {
+      // parse the payload back into the form when one was passed (scan → Edit),
+      // otherwise open an empty form of that type (popup shortcut)
+      applyStructured(type, data ? parseStructured(type, data) : {});
+    } else if (data) {
+      els.content.value = data;
     }
   }
   render();

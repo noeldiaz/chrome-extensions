@@ -41,9 +41,11 @@ Manifest V3.
   rendered on it), or use the popup's **Scan** button to read a QR from a local
   image file (or **drag & drop / paste** an image into the scan window) or, with
   **Scan with camera**, a live webcam feed. Decoded content
-  opens in a small window with **Go to** / **Copy** / **Edit** (open the result
-  in the advanced editor to restyle and re-export) per result. Camera frames and
-  page pixels are decoded locally and never leave the browser.
+  opens in a small window — labelled with its **type** (Wi-Fi / contact / email /
+  …) — with **Go to** / **Copy** / **Edit** per result. **Edit** re-opens it in
+  the advanced editor to restyle and re-export; a structured payload reopens in
+  its own form (e.g. a scanned Wi-Fi code lands in the Wi-Fi fields). Camera
+  frames and page pixels are decoded locally and never leave the browser.
 - **History** — every code you download or copy is logged (content, source,
   date) to a **History** page (clock icon in the popup/editor, or right-click the
   toolbar icon). Re-open any past code in the editor to tweak it, delete rows, or
@@ -125,8 +127,9 @@ include them.
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
-  clamp, deg→rad, card geometry, and the structured-type payload builders for
-  Wi-Fi / vCard / email / SMS / tel / geo), unit-tested with `node:test`.
+  clamp, deg→rad, card geometry, and the structured-type payload builders and
+  parsers for Wi-Fi / vCard / email / SMS / tel / geo), unit-tested with
+  `node:test`.
 - `theme.js` — shared light/dark theme wiring (`initTheme`) used by every page.
 - `icons.js` — shared inline SVG icon strings for the JS-built rows in the scan
   and history pages.

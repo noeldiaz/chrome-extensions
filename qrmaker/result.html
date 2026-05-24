@@ -81,18 +81,27 @@
 
       <!-- decoded content -->
       <div id="result" hidden>
-        <span class="qr-cap">Content</span>
+        <div class="mb-1 flex items-center gap-2">
+          <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400">Content</span>
+          <span id="typeBadge" hidden
+            class="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-300"></span>
+        </div>
         <textarea id="content" rows="3" readonly
           class="w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"></textarea>
-        <div class="mt-3 grid grid-cols-2 gap-2">
+        <div class="mt-3 flex gap-2">
           <button id="goto" type="button" hidden
-            class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            class="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
             Go to
           </button>
           <button id="copy" type="button"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
+            class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
                    dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
             Copy
+          </button>
+          <button id="edit" type="button"
+            class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
+                   dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            Edit
           </button>
         </div>
       </div>

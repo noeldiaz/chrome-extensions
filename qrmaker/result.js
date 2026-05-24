@@ -1,8 +1,25 @@
-import { isShareableUrl, originPattern } from "./lib.js";
+import { isShareableUrl, originPattern, detectType } from "./lib.js";
 import { initTheme } from "./theme.js";
 import { iconOpenExternal, iconCopy, iconEdit } from "./icons.js";
 
 const DECODE_MAX = 1024; // cap the decode canvas; jsQR is slow on huge images
+const TYPE_LABELS = {
+  wifi: "Wi-Fi network",
+  vcard: "Contact card",
+  email: "Email",
+  sms: "SMS",
+  tel: "Phone",
+  geo: "Location",
+};
+
+// Open the editor for a decoded payload, parsing a structured one back into its
+// form (via ?type=) so it round-trips instead of landing as raw text.
+function editUrl(text) {
+  const kind = detectType(text);
+  let url = chrome.runtime.getURL("editor.html") + "?data=" + encodeURIComponent(text);
+  if (kind !== "text") url += "&type=" + kind;
+  return url;
+}
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -18,8 +35,10 @@ const els = {
   result: $("result"),
   pageList: $("pageList"),
   content: $("content"),
+  typeBadge: $("typeBadge"),
   goto: $("goto"),
   copy: $("copy"),
+  edit: $("edit"),
   dropHint: $("dropHint"),
   dropOverlay: $("dropOverlay"),
   winClose: $("winClose"),
@@ -65,12 +84,18 @@ function showResult(text) {
     decodedText = "";
     els.content.value = "";
     els.goto.hidden = true;
+    els.edit.hidden = true;
+    els.typeBadge.hidden = true;
     setStatus("No QR code found in that image.", false);
     return;
   }
   decodedText = text;
   els.content.value = text;
   els.goto.hidden = !isShareableUrl(text);
+  els.edit.hidden = false;
+  const kind = detectType(text);
+  els.typeBadge.hidden = kind === "text";
+  if (kind !== "text") els.typeBadge.textContent = TYPE_LABELS[kind];
   setStatus("");
 }
 
@@ -303,6 +328,9 @@ els.copy.addEventListener("click", async () => {
     setStatus("Copy failed: " + (e?.message || e), false);
   }
 });
+els.edit.addEventListener("click", () => {
+  if (decodedText) chrome.tabs.create({ url: editUrl(decodedText) });
+});
 els.winClose.addEventListener("click", () => window.close());
 
 // --- page scan (list of every QR code found on the active tab) ---
@@ -376,12 +404,11 @@ function pageRow(text) {
     }),
   );
 
-  // Edit: hand the decoded text to the advanced editor to restyle and re-export.
+  // Edit: hand the decoded text to the advanced editor to restyle and re-export
+  // (structured payloads reopen in their own form via editUrl's ?type=).
   actions.appendChild(
     rowButton("Edit", iconEdit, "qr-btn-neutral", () =>
-      chrome.tabs.create({
-        url: chrome.runtime.getURL("editor.html") + "?data=" + encodeURIComponent(text),
-      }),
+      chrome.tabs.create({ url: editUrl(text) }),
     ),
   );
 
