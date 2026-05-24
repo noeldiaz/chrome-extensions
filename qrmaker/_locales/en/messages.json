@@ -144,6 +144,8 @@
 
   "emptyEditor": { "message": "Enter content to generate a code." },
   "emptyFields": { "message": "Fill in the fields to generate a code." },
+  "saveBtn": { "message": "Save" },
+  "savedToHistory": { "message": "Saved to history." },
   "resetBtn": { "message": "Reset" },
   "sectionLogo": { "message": "Center logo" },
   "logoNone": { "message": "No logo" },

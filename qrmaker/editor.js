@@ -147,9 +147,11 @@ const els = {
   presetDeleteCancel: $("presetDeleteCancel"),
   presetDeleteConfirm: $("presetDeleteConfirm"),
   copy: $("copy"),
+  save: $("save"),
   reset: $("reset"),
   status: $("status"),
   history: $("history"),
+  settings: $("settings"),
   themeToggle: $("theme-toggle"),
   moon: $("moon-icon"),
   sun: $("sun-icon"),
@@ -902,6 +904,13 @@ async function download(format) {
   }
 }
 
+// Log the current code + options to History without downloading or copying.
+async function save() {
+  if (!qr) return;
+  await recordHistory();
+  flash(t("savedToHistory"));
+}
+
 async function copyImage() {
   if (!qr) return;
   try {
@@ -1046,10 +1055,12 @@ document.getElementById("dlPng").addEventListener("click", () => download("png")
 document.getElementById("dlSvg").addEventListener("click", () => download("svg"));
 document.getElementById("dlJpg").addEventListener("click", () => download("jpeg"));
 els.copy.addEventListener("click", copyImage);
+els.save.addEventListener("click", save);
 els.reset.addEventListener("click", reset);
 els.history.addEventListener("click", () =>
   chrome.tabs.create({ url: chrome.runtime.getURL("history.html") }),
 );
+els.settings.addEventListener("click", () => chrome.runtime.openOptionsPage());
 
 // Footer Close: shut the editor tab (window.close() is unreliable for a tab
 // opened via chrome.tabs.create, so remove it by id, falling back if needed).
