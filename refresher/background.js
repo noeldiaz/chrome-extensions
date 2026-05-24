@@ -31,12 +31,12 @@ function stopBadgeTimers() {
 }
 
 async function setBadgeText(text) {
-  await chrome.action.setBadgeText({ text });
+  await chrome.action.setBadgeText?.({ text });
   if (text) {
-    await chrome.action.setBadgeBackgroundColor({ color: "#1e88e5" });
-    if (chrome.action.setBadgeTextColor) {
-      await chrome.action.setBadgeTextColor({ color: "#ffffff" });
-    }
+    // Badge color setters aren't in every engine (Safari styles badges itself);
+    // call only when present so the countdown text still shows.
+    await chrome.action.setBadgeBackgroundColor?.({ color: "#1e88e5" });
+    await chrome.action.setBadgeTextColor?.({ color: "#ffffff" });
   }
 }
 
