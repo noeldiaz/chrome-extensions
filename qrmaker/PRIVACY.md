@@ -37,6 +37,10 @@ the extension's storage, removes it.
 - **Camera** (`getUserMedia`) — used only while you actively choose "Scan with
   camera." Frames are processed locally to find a QR code and are never stored
   or transmitted. The camera is released as soon as a code is found or you stop.
+- **Location** (`navigator.geolocation`) — used only when you click "Use my
+  location" for the editor's Location code type, to fill the latitude/longitude
+  fields. Read once per click, kept local, and never transmitted. Requested via
+  the browser's own prompt — not an install-time permission.
 - **Optional host permissions (`http`/`https`)** — requested **only** when you
   scan a QR code from an image hosted on another website, so the extension can
   fetch that one image's pixels to decode it. Not requested at install.

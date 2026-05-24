@@ -24,8 +24,9 @@ Manifest V3.
 - **Structured types** *(editor)* — pick a **Type** to encode more than plain
   text: a **Wi-Fi** network (SSID / password / security / hidden), a **contact
   card** (vCard), an **email** (mailto), an **SMS**, a **phone** number, or a
-  **map location** (geo). The matching fields appear and compose the payload for
-  you, and re-opening one from History rebuilds its form.
+  **map location** (geo, with a one-tap **Use my location**). The matching fields
+  appear and compose the payload for you, and re-opening one from History
+  rebuilds its form.
 - **Frame / "Scan me" card** *(editor)* — wrap the code in a printable card: a
   caption above it (your text, any color) on a solid or **gradient** background,
   with the code on a white rounded tile. Exports as PNG / JPG (or copy).

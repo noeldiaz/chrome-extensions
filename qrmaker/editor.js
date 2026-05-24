@@ -89,6 +89,7 @@ const els = {
   // location
   geoLat: $("geoLat"),
   geoLng: $("geoLng"),
+  geoLocate: $("geoLocate"),
   dotStyle: $("dotStyle"),
   cornerStyle: $("cornerStyle"),
   colorDots: $("colorDots"),
@@ -1008,6 +1009,39 @@ for (const el of [
 ]) {
   el.addEventListener("input", render);
 }
+
+// Fill the Location fields from the device. Uses the browser's geolocation
+// prompt on click (no install-time permission); coords stay local.
+els.geoLocate.addEventListener("click", () => {
+  if (!navigator.geolocation) {
+    flash("Geolocation isn't available in this browser.", false);
+    return;
+  }
+  els.geoLocate.disabled = true;
+  flash("Getting your location…");
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      els.geoLocate.disabled = false;
+      els.geoLat.value = pos.coords.latitude.toFixed(6);
+      els.geoLng.value = pos.coords.longitude.toFixed(6);
+      render();
+      flash("Location filled in.");
+    },
+    (err) => {
+      els.geoLocate.disabled = false;
+      const msg =
+        err.code === err.PERMISSION_DENIED
+          ? "Location permission denied."
+          : err.code === err.POSITION_UNAVAILABLE
+            ? "Location unavailable."
+            : err.code === err.TIMEOUT
+              ? "Location request timed out."
+              : "Couldn't get your location.";
+      flash(msg, false);
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+  );
+});
 
 document.getElementById("dlPng").addEventListener("click", () => download("png"));
 document.getElementById("dlSvg").addEventListener("click", () => download("svg"));
