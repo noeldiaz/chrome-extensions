@@ -9,6 +9,7 @@ import {
   statsLabel,
   readInterval as parseInterval,
 } from "./lib.js";
+import { localize, t } from "./i18n.js";
 
 const minutesEl = document.getElementById("minutes");
 const secondsEl = document.getElementById("seconds");
@@ -94,7 +95,7 @@ function stopCountdown() {
 
 // --- target list ---
 
-function buildRow(tabId, t) {
+function buildRow(tabId, target) {
   const row = document.createElement("div");
   row.className =
     "rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:shadow-none";
@@ -102,7 +103,7 @@ function buildRow(tabId, t) {
   const head = document.createElement("div");
   head.className = "flex items-baseline justify-between gap-3";
 
-  const label = t.tabTitle || `Tab #${tabId}`;
+  const label = target.tabTitle || t("rowTabFallback", [String(tabId)]);
 
   const title = document.createElement("div");
   title.className = "truncate text-sm text-slate-900 dark:text-slate-100";
@@ -120,7 +121,7 @@ function buildRow(tabId, t) {
 
   const interval = document.createElement("span");
   interval.className = "text-xs text-slate-500 dark:text-slate-400";
-  interval.textContent = `Every ${intervalLabel(t.minutes, t.seconds)}`;
+  interval.textContent = t("rowEvery", [intervalLabel(target.minutes, target.seconds)]);
 
   const actions = document.createElement("div");
   actions.className = "flex items-center gap-5";
@@ -128,17 +129,17 @@ function buildRow(tabId, t) {
   const go = document.createElement("button");
   go.type = "button";
   go.className = "text-xs text-blue-600 hover:underline dark:text-blue-400";
-  go.textContent = "Go";
-  go.title = `Switch to ${label}`;
-  go.setAttribute("aria-label", `Switch to ${label}`);
+  go.textContent = t("rowGo");
+  go.title = t("rowSwitchTo", [label]);
+  go.setAttribute("aria-label", t("rowSwitchTo", [label]));
   go.addEventListener("click", () => jumpToTab(tabId));
 
   const stop = document.createElement("button");
   stop.type = "button";
   stop.className = "text-xs text-red-600 hover:underline dark:text-red-400";
-  stop.textContent = "Stop";
-  stop.title = `Stop refreshing ${label}`;
-  stop.setAttribute("aria-label", `Stop refreshing ${label}`);
+  stop.textContent = t("rowStop");
+  stop.title = t("rowStopRefreshing", [label]);
+  stop.setAttribute("aria-label", t("rowStopRefreshing", [label]));
   stop.addEventListener("click", () => stopTarget(tabId));
 
   actions.append(go, stop);
@@ -147,9 +148,9 @@ function buildRow(tabId, t) {
   const stats = document.createElement("div");
   stats.className = "mt-0.5 text-[11px] tabular-nums text-slate-400 dark:text-slate-500";
   stats.dataset.stats = String(tabId);
-  stats.dataset.count = String(t.count || 0);
-  stats.dataset.last = t.lastRefresh ? String(t.lastRefresh) : "";
-  stats.textContent = statsLabel(t.count || 0, t.lastRefresh || null);
+  stats.dataset.count = String(target.count || 0);
+  stats.dataset.last = target.lastRefresh ? String(target.lastRefresh) : "";
+  stats.textContent = statsLabel(target.count || 0, target.lastRefresh || null);
 
   row.append(head, foot, stats);
   return row;
@@ -174,7 +175,7 @@ async function renderList() {
 async function updateAddButton(targets) {
   const tab = await activeTab();
   const already = tab && String(tab.id) in targets;
-  addEl.textContent = already ? "Update interval" : "Refresh this Tab";
+  addEl.textContent = already ? t("updateInterval") : t("refreshThisTab");
 }
 
 // --- actions ---
@@ -191,13 +192,13 @@ async function commitIntervalFields() {
 async function addOrUpdate() {
   const { minutes, seconds, total } = await commitIntervalFields();
   if (total < MIN_TOTAL_SECONDS) {
-    statusEl.textContent = `Minimum interval is ${MIN_TOTAL_SECONDS} seconds.`;
+    statusEl.textContent = t("minIntervalError", [String(MIN_TOTAL_SECONDS)]);
     return;
   }
   const tab = await activeTab();
   if (!tab) return;
   if (PROTECTED_URL.test(tab.url || "")) {
-    statusEl.textContent = "Cannot refresh this page.";
+    statusEl.textContent = t("cannotRefresh");
     return;
   }
   statusEl.textContent = "";
@@ -253,7 +254,7 @@ preserveScrollEl.addEventListener("change", async () => {
     const granted = await chrome.permissions.request({ origins: SCROLL_ORIGINS });
     if (!granted) {
       preserveScrollEl.checked = false;
-      statusEl.textContent = "Scroll preservation needs access to your pages.";
+      statusEl.textContent = t("scrollNeedsAccess");
       return;
     }
     statusEl.textContent = "";
@@ -303,5 +304,6 @@ async function load() {
   await renderList();
 }
 
+localize();
 loadTheme();
 load();

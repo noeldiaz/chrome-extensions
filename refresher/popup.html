@@ -15,6 +15,7 @@
           <button
             id="settings"
             type="button"
+            data-i18n-attr="title:settings,aria-label:settings"
             class="rounded p-1 text-slate-500 transition hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
             title="Settings"
             aria-label="Settings"
@@ -27,6 +28,7 @@
           <button
             id="theme-toggle"
             type="button"
+            data-i18n-attr="title:themeToggle,aria-label:themeToggle"
             class="rounded p-1 text-slate-500 transition hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
             title="Toggle dark mode"
             aria-label="Toggle dark mode"
@@ -45,7 +47,7 @@
 
       <div class="flex gap-3">
         <div class="flex-1">
-          <label for="minutes" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Minutes</label>
+          <label for="minutes" data-i18n="minutes" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Minutes</label>
           <input
             type="number"
             id="minutes"
@@ -59,7 +61,7 @@
           />
         </div>
         <div class="flex-1">
-          <label for="seconds" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Seconds</label>
+          <label for="seconds" data-i18n="seconds" class="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Seconds</label>
           <input
             type="number"
             id="seconds"
@@ -75,14 +77,14 @@
       </div>
 
       <div class="mt-3">
-        <span class="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Preset intervals</span>
+        <span data-i18n="presetIntervals" class="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Preset intervals</span>
         <div class="grid grid-cols-3 gap-2" id="presets">
-          <button type="button" class="preset-btn" data-seconds="30">30 Seconds</button>
-          <button type="button" class="preset-btn" data-seconds="60">1 Minute</button>
-          <button type="button" class="preset-btn" data-seconds="120">2 Minutes</button>
-          <button type="button" class="preset-btn" data-seconds="300">5 Minutes</button>
-          <button type="button" class="preset-btn" data-seconds="600">10 Minutes</button>
-          <button type="button" class="preset-btn" data-seconds="900">15 Minutes</button>
+          <button type="button" class="preset-btn" data-seconds="30" data-i18n="preset30s">30 Seconds</button>
+          <button type="button" class="preset-btn" data-seconds="60" data-i18n="preset1m">1 Minute</button>
+          <button type="button" class="preset-btn" data-seconds="120" data-i18n="preset2m">2 Minutes</button>
+          <button type="button" class="preset-btn" data-seconds="300" data-i18n="preset5m">5 Minutes</button>
+          <button type="button" class="preset-btn" data-seconds="600" data-i18n="preset10m">10 Minutes</button>
+          <button type="button" class="preset-btn" data-seconds="900" data-i18n="preset15m">15 Minutes</button>
         </div>
       </div>
 
@@ -90,6 +92,7 @@
         <button
           id="add"
           type="button"
+          data-i18n="refreshThisTab"
           class="w-full rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-1
                  bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400
                  dark:focus:ring-offset-slate-900"
@@ -104,7 +107,7 @@
           id="preserveScroll"
           class="h-3.5 w-3.5 accent-blue-600"
         />
-        Preserve scroll position
+        <span data-i18n="preserveScroll">Preserve scroll position</span>
       </label>
 
       <p id="status" class="mt-2 text-center text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
@@ -112,11 +115,11 @@
       <div class="my-4 border-t border-slate-200 dark:border-slate-700"></div>
 
       <div class="flex items-center justify-between">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active tabs</span>
+        <span data-i18n="activeTabs" class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active tabs</span>
         <span id="count" class="text-[10px] font-medium tabular-nums text-slate-400 dark:text-slate-500"></span>
       </div>
 
-      <p id="empty" class="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">No tabs refreshing yet.</p>
+      <p id="empty" data-i18n="emptyTabs" class="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">No tabs refreshing yet.</p>
       <div id="list" class="mt-2 space-y-2"></div>
     </div>
     <script type="module" src="popup.js"></script>

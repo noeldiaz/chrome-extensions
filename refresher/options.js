@@ -1,6 +1,8 @@
 // Placeholder options page — settings will be added here later. For now it only
 // carries the same light/dark theme wiring the popup uses (Refresher has no
-// shared theme module, so it's inlined here).
+// shared theme module, so it's inlined here) plus localization.
+
+import { localize } from "./i18n.js";
 
 const themeToggleEl = document.getElementById("theme-toggle");
 const moonIconEl = document.getElementById("moon-icon");
@@ -44,4 +46,5 @@ document.getElementById("winClose").addEventListener("click", async () => {
   window.close();
 });
 
+localize();
 loadTheme();

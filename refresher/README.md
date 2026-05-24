@@ -40,8 +40,9 @@ Load unpacked from `chrome://extensions` (Developer mode → Load unpacked → t
 Build CSS, then zip only the runtime files:
 
 ```bash
-npm run build:css && zip refresher.zip \
-  manifest.json popup.html popup.css popup.js background.js lib.js \
+npm run build:css && zip -r refresher.zip \
+  manifest.json popup.html popup.css popup.js options.html options.js background.js lib.js i18n.js \
+  _locales \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
 
@@ -52,6 +53,7 @@ Excludes source/tooling (`src/`, `node_modules/`, `eslint.config.js`, `test/`, `
 - `background.js` — service worker: alarms, badge, reload logic, scroll capture/restore, stats.
 - `popup.js` — popup UI: target list, countdown ticker, interval controls, theme.
 - `lib.js` — pure helpers (formatting, clamping, alarm-name parsing, URL guards), shared by both and unit-tested.
+- `i18n.js` / `_locales/` — localization. `_locales/en/messages.json` is the message catalog; `i18n.js`'s `localize()` applies it to each page on load via `data-i18n` / `data-i18n-attr`, and `t()` wraps `chrome.i18n.getMessage` for dynamic strings. Add a locale by dropping in `_locales/<lang>/messages.json`. (Pluralized count strings like the per-tab stats stay English — Chrome i18n has no plural rules.)
 - `src/styles.css` → `popup.css` — Tailwind v4 source and compiled output.
 
 Built with vanilla JS (ES modules) and Tailwind v4. No runtime dependencies.

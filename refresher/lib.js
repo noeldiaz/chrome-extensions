@@ -42,6 +42,8 @@ export function readInterval(minutesValue, secondsValue) {
   return { minutes, seconds, total: minutes * 60 + seconds };
 }
 
+// TODO(i18n): plural — count-dependent "min"/"sec" units stay English (Chrome
+// i18n has no plural rules). Pure helper, no DOM, so it can't call getMessage.
 export function intervalLabel(minutes, seconds) {
   const parts = [];
   if (minutes > 0) parts.push(`${minutes} min`);
@@ -49,6 +51,8 @@ export function intervalLabel(minutes, seconds) {
   return parts.join(" ") || "0 sec";
 }
 
+// TODO(i18n): plural — count-dependent "ago" units stay English (Chrome i18n
+// has no plural rules). Pure helper, no DOM, so it can't call getMessage.
 export function relativeTime(fromMs, now = Date.now()) {
   const s = Math.max(0, Math.round((now - fromMs) / 1000));
   if (s < 60) return `${s}s ago`;
@@ -60,6 +64,8 @@ export function relativeTime(fromMs, now = Date.now()) {
 }
 
 // Per-target refresh summary, e.g. "12× · 34s ago".
+// TODO(i18n): plural — count-dependent summary stays English (Chrome i18n has
+// no plural rules). Pure helper, no DOM, so it can't call getMessage.
 export function statsLabel(count, lastRefresh, now = Date.now()) {
   if (!count) return "No refreshes yet";
   const times = `${count}×`;

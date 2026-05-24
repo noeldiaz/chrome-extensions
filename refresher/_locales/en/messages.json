@@ -1,0 +1,54 @@
+{
+  "appName": { "message": "Refresher" },
+  "appDesc": {
+    "message": "Refresh chosen browser tabs on periodic intervals you control."
+  },
+
+  "themeToggle": { "message": "Toggle dark mode" },
+  "settings": { "message": "Settings" },
+  "titleOptions": { "message": "Refresher — Options" },
+  "h1Options": { "message": "Refresher — Options" },
+  "optionsBlank": { "message": "Nothing to configure yet — settings will live here." },
+  "close": { "message": "Close" },
+
+  "minutes": { "message": "Minutes" },
+  "seconds": { "message": "Seconds" },
+  "presetIntervals": { "message": "Preset intervals" },
+  "preset30s": { "message": "30 Seconds" },
+  "preset1m": { "message": "1 Minute" },
+  "preset2m": { "message": "2 Minutes" },
+  "preset5m": { "message": "5 Minutes" },
+  "preset10m": { "message": "10 Minutes" },
+  "preset15m": { "message": "15 Minutes" },
+  "refreshThisTab": { "message": "Refresh this Tab" },
+  "updateInterval": { "message": "Update interval" },
+  "preserveScroll": { "message": "Preserve scroll position" },
+  "activeTabs": { "message": "Active tabs" },
+  "emptyTabs": { "message": "No tabs refreshing yet." },
+
+  "rowGo": { "message": "Go" },
+  "rowStop": { "message": "Stop" },
+  "rowEvery": {
+    "message": "Every $interval$",
+    "placeholders": { "interval": { "content": "$1" } }
+  },
+  "rowTabFallback": {
+    "message": "Tab #$id$",
+    "placeholders": { "id": { "content": "$1" } }
+  },
+  "rowSwitchTo": {
+    "message": "Switch to $label$",
+    "placeholders": { "label": { "content": "$1" } }
+  },
+  "rowStopRefreshing": {
+    "message": "Stop refreshing $label$",
+    "placeholders": { "label": { "content": "$1" } }
+  },
+
+  "minIntervalError": {
+    "message": "Minimum interval is $seconds$ seconds.",
+    "placeholders": { "seconds": { "content": "$1" } }
+  },
+  "cannotRefresh": { "message": "Cannot refresh this page." },
+  "scrollNeedsAccess": { "message": "Scroll preservation needs access to your pages." }
+}
