@@ -3,14 +3,16 @@
 
 const WEB = ["http://*/*", "https://*/*"];
 
+const msg = (k) => chrome.i18n.getMessage(k);
+
 const MENUS = [
-  { id: "qr-page", title: "Create QR code for this page", contexts: ["page"], documentUrlPatterns: WEB },
-  { id: "qr-link", title: "Create QR code for this link", contexts: ["link"], targetUrlPatterns: WEB },
-  { id: "qr-selection", title: "Create QR code for selection", contexts: ["selection"] },
-  { id: "qr-image", title: "Create QR code for image address", contexts: ["image"], targetUrlPatterns: WEB },
-  { id: "qr-scan-image", title: "Scan QR code from this image", contexts: ["image"] },
-  { id: "qr-scan-page", title: "Scan QR codes on this page", contexts: ["page"], documentUrlPatterns: WEB },
-  { id: "qr-history", title: "View created QR codes", contexts: ["action"] },
+  { id: "qr-page", title: msg("menuQrPage"), contexts: ["page"], documentUrlPatterns: WEB },
+  { id: "qr-link", title: msg("menuQrLink"), contexts: ["link"], targetUrlPatterns: WEB },
+  { id: "qr-selection", title: msg("menuQrSelection"), contexts: ["selection"] },
+  { id: "qr-image", title: msg("menuQrImage"), contexts: ["image"], targetUrlPatterns: WEB },
+  { id: "qr-scan-image", title: msg("menuScanImage"), contexts: ["image"] },
+  { id: "qr-scan-page", title: msg("menuScanPage"), contexts: ["page"], documentUrlPatterns: WEB },
+  { id: "qr-history", title: msg("menuHistory"), contexts: ["action"] },
 ];
 
 function buildMenus() {

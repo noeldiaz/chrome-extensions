@@ -10,6 +10,8 @@
 @source "../result.js";
 @source "../history.html";
 @source "../history.js";
+@source "../options.html";
+@source "../options.js";
 @source "../icons.js";
 
 @layer base {

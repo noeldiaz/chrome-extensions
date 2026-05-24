@@ -12,6 +12,7 @@ import {
   buildGeo,
   parseStructured,
 } from "./lib.js";
+import { localize, t } from "./i18n.js";
 import {
   addLogo,
   getLogos,
@@ -413,7 +414,7 @@ async function renderLibrary() {
     tile.type = "button";
     tile.className = "logo-tile";
     tile.dataset.logoId = String(id);
-    tile.title = "Use this logo";
+    tile.title = t("logoUse");
     const img = document.createElement("img");
     img.src = dataUrl;
     img.alt = "";
@@ -425,8 +426,8 @@ async function renderLibrary() {
     del.type = "button";
     del.className = "logo-del";
     del.textContent = "✕";
-    del.title = "Remove from library";
-    del.setAttribute("aria-label", "Remove logo from library");
+    del.title = t("logoRemoveTitle");
+    del.setAttribute("aria-label", t("logoRemoveAria"));
     del.addEventListener("click", async (e) => {
       e.stopPropagation();
       await deleteLogo(id);
@@ -536,7 +537,7 @@ function renderPresetOptions(selectedId = "") {
   els.presetSelect.replaceChildren();
   const none = document.createElement("option");
   none.value = "";
-  none.textContent = "— No preset —";
+  none.textContent = t("presetNone");
   els.presetSelect.appendChild(none);
   for (const p of presets) {
     const opt = document.createElement("option");
@@ -570,7 +571,7 @@ async function updateSelectedPreset() {
   if (!p) return;
   p.config = captureConfig();
   await persistPresets();
-  presetFlash(`Saved “${p.name}”.`);
+  presetFlash(t("presetSaved", [p.name]));
 }
 
 async function deleteSelectedPreset() {
@@ -581,7 +582,7 @@ async function deleteSelectedPreset() {
   if (defaultPresetId === id) defaultPresetId = null;
   await persistPresets();
   renderPresetOptions("");
-  presetFlash(`Deleted “${name}”.`);
+  presetFlash(t("presetDeleted", [name]));
 }
 
 function openDeleteModal() {
@@ -607,7 +608,7 @@ async function toggleDefault() {
   defaultPresetId = els.presetDefault.checked ? id : null;
   await persistPresets();
   renderPresetOptions(id); // refresh the ★ markers
-  presetFlash(els.presetDefault.checked ? "Set as default." : "Default cleared.");
+  presetFlash(els.presetDefault.checked ? t("presetSetDefault") : t("presetDefaultCleared"));
 }
 
 function openPresetModal() {
@@ -628,7 +629,7 @@ async function confirmPreset() {
   }
   await savePreset(name);
   closePresetModal();
-  presetFlash(`Created “${name}”.`);
+  presetFlash(t("presetCreated", [name]));
 }
 
 // --- render ---
@@ -651,7 +652,7 @@ function render() {
   els.dlSvg.disabled = els.cardOn.checked;
   els.dlSvg.classList.toggle("cursor-not-allowed", els.cardOn.checked);
   els.dlSvg.classList.toggle("opacity-40", els.cardOn.checked);
-  els.dlSvg.title = els.cardOn.checked ? "Turn off the card to export SVG (code-only)" : "";
+  els.dlSvg.title = els.cardOn.checked ? t("svgDisabledTitle") : "";
   updateCardPreview();
   showTypeFields();
 
@@ -661,10 +662,7 @@ function render() {
     qr = null;
     els.mount.replaceChildren();
     els.mount.classList.add("hidden");
-    els.empty.textContent =
-      els.qrType.value === "text"
-        ? "Enter content to generate a code."
-        : "Fill in the fields to generate a code.";
+    els.empty.textContent = els.qrType.value === "text" ? t("emptyEditor") : t("emptyFields");
     els.empty.hidden = false;
     return;
   }
@@ -684,7 +682,7 @@ function render() {
     qr = null;
     els.mount.replaceChildren();
     els.mount.classList.add("hidden");
-    els.empty.textContent = "Too long to encode — try shortening the text.";
+    els.empty.textContent = t("tooLong");
     els.empty.hidden = false;
     return;
   }
@@ -900,7 +898,7 @@ async function download(format) {
     setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
     recordHistory();
   } catch (e) {
-    flash("Download failed: " + (e?.message || e), false);
+    flash(t("errDownload", [e?.message || String(e)]), false);
   }
 }
 
@@ -909,10 +907,10 @@ async function copyImage() {
   try {
     const blob = els.cardOn.checked ? await renderCard("png") : await exporter("png");
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    flash("Copied to clipboard.");
+    flash(t("copiedToClipboard"));
     recordHistory();
   } catch (e) {
-    flash("Copy failed: " + (e?.message || e), false);
+    flash(t("errCopy", [e?.message || String(e)]), false);
   }
 }
 
@@ -944,7 +942,7 @@ function reset() {
   markActiveTiles();
   renderPresetOptions(""); // deselect any preset — back to "— No preset —"
   render();
-  flash("Reset to defaults.");
+  flash(t("resetDone"));
 }
 
 function setActive(group, value) {
@@ -1015,29 +1013,29 @@ for (const el of [
 // prompt on click (no install-time permission); coords stay local.
 els.geoLocate.addEventListener("click", () => {
   if (!navigator.geolocation) {
-    flash("Geolocation isn't available in this browser.", false);
+    flash(t("geoUnsupported"), false);
     return;
   }
   els.geoLocate.disabled = true;
-  flash("Getting your location…");
+  flash(t("geoGetting"));
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       els.geoLocate.disabled = false;
       els.geoLat.value = pos.coords.latitude.toFixed(6);
       els.geoLng.value = pos.coords.longitude.toFixed(6);
       render();
-      flash("Location filled in.");
+      flash(t("geoFilled"));
     },
     (err) => {
       els.geoLocate.disabled = false;
       const msg =
         err.code === err.PERMISSION_DENIED
-          ? "Location permission denied."
+          ? t("geoDenied")
           : err.code === err.POSITION_UNAVAILABLE
-            ? "Location unavailable."
+            ? t("geoUnavailable")
             : err.code === err.TIMEOUT
-              ? "Location request timed out."
-              : "Couldn't get your location.";
+              ? t("geoTimeout")
+              : t("geoError");
       flash(msg, false);
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
@@ -1081,7 +1079,7 @@ els.logoFile.addEventListener("change", async () => {
     await renderLibrary();
     selectLogo(dataUrl, id);
   } catch (e) {
-    flash("Couldn't add that logo: " + (e?.message || e), false);
+    flash(t("errAddLogo", [e?.message || String(e)]), false);
   }
 });
 
@@ -1116,7 +1114,7 @@ async function init() {
   try {
     await renderLibrary();
   } catch (e) {
-    flash("Couldn't load saved logos: " + (e?.message || e), false);
+    flash(t("errLoadLogos", [e?.message || String(e)]), false);
   }
   try {
     await loadPresets();
@@ -1124,7 +1122,7 @@ async function init() {
     const def = defaultPresetId != null ? presets.find((p) => p.id === defaultPresetId) : null;
     if (def) await applyConfig(def.config);
   } catch (e) {
-    flash("Couldn't load presets: " + (e?.message || e), false);
+    flash(t("errLoadPresets", [e?.message || String(e)]), false);
   }
   const params = new URLSearchParams(location.search);
   const histId = params.get("history");
@@ -1144,7 +1142,7 @@ async function init() {
         }
       }
     } catch (e) {
-      flash("Couldn't load that code: " + (e?.message || e), false);
+      flash(t("errLoadCode", [e?.message || String(e)]), false);
     }
   } else {
     const data = params.get("data");
@@ -1161,5 +1159,6 @@ async function init() {
   render();
 }
 
+localize();
 initTheme({ toggle: els.themeToggle, moon: els.moon, sun: els.sun });
 init();

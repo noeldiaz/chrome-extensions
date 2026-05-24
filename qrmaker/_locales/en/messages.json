@@ -1,0 +1,259 @@
+{
+  "appName": { "message": "QRmaker" },
+  "appDesc": {
+    "message": "Make, style, and scan QR codes — encode the current tab, any link or text; decode codes from images, the page, or your camera."
+  },
+
+  "themeToggle": { "message": "Toggle dark mode" },
+  "settings": { "message": "Settings" },
+  "titleOptions": { "message": "QRmaker — Options" },
+  "h1Options": { "message": "QRmaker — Options" },
+  "optionsBlank": { "message": "Nothing to configure yet — settings will live here." },
+  "viewCreatedCodes": { "message": "View created codes" },
+  "close": { "message": "Close" },
+  "copy": { "message": "Copy" },
+  "cancel": { "message": "Cancel" },
+
+  "typeText": { "message": "Text / URL" },
+  "typeWifi": { "message": "Wi-Fi network" },
+  "typeVcard": { "message": "Contact card" },
+  "typeEmail": { "message": "Email" },
+  "typeSms": { "message": "SMS" },
+  "typeTel": { "message": "Phone" },
+  "typeGeo": { "message": "Location" },
+
+  "qrContentPlaceholder": { "message": "URL or text to encode" },
+  "qrContentAria": { "message": "QR content" },
+  "qrCodeAria": { "message": "QR code" },
+  "popupOptions": { "message": "Options" },
+  "colorDots": { "message": "Dots" },
+  "colorCorners": { "message": "Corners" },
+  "colorBg": { "message": "Background" },
+  "colorDotsAria": { "message": "Dots color" },
+  "colorCornersAria": { "message": "Corners color" },
+  "colorBgAria": { "message": "Background color" },
+  "moreTypesLabel": { "message": "More types (opens editor)" },
+  "moreTypesAria": { "message": "Open the editor as a structured type" },
+  "moreTypesPlaceholder": { "message": "Open editor as…" },
+  "resetDefaults": { "message": "Reset to defaults" },
+  "download": { "message": "Download" },
+  "copyImage": { "message": "Copy image to clipboard" },
+  "scanImage": { "message": "Scan a QR image" },
+  "advancedEditor": { "message": "Advanced editor" },
+  "downloadFormatAria": { "message": "Download format" },
+  "fmtPng": { "message": "PNG" },
+  "fmtSvg": { "message": "SVG" },
+  "fmtJpg": { "message": "JPG" },
+
+  "titleScan": { "message": "QRmaker — Scan" },
+  "grant": { "message": "Allow access & scan this image" },
+  "pick": { "message": "Scan an image file" },
+  "camera": { "message": "Scan with camera" },
+  "dropHint": { "message": "…or drag & drop or paste an image" },
+  "cameraStop": { "message": "Stop camera" },
+  "contentLabel": { "message": "Content" },
+  "goTo": { "message": "Go to" },
+  "edit": { "message": "Edit" },
+  "dropOverlay": { "message": "Drop an image to scan" },
+
+  "titleHistory": { "message": "QRmaker — History" },
+  "h1History": { "message": "QRmaker — History" },
+  "clearAll": { "message": "Clear all" },
+  "historyOpen": { "message": "Open" },
+  "emptyHistory": { "message": "No codes yet. Codes you download or copy show up here." },
+
+  "titleEditor": { "message": "QRmaker — Advanced editor" },
+  "h1Editor": { "message": "QRmaker — Advanced editor" },
+  "sectionContent": { "message": "Content" },
+  "capType": { "message": "Type" },
+  "capWifiSsid": { "message": "Network name (SSID)" },
+  "capPassword": { "message": "Password" },
+  "capSecurity": { "message": "Security" },
+  "wifiWpa": { "message": "WPA/WPA2" },
+  "wifiWep": { "message": "WEP" },
+  "wifiOpen": { "message": "None (open)" },
+  "wifiHidden": { "message": "Hidden network" },
+  "capFirstName": { "message": "First name" },
+  "capLastName": { "message": "Last name" },
+  "capPhone": { "message": "Phone" },
+  "capEmail": { "message": "Email" },
+  "capOrg": { "message": "Organization" },
+  "capTitle": { "message": "Title" },
+  "capWebsite": { "message": "Website" },
+  "capStreet": { "message": "Street" },
+  "capCity": { "message": "City" },
+  "capRegion": { "message": "Region / State" },
+  "capPostal": { "message": "Postal code" },
+  "capCountry": { "message": "Country" },
+  "capNote": { "message": "Note" },
+  "capTo": { "message": "To" },
+  "capSubject": { "message": "Subject" },
+  "capBody": { "message": "Body" },
+  "capPhoneNumber": { "message": "Phone number" },
+  "capMessage": { "message": "Message" },
+  "capLatitude": { "message": "Latitude" },
+  "capLongitude": { "message": "Longitude" },
+  "useMyLocation": { "message": "Use my location" },
+
+  "sectionPresets": { "message": "Presets" },
+  "presetNew": { "message": "New" },
+  "presetNewTitle": { "message": "Create a new preset" },
+  "presetNewAria": { "message": "New preset" },
+  "presetNone": { "message": "— No preset —" },
+  "presetSave": { "message": "Save" },
+  "presetSaveTitle": { "message": "Save changes to this preset" },
+  "presetSaveAria": { "message": "Save changes to preset" },
+  "presetDeleteTitle": { "message": "Delete preset" },
+  "presetDefaultLabel": { "message": "Use as default (loaded on open)" },
+
+  "sectionStyle": { "message": "Style" },
+  "capDotStyle": { "message": "Dot style" },
+  "capCornerStyle": { "message": "Corner style" },
+  "chipSquare": { "message": "Square" },
+  "chipRounded": { "message": "Rounded" },
+  "chipDots": { "message": "Dots" },
+  "chipClassy": { "message": "Classy" },
+
+  "sectionColors": { "message": "Colors" },
+  "gradientOn": { "message": "Background gradient" },
+  "capStop1": { "message": "Stop 1" },
+  "capStop2": { "message": "Stop 2" },
+  "gradColor1Aria": { "message": "Gradient color 1" },
+  "gradColor2Aria": { "message": "Gradient color 2" },
+  "gradLinear": { "message": "Linear" },
+  "gradRadial": { "message": "Radial" },
+  "capAngle": { "message": "Angle" },
+
+  "sectionLayout": { "message": "Layout" },
+  "capMargin": { "message": "Margin" },
+  "capExportSize": { "message": "Export size" },
+
+  "sectionFrame": { "message": "Frame / “Scan me” card" },
+  "cardWrap": { "message": "Wrap in a card" },
+  "capCaption": { "message": "Caption (shown above the code)" },
+  "cardCaptionPlaceholder": { "message": "e.g. Scan to check in" },
+  "capCaptionColor": { "message": "Caption color" },
+  "capCardBg": { "message": "Card background" },
+  "cardBgAria": { "message": "Card background color" },
+  "cardGradOn": { "message": "Card background gradient" },
+  "cardGradColor1Aria": { "message": "Card gradient color 1" },
+  "cardGradColor2Aria": { "message": "Card gradient color 2" },
+  "cardNote": {
+    "message": "The card exports as PNG or JPG (SVG stays code-only). The code sits on a white tile, so its own background colour isn’t applied here."
+  },
+
+  "emptyEditor": { "message": "Enter content to generate a code." },
+  "emptyFields": { "message": "Fill in the fields to generate a code." },
+  "resetBtn": { "message": "Reset" },
+  "sectionLogo": { "message": "Center logo" },
+  "logoNone": { "message": "No logo" },
+  "logoUpload": { "message": "Upload logo" },
+  "logoUse": { "message": "Use this logo" },
+  "logoRemoveTitle": { "message": "Remove from library" },
+  "logoRemoveAria": { "message": "Remove logo from library" },
+  "capLogoSize": { "message": "Logo size" },
+
+  "presetModalTitle": { "message": "New preset" },
+  "presetModalDesc": { "message": "Stores the current style, colors, gradient, sizes, and selected logo." },
+  "capName": { "message": "Name" },
+  "presetNamePlaceholder": { "message": "My design" },
+  "create": { "message": "Create" },
+  "deletePrefix": { "message": "Delete “" },
+  "deleteSuffix": { "message": "”? This can’t be undone." },
+  "delete": { "message": "Delete" },
+
+  "svgDisabledTitle": { "message": "Turn off the card to export SVG (code-only)" },
+
+  "flashEnterContent": { "message": "Enter a URL or text to make a code." },
+  "tooLong": { "message": "Too long to encode — try shortening the text." },
+  "copiedToClipboard": { "message": "Copied to clipboard." },
+  "copied": { "message": "Copied." },
+  "resetDone": { "message": "Reset to defaults." },
+  "errReadTab": {
+    "message": "Couldn't read this tab: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errDownload": {
+    "message": "Download failed: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errCopy": {
+    "message": "Copy failed: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "presetSaved": {
+    "message": "Saved “$name$”.",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "presetDeleted": {
+    "message": "Deleted “$name$”.",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "presetCreated": {
+    "message": "Created “$name$”.",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "presetSetDefault": { "message": "Set as default." },
+  "presetDefaultCleared": { "message": "Default cleared." },
+  "clearHistoryConfirm": { "message": "Clear all created-code history? This can't be undone." },
+
+  "errLoadLogos": {
+    "message": "Couldn't load saved logos: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errLoadPresets": {
+    "message": "Couldn't load presets: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errLoadCode": {
+    "message": "Couldn't load that code: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errAddLogo": {
+    "message": "Couldn't add that logo: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "geoUnsupported": { "message": "Geolocation isn't available in this browser." },
+  "geoGetting": { "message": "Getting your location…" },
+  "geoFilled": { "message": "Location filled in." },
+  "geoDenied": { "message": "Location permission denied." },
+  "geoUnavailable": { "message": "Location unavailable." },
+  "geoTimeout": { "message": "Location request timed out." },
+  "geoError": { "message": "Couldn't get your location." },
+
+  "noQrFound": { "message": "No QR code found in that image." },
+  "scanning": { "message": "Scanning…" },
+  "crossOriginNotice": { "message": "This image is on another site — allow access to scan it." },
+  "accessDenied": { "message": "Access denied — can't scan this image." },
+  "notImage": { "message": "That wasn't an image file." },
+  "cameraStarting": { "message": "Starting camera…" },
+  "cameraDenied": { "message": "Camera access denied." },
+  "cameraNotFound": { "message": "No camera found." },
+  "cameraPoint": { "message": "Point your camera at a QR code…" },
+  "errReadImage": {
+    "message": "Couldn't read that image: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errReadFile": {
+    "message": "Couldn't read that file: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "cameraError": {
+    "message": "Couldn't start camera: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errScanPage": {
+    "message": "Couldn't scan this page: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "menuQrPage": { "message": "Create QR code for this page" },
+  "menuQrLink": { "message": "Create QR code for this link" },
+  "menuQrSelection": { "message": "Create QR code for selection" },
+  "menuQrImage": { "message": "Create QR code for image address" },
+  "menuScanImage": { "message": "Scan QR code from this image" },
+  "menuScanPage": { "message": "Scan QR codes on this page" },
+  "menuHistory": { "message": "View created QR codes" }
+}

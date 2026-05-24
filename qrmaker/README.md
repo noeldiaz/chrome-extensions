@@ -94,7 +94,8 @@ directory).
 ```bash
 npm run build:css && zip -r qrmaker.zip \
   manifest.json popup.html popup.js editor.html editor.js result.html result.js \
-  history.html history.js background.js scanpage.js lib.js idb.js theme.js icons.js popup.css \
+  history.html history.js options.html options.js background.js scanpage.js lib.js idb.js theme.js icons.js i18n.js popup.css \
+  _locales \
   vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -124,6 +125,9 @@ include them.
 - `history.html` / `history.js` — the History page: lists created codes (from
   the `history` IndexedDB store) with re-encoded previews, re-open in editor,
   delete, and clear-all.
+- `options.html` / `options.js` — the options page (`options_ui`, opened by the
+  popup's gear via `chrome.runtime.openOptionsPage()`); a themed placeholder for
+  now.
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
@@ -133,6 +137,11 @@ include them.
 - `theme.js` — shared light/dark theme wiring (`initTheme`) used by every page.
 - `icons.js` — shared inline SVG icon strings for the JS-built rows in the scan
   and history pages.
+- `i18n.js` / `_locales/` — localization. `_locales/en/messages.json` is the
+  message catalog; `i18n.js`'s `localize()` applies it to each page on load via
+  `data-i18n` / `data-i18n-attr`, and `t()` wraps `chrome.i18n.getMessage` for
+  dynamic strings. Add a locale by dropping in `_locales/<lang>/messages.json`.
+  (Pluralized page-scan counts stay English — Chrome i18n has no plural rules.)
 - `idb.js` — IndexedDB (DB `qrmaker`): the editor's uploaded center-logo library
   (`logos`) and the created-codes `history` store.
 - `vendor/qr-code-styling.js` — vendored [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)

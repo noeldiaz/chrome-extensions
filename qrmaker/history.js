@@ -2,6 +2,7 @@ import { degToRad } from "./lib.js";
 import { getHistory, deleteHistoryItem, clearHistory } from "./idb.js";
 import { initTheme } from "./theme.js";
 import { iconEdit, iconTrash } from "./icons.js";
+import { localize, t } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -90,7 +91,7 @@ function row(item) {
   const open = document.createElement("button");
   open.type = "button";
   open.className = "qr-btn-primary";
-  open.innerHTML = iconEdit + "<span>Open</span>";
+  open.innerHTML = iconEdit + "<span>" + t("historyOpen") + "</span>";
   open.addEventListener("click", () =>
     chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + "?history=" + item.id }),
   );
@@ -98,8 +99,8 @@ function row(item) {
 
   const del = document.createElement("button");
   del.type = "button";
-  del.title = "Delete";
-  del.setAttribute("aria-label", "Delete");
+  del.title = t("delete");
+  del.setAttribute("aria-label", t("delete"));
   del.className = "qr-btn-del";
   del.innerHTML = iconTrash;
   del.addEventListener("click", async () => {
@@ -142,7 +143,7 @@ async function render() {
 }
 
 els.clearAll.addEventListener("click", async () => {
-  if (!window.confirm("Clear all created-code history? This can't be undone.")) return;
+  if (!window.confirm(t("clearHistoryConfirm"))) return;
   await clearHistory();
   els.list.replaceChildren();
   showEmpty();
@@ -161,5 +162,6 @@ els.winClose.addEventListener("click", async () => {
   window.close();
 });
 
+localize();
 initTheme({ toggle: els.themeToggle, moon: els.moon, sun: els.sun });
 render();

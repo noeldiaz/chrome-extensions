@@ -1,6 +1,7 @@
 import { downloadFilename, clamp, degToRad } from "./lib.js";
 import { getLogos, addHistory } from "./idb.js";
 import { initTheme } from "./theme.js";
+import { localize, t } from "./i18n.js";
 
 const qrWrapEl = document.getElementById("qrWrap");
 const qrMountEl = document.getElementById("qrMount");
@@ -9,6 +10,7 @@ const colorDotsEl = document.getElementById("colorDots");
 const colorCornersEl = document.getElementById("colorCorners");
 const colorBgEl = document.getElementById("colorBg");
 const resetEl = document.getElementById("reset");
+const settingsEl = document.getElementById("settings");
 const moreTypesEl = document.getElementById("moreTypes");
 const controlsEl = document.getElementById("controls");
 const downloadEl = document.getElementById("download");
@@ -167,7 +169,7 @@ function renderQr(data) {
     // payload exceeds the symbol's capacity at this error-correction level.
     qr = new QRCodeStyling(qrOptions(data));
   } catch {
-    hideQr("Too long to encode — try shortening the text.");
+    hideQr(t("tooLong"));
     return;
   }
   qrMountEl.replaceChildren();
@@ -181,7 +183,7 @@ function renderQr(data) {
 function updatePreview() {
   const data = dataFor();
   if (!data) {
-    hideQr("Enter a URL or text to make a code.");
+    hideQr(t("flashEnterContent"));
     return;
   }
   renderQr(data);
@@ -279,7 +281,7 @@ async function download(format) {
     setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
     recordHistory();
   } catch (e) {
-    flash("Download failed: " + (e?.message || e), false);
+    flash(t("errDownload", [e?.message || String(e)]), false);
   }
 }
 
@@ -288,10 +290,10 @@ async function copyImage() {
   try {
     const { blob } = await rawData("png"); // clipboard images are PNG
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    flash("Copied to clipboard.");
+    flash(t("copiedToClipboard"));
     recordHistory();
   } catch (e) {
-    flash("Copy failed: " + (e?.message || e), false);
+    flash(t("errCopy", [e?.message || String(e)]), false);
   }
 }
 
@@ -328,6 +330,7 @@ historyEl.addEventListener("click", () => {
   chrome.tabs.create({ url: chrome.runtime.getURL("history.html") });
   window.close();
 });
+settingsEl.addEventListener("click", () => chrome.runtime.openOptionsPage());
 
 contentEl.addEventListener("input", () => {
   autoGrow();
@@ -354,12 +357,13 @@ async function main() {
     currentUrl = tab?.url || "";
   } catch (e) {
     currentUrl = "";
-    flash("Couldn't read this tab: " + (e?.message || e), false);
+    flash(t("errReadTab", [e?.message || String(e)]), false);
   }
   contentEl.value = currentUrl;
   autoGrow();
   updatePreview();
 }
 
+localize();
 initTheme({ toggle: themeToggleEl, moon: moonIconEl, sun: sunIconEl });
 main();

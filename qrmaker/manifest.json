@@ -1,14 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "QRmaker",
+  "name": "__MSG_appName__",
   "version": "0.4.0",
-  "description": "Make, style, and scan QR codes — encode the current tab, any link or text; decode codes from images, the page, or your camera.",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
   "minimum_chrome_version": "110",
   "permissions": ["activeTab", "storage", "clipboardWrite", "contextMenus", "scripting"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   },
   "action": {
     "default_popup": "popup.html",

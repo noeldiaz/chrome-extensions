@@ -1,15 +1,16 @@
 import { isShareableUrl, originPattern, detectType } from "./lib.js";
 import { initTheme } from "./theme.js";
 import { iconOpenExternal, iconCopy, iconEdit } from "./icons.js";
+import { localize, t } from "./i18n.js";
 
 const DECODE_MAX = 1024; // cap the decode canvas; jsQR is slow on huge images
 const TYPE_LABELS = {
-  wifi: "Wi-Fi network",
-  vcard: "Contact card",
-  email: "Email",
-  sms: "SMS",
-  tel: "Phone",
-  geo: "Location",
+  wifi: t("typeWifi"),
+  vcard: t("typeVcard"),
+  email: t("typeEmail"),
+  sms: t("typeSms"),
+  tel: t("typeTel"),
+  geo: t("typeGeo"),
 };
 
 // Open the editor for a decoded payload, parsing a structured one back into its
@@ -86,7 +87,7 @@ function showResult(text) {
     els.goto.hidden = true;
     els.edit.hidden = true;
     els.typeBadge.hidden = true;
-    setStatus("No QR code found in that image.", false);
+    setStatus(t("noQrFound"), false);
     return;
   }
   decodedText = text;
@@ -101,14 +102,14 @@ function showResult(text) {
 
 // Fetch the bytes (so a cross-origin canvas isn't tainted) and decode.
 async function fetchAndDecode(src) {
-  setStatus("Scanning…");
+  setStatus(t("scanning"));
   try {
     const resp = await fetch(src);
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     const bitmap = await createImageBitmap(await resp.blob());
     showResult(decode(bitmap));
   } catch (e) {
-    setStatus("Couldn't read that image: " + (e?.message || e), false);
+    setStatus(t("errReadImage", [e?.message || String(e)]), false);
   }
 }
 
@@ -128,7 +129,7 @@ async function scanSrc(src) {
   } else {
     pendingSrc = src;
     els.grant.hidden = false;
-    setStatus("This image is on another site — allow access to scan it.");
+    setStatus(t("crossOriginNotice"));
   }
 }
 
@@ -137,7 +138,7 @@ els.grant.addEventListener("click", async () => {
   const pattern = originPattern(pendingSrc);
   const granted = await chrome.permissions.request({ origins: [pattern] });
   if (!granted) {
-    setStatus("Access denied — can't scan this image.", false);
+    setStatus(t("accessDenied"), false);
     return;
   }
   els.grant.hidden = true;
@@ -158,7 +159,7 @@ async function decodeFile(file) {
     els.thumbWrap.hidden = false;
     showResult(decode(bitmap));
   } catch (e) {
-    setStatus("Couldn't read that file: " + (e?.message || e), false);
+    setStatus(t("errReadFile", [e?.message || String(e)]), false);
   }
 }
 
@@ -202,7 +203,7 @@ document.addEventListener("drop", async (e) => {
   els.dropOverlay.hidden = true;
   const file = firstImageFile(e.dataTransfer.items) || e.dataTransfer.files?.[0] || null;
   if (file && file.type?.startsWith("image/")) await decodeFile(file);
-  else setStatus("That wasn't an image file.", false);
+  else setStatus(t("notImage"), false);
 });
 
 // Paste an image straight from the clipboard (no clipboard permission needed —
@@ -263,7 +264,7 @@ async function startCamera() {
   els.result.hidden = true;
   els.thumbWrap.hidden = true;
   pendingSrc = null;
-  setStatus("Starting camera…");
+  setStatus(t("cameraStarting"));
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "environment" },
@@ -272,10 +273,10 @@ async function startCamera() {
   } catch (e) {
     const msg =
       e?.name === "NotAllowedError" || e?.name === "SecurityError"
-        ? "Camera access denied."
+        ? t("cameraDenied")
         : e?.name === "NotFoundError"
-          ? "No camera found."
-          : "Couldn't start camera: " + (e?.message || e);
+          ? t("cameraNotFound")
+          : t("cameraError", [e?.message || String(e)]);
     setStatus(msg, false);
     return;
   }
@@ -283,7 +284,7 @@ async function startCamera() {
   els.pick.hidden = true;
   els.camera.hidden = true;
   els.cameraView.hidden = false;
-  setStatus("Point your camera at a QR code…");
+  setStatus(t("cameraPoint"));
   try {
     await els.video.play();
   } catch {
@@ -323,9 +324,9 @@ els.copy.addEventListener("click", async () => {
   if (!decodedText) return;
   try {
     await navigator.clipboard.writeText(decodedText);
-    setStatus("Copied.");
+    setStatus(t("copied"));
   } catch (e) {
-    setStatus("Copy failed: " + (e?.message || e), false);
+    setStatus(t("errCopy", [e?.message || String(e)]), false);
   }
 });
 els.edit.addEventListener("click", () => {
@@ -389,17 +390,17 @@ function pageRow(text) {
 
   if (isShareableUrl(text)) {
     actions.appendChild(
-      rowButton("Go to", iconOpenExternal, "qr-btn-primary", () => chrome.tabs.create({ url: text })),
+      rowButton(t("goTo"), iconOpenExternal, "qr-btn-primary", () => chrome.tabs.create({ url: text })),
     );
   }
 
   actions.appendChild(
-    rowButton("Copy", iconCopy, "qr-btn-neutral", async () => {
+    rowButton(t("copy"), iconCopy, "qr-btn-neutral", async () => {
       try {
         await navigator.clipboard.writeText(text);
-        setStatus("Copied.");
+        setStatus(t("copied"));
       } catch (e) {
-        setStatus("Copy failed: " + (e?.message || e), false);
+        setStatus(t("errCopy", [e?.message || String(e)]), false);
       }
     }),
   );
@@ -407,7 +408,7 @@ function pageRow(text) {
   // Edit: hand the decoded text to the advanced editor to restyle and re-export
   // (structured payloads reopen in their own form via editUrl's ?type=).
   actions.appendChild(
-    rowButton("Edit", iconEdit, "qr-btn-neutral", () =>
+    rowButton(t("edit"), iconEdit, "qr-btn-neutral", () =>
       chrome.tabs.create({ url: editUrl(text) }),
     ),
   );
@@ -418,6 +419,8 @@ function pageRow(text) {
 }
 
 function renderPageResults({ results, tainted }) {
+  // TODO(i18n): these page-scan status lines carry counts + plurals; Chrome's
+  // i18n has no plural rules, so they stay English until a per-locale solution.
   if (!results.length) {
     setStatus(
       tainted
@@ -441,7 +444,7 @@ async function showPageScan() {
   await chrome.storage.session.remove("pageScan");
   const data = pageScan || { results: [], tainted: 0 };
   if (data.error) {
-    setStatus("Couldn't scan this page: " + data.error, false);
+    setStatus(t("errScanPage", [data.error]), false);
     return;
   }
   renderPageResults(data);
@@ -489,5 +492,6 @@ function init() {
   new ResizeObserver(fitWindow).observe(document.body);
 }
 
+localize();
 initTheme({ toggle: els.themeToggle, moon: els.moon, sun: els.sun });
 init();

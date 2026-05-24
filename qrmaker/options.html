@@ -2,17 +2,15 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title data-i18n="titleHistory">QRmaker — History</title>
+    <title data-i18n="titleOptions">QRmaker — Options</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body class="invisible flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-    <header class="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-      <div class="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
+    <div class="mx-auto w-full max-w-xl flex-1 p-6">
+      <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <img src="icons/icon32.png" alt="" class="h-5 w-5 shrink-0 self-center" />
-          <h1 data-i18n="h1History" class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            QRmaker — History
-          </h1>
+          <h1 data-i18n="h1Options" class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">QRmaker — Options</h1>
         </div>
         <button
           id="theme-toggle"
@@ -30,27 +28,13 @@
           </svg>
         </button>
       </div>
-    </header>
 
-    <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-8">
-      <div class="mb-4 flex items-center justify-between">
-        <span id="count" class="text-xs font-medium text-slate-500 dark:text-slate-400"></span>
-        <button id="clearAll" type="button" hidden data-i18n="clearAll"
-          class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:border-red-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300
-                 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-red-500 dark:hover:bg-red-950 dark:hover:text-red-300">
-          Clear all
-        </button>
-      </div>
-
-      <div id="list" class="space-y-3"></div>
-
-      <p id="empty" data-i18n="emptyHistory" class="mt-16 text-center text-sm text-slate-400 dark:text-slate-500" hidden>
-        No codes yet. Codes you download or copy show up here.
+      <p data-i18n="optionsBlank" class="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        Nothing to configure yet — settings will live here.
       </p>
-    </main>
-
+    </div>
     <footer class="border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-      <div class="mx-auto flex max-w-3xl justify-end px-6 py-3">
+      <div class="mx-auto flex w-full max-w-xl justify-end px-6 py-3">
         <button id="winClose" type="button" data-i18n="close"
           class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300
                  dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
@@ -58,8 +42,6 @@
         </button>
       </div>
     </footer>
-
-    <script src="vendor/qr-code-styling.js"></script>
-    <script type="module" src="history.js"></script>
+    <script type="module" src="options.js"></script>
   </body>
 </html>
