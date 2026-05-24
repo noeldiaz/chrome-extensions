@@ -20,6 +20,8 @@ const els = {
   content: $("content"),
   goto: $("goto"),
   copy: $("copy"),
+  dropHint: $("dropHint"),
+  dropOverlay: $("dropOverlay"),
   winClose: $("winClose"),
   status: $("status"),
   themeToggle: $("theme-toggle"),
@@ -120,13 +122,11 @@ els.grant.addEventListener("click", async () => {
 
 // --- scan from a local file ---
 
-els.pick.addEventListener("click", () => els.file.click());
-els.file.addEventListener("change", async () => {
-  const file = els.file.files?.[0];
-  els.file.value = "";
-  if (!file) return;
+// Decode a local image File (from the file picker, a drop, or a paste).
+async function decodeFile(file) {
   els.grant.hidden = true;
   pendingSrc = null;
+  els.pageList.hidden = true;
   try {
     const bitmap = await createImageBitmap(file);
     els.thumb.src = URL.createObjectURL(file);
@@ -135,6 +135,58 @@ els.file.addEventListener("change", async () => {
   } catch (e) {
     setStatus("Couldn't read that file: " + (e?.message || e), false);
   }
+}
+
+els.pick.addEventListener("click", () => els.file.click());
+els.file.addEventListener("change", async () => {
+  const file = els.file.files?.[0];
+  els.file.value = "";
+  if (file) await decodeFile(file);
+});
+
+// --- drag & drop / paste an image ---
+
+// First image file in a DataTransfer / clipboard item list, or null.
+function firstImageFile(items) {
+  for (const it of items || []) {
+    if (it.kind === "file" && it.type.startsWith("image/")) return it.getAsFile();
+  }
+  return null;
+}
+
+const hasFiles = (e) => !!e.dataTransfer?.types?.includes("Files");
+let dragDepth = 0; // ignore dragleave over child elements
+
+document.addEventListener("dragenter", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dragDepth++;
+  els.dropOverlay.hidden = false;
+});
+document.addEventListener("dragover", (e) => {
+  if (hasFiles(e)) e.preventDefault();
+});
+document.addEventListener("dragleave", () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) els.dropOverlay.hidden = true;
+});
+document.addEventListener("drop", async (e) => {
+  if (!e.dataTransfer) return;
+  e.preventDefault();
+  dragDepth = 0;
+  els.dropOverlay.hidden = true;
+  const file = firstImageFile(e.dataTransfer.items) || e.dataTransfer.files?.[0] || null;
+  if (file && file.type?.startsWith("image/")) await decodeFile(file);
+  else setStatus("That wasn't an image file.", false);
+});
+
+// Paste an image straight from the clipboard (no clipboard permission needed —
+// the paste gesture exposes the bytes via the event itself).
+document.addEventListener("paste", async (e) => {
+  const file = firstImageFile(e.clipboardData?.items);
+  if (!file) return;
+  e.preventDefault();
+  await decodeFile(file);
 });
 
 // --- scan from the camera ---
@@ -357,6 +409,7 @@ function renderPageResults({ results, tainted }) {
 async function showPageScan() {
   els.pick.hidden = true; // the single-image controls don't apply to a page scan
   els.camera.hidden = true;
+  els.dropHint.hidden = true;
   const { pageScan } = await chrome.storage.session.get({ pageScan: null });
   await chrome.storage.session.remove("pageScan");
   const data = pageScan || { results: [], tainted: 0 };

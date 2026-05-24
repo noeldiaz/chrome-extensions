@@ -9,6 +9,7 @@ const colorDotsEl = document.getElementById("colorDots");
 const colorCornersEl = document.getElementById("colorCorners");
 const colorBgEl = document.getElementById("colorBg");
 const resetEl = document.getElementById("reset");
+const moreTypesEl = document.getElementById("moreTypes");
 const controlsEl = document.getElementById("controls");
 const downloadEl = document.getElementById("download");
 const downloadMenuEl = document.getElementById("downloadMenu");
@@ -336,6 +337,15 @@ for (const el of [colorDotsEl, colorCornersEl, colorBgEl]) {
   el.addEventListener("input", applyLive);
 }
 resetEl.addEventListener("click", reset);
+// Open the editor ready to build a structured type (the popup itself stays the
+// quick URL/text tool). The tab URL isn't relevant to a Wi-Fi/contact/etc code.
+moreTypesEl.addEventListener("change", () => {
+  const kind = moreTypesEl.value;
+  if (!kind) return;
+  moreTypesEl.value = "";
+  chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + "?type=" + kind });
+  window.close();
+});
 
 async function main() {
   await loadDefaultPreset(); // seeds colours + styling base before first render

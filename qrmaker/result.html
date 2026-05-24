@@ -63,6 +63,10 @@
         Scan with camera
       </button>
 
+      <p id="dropHint" class="mb-3 text-center text-[10px] text-slate-400 dark:text-slate-500">
+        …or drag &amp; drop or paste an image
+      </p>
+
       <!-- live camera view -->
       <div id="cameraView" class="mb-3" hidden>
         <div class="overflow-hidden rounded-lg border border-slate-200 bg-black dark:border-slate-700">
@@ -107,6 +111,13 @@
         </button>
       </div>
     </footer>
+    <!-- drag-over feedback -->
+    <div id="dropOverlay" hidden class="pointer-events-none fixed inset-0 z-20 flex items-center justify-center bg-blue-500/10 p-6 backdrop-blur-[1px]">
+      <div class="rounded-xl border-2 border-dashed border-blue-400 bg-white/90 px-6 py-4 text-sm font-semibold text-blue-700 shadow-lg dark:bg-slate-800/90 dark:text-blue-300">
+        Drop an image to scan
+      </div>
+    </div>
+
     <script src="vendor/jsqr.js"></script>
     <script src="vendor/qr-code-styling.js"></script>
     <script type="module" src="result.js"></script>

@@ -13,7 +13,9 @@ Manifest V3.
 - **Quick colors** *(popup)* — a collapsible Options panel with inside /
   outside / background **colors** and a Reset. Dot & corner style, gradient,
   logo, size, and error-correction live in the advanced editor (or come from
-  your default preset).
+  your default preset). The panel also has a **More types** shortcut that opens
+  the editor ready to build a Wi-Fi / contact / email / SMS / phone / location
+  code.
 - **Advanced editor** *(new tab)* — dot and corner style chips, separate dot /
   corner / background colors, a background **gradient** (linear or radial),
   margin, an export-size slider, and a **center logo** you
@@ -36,7 +38,8 @@ Manifest V3.
 - **Decode / scan** — right-click any image → **Scan QR code from this image**,
   right-click a page → **Scan QR codes on this page** (finds and decodes every QR
   rendered on it), or use the popup's **Scan** button to read a QR from a local
-  image file or, with **Scan with camera**, a live webcam feed. Decoded content
+  image file (or **drag & drop / paste** an image into the scan window) or, with
+  **Scan with camera**, a live webcam feed. Decoded content
   opens in a small window with **Go to** / **Copy** / **Edit** (open the result
   in the advanced editor to restyle and re-export) per result. Camera frames and
   page pixels are decoded locally and never leave the browser.

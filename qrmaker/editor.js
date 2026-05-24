@@ -1090,6 +1090,11 @@ async function init() {
   } else {
     const data = params.get("data");
     if (data) els.content.value = data;
+    // ?type= (from the popup's "More types" shortcut) preselects a structured type
+    const type = params.get("type");
+    if (type && ["text", "wifi", "vcard", "email", "sms", "tel", "geo"].includes(type)) {
+      els.qrType.value = type;
+    }
   }
   render();
 }
