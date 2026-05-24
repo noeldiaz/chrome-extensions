@@ -4,6 +4,8 @@
 
 @source "../popup.html";
 @source "../popup.js";
+@source "../options.html";
+@source "../options.js";
 
 @layer base {
   body {

@@ -245,6 +245,7 @@ function blockNonInteger(e) {
 
 addEl.addEventListener("click", addOrUpdate);
 themeToggleEl.addEventListener("click", toggleTheme);
+document.getElementById("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
 
 // chrome.permissions.request must run inside the user gesture, before any await.
 preserveScrollEl.addEventListener("change", async () => {
