@@ -21,6 +21,7 @@ tabs — **Color**, **Page**, **Tools**.
 - **Recent colors** — your last 12 picks; remove individually or clear all (with confirmation). The most recent is restored on open. The popup shows the latest few with a *More* link into Settings.
 - **Manual choice** (Tools) — a native color box (and the fallback where EyeDropper is unsupported, e.g. Safari/Firefox).
 - **Sync across devices** — an opt-in toggle (Settings) that keeps your settings, favorites, and recent colors in `chrome.storage.sync` across signed-in devices. Off by default; everything stays local otherwise.
+- **Backup & restore** — export all your settings and data to a JSON file, or import one to restore them on another machine (Settings → Backup & restore). Imports are confirmed first and replace what's on the device.
 - **Dark mode**, and a keyboard shortcut **Alt+Shift+P** (rebindable at `chrome://extensions/shortcuts`).
 
 ## Permissions
@@ -58,8 +59,9 @@ load it.
   `gradientCss`, `exportPalette`, …); unit-tested headless with `node:test`.
 - `palette.js` — generated Tailwind color table (name + hex + OKLab) read by
   `nearestTailwind`. Regenerate with `npm run gen:palette` if Tailwind is upgraded.
-- `theme.js` / `i18n.js` / `sync.js` / `dialog.js` — shared theme, localisation,
-  optional cross-device sync, and confirm-modal helpers (workspace conventions).
+- `theme.js` / `i18n.js` / `sync.js` / `dialog.js` / `backup.js` — shared theme,
+  localisation, optional cross-device sync, confirm-modal, and settings
+  export/import helpers (workspace conventions).
 
 ## Other browsers
 

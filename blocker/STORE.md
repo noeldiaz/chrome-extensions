@@ -41,6 +41,8 @@ FEATURES
 • Sweeps open tabs — turning blocking on also handles tabs you already had open.
 • Sync across devices (optional) — roam your allowlist through your own browser
   account. Off by default; whether blocking is on stays per-device.
+• Backup & restore — export all your settings and data to a JSON file and import
+  it on another machine. Importing replaces what's on the device.
 • Asks for access only when you start — not at install.
 • Dark and light themes that follow your system preference.
 

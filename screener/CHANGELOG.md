@@ -4,6 +4,14 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-05-25
+
+### Added
+- **Backup & restore** in Options → Settings: export all your settings to a JSON
+  file, or import one to restore them on another machine. Imports are confirmed
+  first and replace what is currently on the device. (Transient captures are not
+  part of the backup.)
+
 ## [0.4.1] — 2026-05-25
 
 ### Fixed

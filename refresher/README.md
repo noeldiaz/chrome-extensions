@@ -11,6 +11,7 @@ Refresh chosen browser tabs on periodic intervals you control. Manifest V3.
 - **Skips audible tabs** — won't reload a tab that's playing audio; retries once on transient failure.
 - **Survives page navigation** — keeps the target's title current.
 - **Sync across devices** *(opt-in)* — a toggle in Options syncs your refresh defaults (interval minutes/seconds + scroll preservation) across the devices you're signed in to. Per-tab refresh rules and transient tab state stay local. Off by default.
+- **Backup & restore** — export all your settings and data to a JSON file, or import one to restore them on another machine (Options → Backup & restore). Imports are confirmed first and replace what's on the device.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
 
 ## Permissions
@@ -42,7 +43,7 @@ Build CSS, then zip only the runtime files:
 
 ```bash
 npm run build:css && zip -r refresher.zip \
-  manifest.json popup.html popup.css popup.js options.html options.js background.js lib.js i18n.js sync.js \
+  manifest.json popup.html popup.css popup.js options.html options.js background.js lib.js i18n.js sync.js dialog.js backup.js \
   _locales \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -55,6 +56,8 @@ Excludes source/tooling (`src/`, `node_modules/`, `eslint.config.js`, `test/`, `
 - `popup.js` — popup UI: target list, countdown ticker, interval controls, theme.
 - `options.js` / `options.html` — options page: the **Sync across devices** toggle, About panel, theme.
 - `sync.js` — opt-in cross-device sync. A `syncEnabled` flag in `chrome.storage.local` selects the active area (`sync` when on, else `local`) for the refresh defaults (`minutes`, `seconds`, `preserveScroll`); toggling migrates those keys between the two areas. Targets and transient state always use `chrome.storage.local`.
+- `backup.js` — settings/data export & import: bundles every `chrome.storage` key into a tagged JSON file and restores it (used by the Options → Backup & restore controls).
+- `dialog.js` — minimal promise-based confirm modal (used to confirm a restore before it overwrites current data).
 - `lib.js` — pure helpers (formatting, clamping, alarm-name parsing, URL guards), shared by popup/background and unit-tested.
 - `i18n.js` / `_locales/` — localization. `_locales/en/messages.json` is the message catalog; `i18n.js`'s `localize()` applies it to each page on load via `data-i18n` / `data-i18n-attr`, and `t()` wraps `chrome.i18n.getMessage` for dynamic strings. Add a locale by dropping in `_locales/<lang>/messages.json`. (Pluralized count strings like the per-tab stats stay English — Chrome i18n has no plural rules.)
 - `src/styles.css` → `popup.css` — Tailwind v4 source and compiled output.

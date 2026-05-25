@@ -2,6 +2,10 @@ import { loadTheme, wireTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
 import { isValidHttpUrl } from "./lib.js";
 import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
+import { downloadBackup, parseBackup, restoreBackup } from "./backup.js";
+import { confirmDialog } from "./dialog.js";
+
+const APP = "screener";
 
 const endpointEl = document.getElementById("endpoint");
 const tokenEl = document.getElementById("token");
@@ -103,6 +107,53 @@ for (const b of tabBtns)
     for (const x of tabBtns) x.classList.toggle("is-active", x === b);
     for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
   });
+
+// Backup & restore: export everything to a JSON file, or import one to restore
+// it (replacing what's here now) — confirmed first, since it's destructive.
+// Transient captures live in IndexedDB and aren't part of the backup.
+const backupStatusEl = document.getElementById("backupStatus");
+function backupFlash(msg, ok = true) {
+  backupStatusEl.textContent = msg;
+  backupStatusEl.classList.toggle("text-red-500", !ok);
+  backupStatusEl.classList.toggle("dark:text-red-400", !ok);
+}
+
+document.getElementById("exportBtn").addEventListener("click", async () => {
+  try {
+    await downloadBackup(APP);
+    backupFlash(t("backupExported"));
+  } catch (err) {
+    backupFlash(t("backupErr", String(err?.message || err)), false);
+  }
+});
+
+const importFileEl = document.getElementById("importFile");
+document.getElementById("importBtn").addEventListener("click", () => importFileEl.click());
+importFileEl.addEventListener("change", async () => {
+  const file = importFileEl.files?.[0];
+  importFileEl.value = ""; // let the same file be re-picked later
+  if (!file) return;
+  let data;
+  try {
+    data = parseBackup(await file.text(), APP); // err.message is an i18n key
+  } catch (err) {
+    backupFlash(t(err.message), false);
+    return;
+  }
+  const ok = await confirmDialog({
+    title: t("importTitle"),
+    body: t("importBody"),
+    confirmLabel: t("importConfirm"),
+    cancelLabel: t("cancel"),
+  });
+  if (!ok) return;
+  try {
+    await restoreBackup(data);
+    location.reload();
+  } catch (err) {
+    backupFlash(t("backupErr", String(err?.message || err)), false);
+  }
+});
 
 localize();
 wireTheme(document.getElementById("theme-toggle"));

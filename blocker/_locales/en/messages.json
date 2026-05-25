@@ -23,6 +23,25 @@
     "placeholders": { "error": { "content": "$1" } }
   },
 
+  "optBackup": { "message": "Backup & restore" },
+  "optBackupHint": {
+    "message": "Export all your settings and data to a JSON file, or import one to restore them on another machine. Importing replaces what’s on this device."
+  },
+  "optExport": { "message": "Export backup" },
+  "optImport": { "message": "Import backup" },
+  "backupExported": { "message": "Backup downloaded." },
+  "backupErrJson": { "message": "That file isn’t valid JSON." },
+  "backupErrApp": { "message": "That file isn’t a Blocker backup." },
+  "backupErr": {
+    "message": "Backup failed: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "importTitle": { "message": "Restore from backup?" },
+  "importBody": {
+    "message": "This replaces all of Blocker’s current settings and data on this device with the file’s contents. This can’t be undone."
+  },
+  "importConfirm": { "message": "Restore" },
+
   "howTitle": { "message": "How blocking works" },
   "howBody": {
     "message": "When blocking is on, any top-level navigation to a site that isn’t on your allowlist is sent to a block page. Allowing a site allows its whole base domain (every subdomain). Blocking needs permission to see the pages you navigate to; Blocker asks for it the first time you start."

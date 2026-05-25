@@ -22,6 +22,26 @@
     "placeholders": { "error": { "content": "$1" } }
   },
 
+  "cancel": { "message": "Cancel" },
+  "optBackup": { "message": "Backup & restore" },
+  "optBackupHint": {
+    "message": "Export all your settings and data to a JSON file, or import one to restore them on another machine. Importing replaces what’s on this device."
+  },
+  "optExport": { "message": "Export backup" },
+  "optImport": { "message": "Import backup" },
+  "backupExported": { "message": "Backup downloaded." },
+  "backupErrJson": { "message": "That file isn’t valid JSON." },
+  "backupErrApp": { "message": "That file isn’t a Refresher backup." },
+  "backupErr": {
+    "message": "Backup failed: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "importTitle": { "message": "Restore from backup?" },
+  "importBody": {
+    "message": "This replaces all of Refresher’s current settings and data on this device with the file’s contents. This can’t be undone."
+  },
+  "importConfirm": { "message": "Restore" },
+
   "minutes": { "message": "Minutes" },
   "seconds": { "message": "Seconds" },
   "presetIntervals": { "message": "Preset intervals" },

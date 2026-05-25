@@ -11,6 +11,7 @@ Manifest V3.
 - **Sweeps open tabs** — turning blocking on sends already-open disallowed tabs to the block page, not just future navigations.
 - **Two-tab popup** — *Control* (start/stop + allow this tab) and *Allowed* (manage the list).
 - **Sync across devices** *(opt-in)* — a toggle in Options syncs your allowlist across the devices you're signed in to. Whether blocking is on stays local to each device. Off by default.
+- **Backup & restore** — export all your settings and data to a JSON file, or import one to restore them on another machine (Options → Backup & restore). Imports are confirmed first and replace what's on the device.
 - **Opt-in host access** — Blocker asks for permission to watch your navigations only the first time you start blocking, not at install.
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
 
@@ -55,7 +56,7 @@ Build CSS, then zip only the runtime files:
 ```bash
 npm run build:css && zip -r blocker.zip \
   manifest.json popup.html popup.css popup.js options.html options.js \
-  blocked.html blocked.js background.js lib.js i18n.js sync.js dialog.js \
+  blocked.html blocked.js background.js lib.js i18n.js sync.js dialog.js backup.js \
   _locales \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -75,7 +76,8 @@ Excludes source/tooling (`src/`, `node_modules/`, `eslint.config.js`, `test/`, `
 - `options.js` / `options.html` — options page: the **Sync across devices** toggle, a "How blocking works" note, About panel, theme.
 - `sync.js` — opt-in cross-device sync. A `syncEnabled` flag in `chrome.storage.local` selects the active area (`sync` when on, else `local`) for the `allowed` list; toggling migrates it between areas. The blocking switch always uses `chrome.storage.local`.
 - `lib.js` — pure helpers (URL/host parsing, base-domain reduction, allow matching, the block decision), shared by popup/background/blocked and unit-tested.
-- `dialog.js` — minimal promise-based confirm modal used before removing or clearing allowlist entries.
+- `dialog.js` — minimal promise-based confirm modal used before removing or clearing allowlist entries, and before restoring a backup.
+- `backup.js` — settings/data export & import: bundles every `chrome.storage` key into a tagged JSON file and restores it (used by the Options → Backup & restore controls).
 - `i18n.js` / `_locales/` — localization. `_locales/en/messages.json` is the catalog; `localize()` applies it via `data-i18n` / `data-i18n-attr`, and `t()` wraps `chrome.i18n.getMessage`. Add a locale by dropping in `_locales/<lang>/messages.json`.
 - `src/styles.css` → `popup.css` — Tailwind v4 source and compiled output.
 

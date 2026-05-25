@@ -64,6 +64,9 @@ EXTRAS
 • Dark / light theme that follows your OS preference.
 • Optional "Sync across devices" (off by default) keeps your style presets in
   sync through your own browser account.
+• Backup & restore — export everything (settings, saved logos, and created-code
+  history) to a JSON file and import it on another machine. Importing replaces
+  what's on the device.
 
 Your data stays in your browser. The only network request QRmaker ever makes is
 fetching a single cross-origin image you ask it to scan, after you grant access.

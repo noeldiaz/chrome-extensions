@@ -18,6 +18,8 @@ export default [
       "i18n.js",
       "options.js",
       "sync.js",
+      "dialog.js",
+      "backup.js",
     ],
     languageOptions: {
       ecmaVersion: 2023,

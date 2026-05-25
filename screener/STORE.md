@@ -47,6 +47,10 @@ SEND
 • Submit ticket — fill in a title and description and post it to your own
   support endpoint (a URL and token you set in Options).
 
+SETTINGS
+• Backup & restore — export all your settings to a JSON file and import it on
+  another machine. Importing replaces what's on the device.
+
 PRIVACY
 Screener has no server of its own. Download and Copy are fully local. It only
 makes a network request when you click Submit, and only to the endpoint you

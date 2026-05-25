@@ -29,6 +29,7 @@ Capture, annotate, and submit screenshots for tech-support tickets. Manifest V3.
 - **Sync across devices** *(opt-in)* — a toggle in Options → Settings keeps the
   ticket endpoint and token in `chrome.storage.sync` across the devices where
   you're signed in to this browser. Off by default; everything else stays local.
+- **Backup & restore** — export all your settings to a JSON file, or import one to restore them on another machine (Options → Settings → Backup & restore). Imports are confirmed first and replace what's on the device. (Transient captures aren't part of the backup.)
 - **Dark / light theme** — slate palette, follows OS preference, manual toggle.
 
 ## Permissions
@@ -82,7 +83,7 @@ Build CSS, then zip only the runtime files:
 npm run build:css && zip -r screener.zip \
   manifest.json popup.html popup.js editor.html editor.js \
   options.html options.js background.js offscreen.html offscreen.js \
-  theme.js lib.js idb.js annotator.js i18n.js sync.js build-config.js app.css \
+  theme.js lib.js idb.js annotator.js i18n.js sync.js dialog.js backup.js build-config.js app.css \
   _locales/ \
   vendor/konva.min.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
@@ -133,6 +134,10 @@ and signing flow. Screener-specific notes:
   **Tickets** (endpoint URL + bearer token + what-gets-sent), and **About**.
 - `sync.js` — opt-in cross-device sync helper: routes `endpoint`/`token` to
   `chrome.storage.sync` when enabled, otherwise `chrome.storage.local`.
+- `backup.js` — settings export & import: bundles every `chrome.storage` key into
+  a tagged JSON file and restores it (transient IndexedDB captures are excluded).
+- `dialog.js` — minimal promise-based confirm modal (confirms a restore before it
+  overwrites current settings).
 - `build-config.js` — per-target feature flags (`fullscreenCapture`,
   `nativeDownloads`); overwritten by `build.mjs` for each browser target.
 - `theme.js` — shared light/dark controller.

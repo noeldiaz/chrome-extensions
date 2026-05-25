@@ -38,6 +38,10 @@ Manifest V3.
   Settings to keep your saved style **presets** (and the default preset) in sync
   on every device where you're signed in to this browser. Off by default; the
   saved logo images and the page-scan handoff always stay local to each device.
+- **Backup & restore** *(opt-in)* — export everything (settings, saved logos, and
+  created-code history) to a JSON file, or import one to restore it on another
+  machine (Settings → Backup & restore). Imports are confirmed first and replace
+  what's on the device.
 - **Right-click menus** — make a code for the **page**, a **link**, a **text
   selection**, or an **image address**; opens the editor prefilled.
 - **Decode / scan** — right-click any image → **Scan QR code from this image**,
@@ -99,7 +103,7 @@ directory).
 ```bash
 npm run build:css && zip -r qrmaker.zip \
   manifest.json popup.html popup.js editor.html editor.js result.html result.js \
-  history.html history.js options.html options.js background.js scanpage.js lib.js idb.js sync.js theme.js icons.js i18n.js popup.css \
+  history.html history.js options.html options.js background.js scanpage.js lib.js idb.js sync.js dialog.js backup.js theme.js icons.js i18n.js popup.css \
   _locales \
   vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
@@ -138,6 +142,11 @@ include them.
   toggling it migrates the synced keys (`presets`, `defaultPresetId`) between the
   two areas. The opt-in flag, theme, page-scan handoff, and logo images stay
   local.
+- `backup.js` — settings/data export & import: bundles every `chrome.storage`
+  key plus the IndexedDB stores (saved logos + created-code history, via
+  `idb.js`'s `exportAll`/`importAll`) into a tagged JSON file and restores it.
+- `dialog.js` — minimal promise-based confirm modal (used to confirm a restore
+  before it overwrites current data).
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,

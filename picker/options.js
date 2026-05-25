@@ -6,8 +6,10 @@ import { confirmDialog } from "./dialog.js";
 import { FORMATS, DEFAULT_FORMATS } from "./lib.js";
 import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
 import { TAILWIND_VERSION, TAILWIND_COLORS } from "./palette.js";
+import { downloadBackup, parseBackup, restoreBackup } from "./backup.js";
 
 const $ = (id) => document.getElementById(id);
+const APP = "picker";
 
 let statusTimer = null;
 function flash(msg) {
@@ -199,5 +201,50 @@ async function init() {
     window.close();
   });
 }
+
+// Backup & restore: export everything to a JSON file, or import one to restore
+// it (replacing what's here now) — confirmed first, since it's destructive.
+function backupFlash(msg, ok = true) {
+  const el = $("backupStatus");
+  el.textContent = msg;
+  el.classList.toggle("text-red-500", !ok);
+  el.classList.toggle("dark:text-red-400", !ok);
+}
+
+$("exportBtn").addEventListener("click", async () => {
+  try {
+    await downloadBackup(APP);
+    backupFlash(t("backupExported"));
+  } catch (err) {
+    backupFlash(t("backupErr", String(err?.message || err)), false);
+  }
+});
+
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async () => {
+  const input = $("importFile");
+  const file = input.files?.[0];
+  input.value = ""; // let the same file be re-picked later
+  if (!file) return;
+  let data;
+  try {
+    data = parseBackup(await file.text(), APP); // err.message is an i18n key
+  } catch (err) {
+    backupFlash(t(err.message), false);
+    return;
+  }
+  const ok = await confirmDialog({
+    message: t("importBody"),
+    confirmText: t("importConfirm"),
+    cancelText: t("cancel"),
+  });
+  if (!ok) return;
+  try {
+    await restoreBackup(data);
+    location.reload();
+  } catch (err) {
+    backupFlash(t("backupErr", String(err?.message || err)), false);
+  }
+});
 
 init();

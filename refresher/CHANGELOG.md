@@ -4,6 +4,13 @@ All notable changes to Refresher are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-05-25
+
+### Added
+- **Backup & restore** in Options → Settings: export all your settings and data
+  to a JSON file, or import one to restore them on another machine. Imports are
+  confirmed first and replace what is currently on the device.
+
 ## [0.7.0] — 2026-05-25
 
 ### Added

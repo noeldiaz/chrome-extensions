@@ -40,6 +40,8 @@ FEATURES
   reload. Off by default; turning it on asks for the access it needs.
 • Per-tab stats — see how many times each tab has refreshed and when it last did.
 • Skips tabs playing audio, so a refresh never interrupts a video or call.
+• Backup & restore — export all your settings and data to a JSON file and import
+  it on another machine. Importing replaces what's on the device.
 • Dark and light themes that follow your system preference.
 
 PRIVACY

@@ -178,3 +178,45 @@ export async function clearHistory() {
     db.close();
   }
 }
+
+// --- backup adapter (used by backup.js) ---
+// Both stores use an inline keyPath ("id"), so put(record) restores each row
+// under its original id; no separate key array is needed.
+
+function getAllFrom(db, store) {
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(store, "readonly").objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function exportAll() {
+  const db = await open();
+  try {
+    const [logos, history] = await Promise.all([getAllFrom(db, STORE), getAllFrom(db, HISTORY)]);
+    return { logos, history };
+  } finally {
+    db.close();
+  }
+}
+
+export async function importAll(data) {
+  const db = await open();
+  try {
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction([STORE, HISTORY], "readwrite");
+      const logos = tx.objectStore(STORE);
+      const history = tx.objectStore(HISTORY);
+      logos.clear();
+      history.clear();
+      for (const r of data?.logos || []) logos.put(r);
+      for (const r of data?.history || []) history.put(r);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+}

@@ -58,6 +58,8 @@ WORKFLOW
 • Page colors — scan the current tab and list its most-used colors.
 • Favorites — save named colors; rename, remove, JSON export/import.
 • Recent colors — your last 12 picks, restored on open.
+• Backup & restore — export all your settings and data to a JSON file and import
+  it on another machine. Importing replaces what's on the device.
 • Dark mode and a keyboard shortcut (Alt+Shift+P, rebindable).
 
 PRIVACY
