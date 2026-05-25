@@ -83,6 +83,12 @@
     "placeholders": { "error": { "content": "$1" } }
   },
 
+  "tabSettings": { "message": "Settings" },
+  "tabRecent": { "message": "Recent Colors" },
+  "tabAbout": { "message": "About" },
+  "version": { "message": "Version" },
+  "aboutRepo": { "message": "View on GitHub" },
+
   "optFormats": { "message": "Favorite formats" },
   "optFormatsHint": { "message": "Checked formats show under “Favorite Formats” in the popup; the rest live under “Other Formats”." },
   "optCopyOnPick": { "message": "Copy on pick" },

@@ -143,6 +143,23 @@ async function init() {
   // Tailwind palette version (so you can tell when a new Tailwind ships new colors)
   $("twInfo").textContent = t("optTwLoaded", [TAILWIND_VERSION, String(TAILWIND_COLORS.length)]);
 
+  // About: extension version
+  $("aboutVersion").textContent = `${t("version")} ${chrome.runtime.getManifest().version}`;
+
+  // Tabs: Settings / Recent Colors / About
+  const opanels = {
+    settings: $("opanel-settings"),
+    recent: $("opanel-recent"),
+    about: $("opanel-about"),
+  };
+  const tabs = document.querySelectorAll(".tab-btn");
+  for (const b of tabs) {
+    b.addEventListener("click", () => {
+      for (const x of tabs) x.classList.toggle("is-active", x === b);
+      for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
+    });
+  }
+
   // Footer Close: remove this options tab (window.close is unreliable for a tab).
   $("winClose").addEventListener("click", async () => {
     try {
