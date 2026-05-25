@@ -1,0 +1,19 @@
+{
+  "name": "blocker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:css": "tailwindcss -i src/styles.css -o popup.css --minify",
+    "watch:css": "tailwindcss -i src/styles.css -o popup.css --watch",
+    "lint": "eslint .",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/cli": "^4.0.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "globals": "^15.0.0"
+  }
+}

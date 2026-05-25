@@ -11,6 +11,7 @@ chrome-extensions/
   screener/         Screenshot capture, annotate, and ticket submit (MV3)
   qrmaker/          QR code for the active tab's URL (MV3)
   picker/           On-screen color picker / eyedropper (MV3)
+  blocker/          Allowlist navigation blocker (MV3)
   build.mjs         Multi-target packager → dist/<target>/<ext>/
   <next-extension>/
 ```
@@ -26,6 +27,7 @@ new subdirectories here, not as separate repos.
 | [screener](screener/) | Capture, annotate, and submit screenshots as support tickets |
 | [qrmaker](qrmaker/) | Show a scannable QR code for the current tab's URL |
 | [picker](picker/) | Pick any on-screen color with the eyedropper; copy HEX/RGB/HSL and more |
+| [blocker](blocker/) | Allow only the sites you choose; block navigation to everything else |
 
 ## Working in an extension
 

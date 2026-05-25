@@ -45,6 +45,10 @@ xcrun safari-web-extension-converter dist/safari/screener \
 xcrun safari-web-extension-converter dist/safari/picker \
   --macos-only --app-name "Picker"    --bundle-identifier com.noeldiaz.Picker \
   --project-location dist/xcode/picker --no-open --force
+
+xcrun safari-web-extension-converter dist/safari/blocker \
+  --macos-only --app-name "Blocker"   --bundle-identifier com.noeldiaz.Blocker \
+  --project-location dist/xcode/blocker --no-open --force
 ```
 
 Each produces an Xcode project (a thin container app wrapping the web
@@ -145,16 +149,19 @@ xcrun stapler staple <App>.app          # then re-zip the stapled .app to distri
 | refresher | Badge color setters are no-ops if Safari lacks them (text still shows). No build-time change. |
 | qrmaker   | None — already uses `<a download>` and guards window resize. |
 | picker    | No `EyeDropper` (Chromium-only) — the screen-pick button is disabled and the native color box takes over. No build-time change. |
+| blocker   | None — no `offscreen`/`downloads`. `webNavigation` + the optional host grant drive blocking; the **ON** badge text shows (color may be ignored). No build-time change. |
 
 ## Caveats to validate on real Safari
 
 These behave differently in Safari and need a manual check; they don't break the
 build:
 
-- **Host permissions** — all three call `chrome.permissions.request({origins})`
-  (qrmaker `result.js`, refresher `popup.js`, screener `editor.js`). Safari grants
-  host access per-site via its own UI rather than a broad runtime prompt. Confirm
-  the grant flow works and add a fallback message if a request is silently denied.
+- **Host permissions** — several call `chrome.permissions.request({origins})`
+  (qrmaker `result.js`, refresher `popup.js`, screener `editor.js`, blocker
+  `popup.js`). Safari grants host access per-site via its own UI rather than a
+  broad runtime prompt. Confirm the grant flow works and add a fallback message if
+  a request is silently denied. **Blocker depends on this** — without the host
+  grant, `webNavigation` delivers no events and nothing is blocked.
 - **`commands` shortcuts** — Safari ignores `suggested_key`; users assign shortcuts
   in Safari's settings. The commands still fire.
 - **refresher badge** — `setBadgeText` shows, but the blue background / white text
@@ -202,6 +209,7 @@ cd dist/firefox/<ext> && zip -r -FS ../<ext>-firefox.zip . -x '*.DS_Store'
 | refresher | Badge text shows; `chrome.alarms`/`tabs` supported. Event-page background must re-register listeners at top level (already does). |
 | screener  | Full-page capture off (no offscreen); visible-tab capture + `downloads` work. |
 | qrmaker   | `<a download>` + `storage.sync` work; `chrome.storage.session` is supported in Firefox 115+. |
+| blocker   | `webNavigation` + `tabs` + `storage.sync` supported. Event-page background re-registers listeners at top level (already does). Host access must be granted in the add-on's permissions for navigation events to fire. |
 
 > **Not yet load-tested on Firefox.** The build is structurally correct, but the
 > `chrome.*` promise calls and event-page background lifetime should be verified by

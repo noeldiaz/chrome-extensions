@@ -1,0 +1,81 @@
+{
+  "appName": { "message": "Blocker" },
+  "appDesc": {
+    "message": "Allow only the sites you choose and block navigation to everything else."
+  },
+
+  "themeToggle": { "message": "Toggle dark mode" },
+  "settings": { "message": "Settings" },
+  "close": { "message": "Close" },
+  "version": { "message": "Version" },
+
+  "titleOptions": { "message": "Blocker — Options" },
+  "h1Options": { "message": "Blocker — Options" },
+  "tabSettings": { "message": "Settings" },
+  "tabAbout": { "message": "About" },
+
+  "optSync": { "message": "Sync across devices" },
+  "optSyncHint": {
+    "message": "Keep your allowlist in sync across the devices where you’re signed in to this browser. Off by default; whether blocking is on stays local to each device."
+  },
+  "optSyncErr": {
+    "message": "Couldn’t turn on sync: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "howTitle": { "message": "How blocking works" },
+  "howBody": {
+    "message": "When blocking is on, any top-level navigation to a site that isn’t on your allowlist is sent to a block page. Allowing a site allows its whole base domain (every subdomain). Blocking needs permission to see the pages you navigate to; Blocker asks for it the first time you start."
+  },
+
+  "tabControl": { "message": "Control" },
+  "tabAllowed": { "message": "Allowed" },
+
+  "startBlocking": { "message": "Start blocking" },
+  "stopBlocking": { "message": "Stop blocking" },
+  "statusOn": {
+    "message": "Blocking on — $count$ allowed",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "statusOff": { "message": "Blocking is off" },
+
+  "thisTab": { "message": "This tab" },
+  "allowThisSite": { "message": "Allow this site" },
+  "alreadyAllowed": { "message": "Already allowed" },
+  "noSiteHere": { "message": "No website on this tab" },
+  "needsAccess": { "message": "Blocker needs permission to see the pages you visit." },
+
+  "addPlaceholder": { "message": "example.com" },
+  "add": { "message": "Add" },
+  "allowedSites": { "message": "Allowed sites" },
+  "clearAll": { "message": "Clear all" },
+  "emptyAllowed": { "message": "No sites allowed yet." },
+  "invalidDomain": { "message": "Enter a valid domain, like example.com." },
+  "removeSite": {
+    "message": "Remove $domain$",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+
+  "removeTitle": { "message": "Remove site?" },
+  "removeBody": {
+    "message": "Stop allowing $domain$? You can add it again later.",
+    "placeholders": { "domain": { "content": "$1" } }
+  },
+  "remove": { "message": "Remove" },
+  "cancel": { "message": "Cancel" },
+  "clearTitle": { "message": "Clear all allowed sites?" },
+  "clearBody": {
+    "message": "Remove all $count$ allowed sites? This can’t be undone.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+
+  "blockedTitle": { "message": "Site blocked — Blocker" },
+  "blockedHeading": { "message": "This site is blocked" },
+  "blockedBody": { "message": "Blocker is on. Only the sites on your allowlist can be opened." },
+  "blockedUrlLabel": { "message": "Blocked address" },
+  "blockedAllow": { "message": "Allow this site" },
+  "blockedBack": { "message": "Go back" },
+  "blockedStop": { "message": "Stop blocking" },
+  "blockedUnknown": { "message": "this page" },
+  "blockedNothingToAllow": { "message": "Can’t allow this page" }
+}

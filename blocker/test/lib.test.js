@@ -1,0 +1,105 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+
+import {
+  PROTECTED_URL,
+  isHttpUrl,
+  hostFromUrl,
+  baseDomain,
+  normalizeDomain,
+  domainAllowed,
+  shouldBlock,
+  addDomain,
+  removeDomain,
+} from "../lib.js";
+
+test("isHttpUrl matches only http/https", () => {
+  assert.equal(isHttpUrl("http://a.com"), true);
+  assert.equal(isHttpUrl("https://a.com/x?y#z"), true);
+  assert.equal(isHttpUrl("chrome://extensions"), false);
+  assert.equal(isHttpUrl("about:blank"), false);
+  assert.equal(isHttpUrl(""), false);
+  assert.equal(isHttpUrl(undefined), false);
+});
+
+test("PROTECTED_URL flags non-web schemes", () => {
+  for (const u of ["chrome://x", "about:blank", "chrome-extension://id/p", "file:///x", "view-source:http://a"]) {
+    assert.equal(PROTECTED_URL.test(u), true, u);
+  }
+  assert.equal(PROTECTED_URL.test("https://example.com"), false);
+});
+
+test("hostFromUrl returns lowercased host for http(s) only", () => {
+  assert.equal(hostFromUrl("https://Example.COM/path"), "example.com");
+  assert.equal(hostFromUrl("http://sub.Example.com:8080/x"), "sub.example.com");
+  assert.equal(hostFromUrl("chrome://extensions"), null);
+  assert.equal(hostFromUrl("not a url"), null);
+});
+
+test("baseDomain reduces to the registrable domain", () => {
+  assert.equal(baseDomain("example.com"), "example.com");
+  assert.equal(baseDomain("www.example.com"), "example.com");
+  assert.equal(baseDomain("a.b.c.example.com"), "example.com");
+  assert.equal(baseDomain("EXAMPLE.com"), "example.com");
+  assert.equal(baseDomain("example.com."), "example.com");
+});
+
+test("baseDomain handles common multi-part TLDs", () => {
+  assert.equal(baseDomain("www.bbc.co.uk"), "bbc.co.uk");
+  assert.equal(baseDomain("shop.example.com.au"), "example.com.au");
+  assert.equal(baseDomain("foo.bar.co.jp"), "bar.co.jp");
+});
+
+test("baseDomain passes through IPs and localhost", () => {
+  assert.equal(baseDomain("127.0.0.1"), "127.0.0.1");
+  assert.equal(baseDomain("localhost"), "localhost");
+  assert.equal(baseDomain("::1"), "::1");
+});
+
+test("normalizeDomain accepts URLs, hosts, and bare domains", () => {
+  assert.equal(normalizeDomain("https://www.Example.com/path?q=1"), "example.com");
+  assert.equal(normalizeDomain("app.example.com"), "example.com");
+  assert.equal(normalizeDomain("  Example.COM  "), "example.com");
+  assert.equal(normalizeDomain("example.com:8443/x"), "example.com");
+  assert.equal(normalizeDomain("www.bbc.co.uk"), "bbc.co.uk");
+  assert.equal(normalizeDomain("localhost"), "localhost");
+});
+
+test("normalizeDomain rejects junk", () => {
+  assert.equal(normalizeDomain(""), null);
+  assert.equal(normalizeDomain("   "), null);
+  assert.equal(normalizeDomain("notadomain"), null);
+  assert.equal(normalizeDomain("chrome://x"), null);
+});
+
+test("domainAllowed matches exact and subdomains", () => {
+  const allowed = ["example.com", "bbc.co.uk"];
+  assert.equal(domainAllowed("example.com", allowed), true);
+  assert.equal(domainAllowed("www.example.com", allowed), true);
+  assert.equal(domainAllowed("a.b.example.com", allowed), true);
+  assert.equal(domainAllowed("news.bbc.co.uk", allowed), true);
+  assert.equal(domainAllowed("notexample.com", allowed), false);
+  assert.equal(domainAllowed("example.com.evil.com", allowed), false);
+  assert.equal(domainAllowed("", allowed), false);
+});
+
+test("shouldBlock gates only disallowed http(s) top navigations", () => {
+  const allowed = ["example.com"];
+  assert.equal(shouldBlock("https://other.com", allowed, true), true);
+  assert.equal(shouldBlock("https://example.com/x", allowed, true), false);
+  assert.equal(shouldBlock("https://sub.example.com", allowed, true), false);
+  // never block when off, non-http, or unparsable
+  assert.equal(shouldBlock("https://other.com", allowed, false), false);
+  assert.equal(shouldBlock("chrome://extensions", allowed, true), false);
+  assert.equal(shouldBlock("about:blank", allowed, true), false);
+  assert.equal(shouldBlock("", allowed, true), false);
+});
+
+test("addDomain dedups and sorts; removeDomain filters", () => {
+  assert.deepEqual(addDomain([], "b.com"), ["b.com"]);
+  assert.deepEqual(addDomain(["b.com"], "a.com"), ["a.com", "b.com"]);
+  assert.deepEqual(addDomain(["a.com"], "a.com"), ["a.com"]);
+  assert.deepEqual(addDomain(["a.com"], ""), ["a.com"]);
+  assert.deepEqual(removeDomain(["a.com", "b.com"], "a.com"), ["b.com"]);
+  assert.deepEqual(removeDomain(["a.com"], "x.com"), ["a.com"]);
+});
