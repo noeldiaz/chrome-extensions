@@ -5,7 +5,7 @@
   "description": "__MSG_appDesc__",
   "default_locale": "en",
   "minimum_chrome_version": "95",
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab", "scripting"],
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true

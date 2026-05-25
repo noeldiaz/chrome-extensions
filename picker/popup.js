@@ -45,7 +45,6 @@ const fmtHex = (hex) => (hexUpper ? hex.toUpperCase() : hex.toLowerCase());
 const els = {
   pick: document.getElementById("pick"),
   noEd: document.getElementById("noEd"),
-  result: document.getElementById("result"),
   swatch: document.getElementById("swatch"),
   fav: document.getElementById("fav"),
   favIco: document.getElementById("fav-ico"),
@@ -59,7 +58,6 @@ const els = {
   cratio: document.getElementById("cratio"),
   cpreview: document.getElementById("cpreview"),
   cbadges: document.getElementById("cbadges"),
-  hint: document.getElementById("hint"),
   native: document.getElementById("native"),
   favWrap: document.getElementById("favWrap"),
   favList: document.getElementById("favList"),
@@ -70,6 +68,15 @@ const els = {
   recent: document.getElementById("recent"),
   clearRecent: document.getElementById("clearRecent"),
   status: document.getElementById("status"),
+  tabBtns: document.querySelectorAll(".tab-btn"),
+  panels: {
+    color: document.getElementById("panel-color"),
+    page: document.getElementById("panel-page"),
+    tools: document.getElementById("panel-tools"),
+  },
+  scanBtn: document.getElementById("scanPage"),
+  pageMsg: document.getElementById("pageMsg"),
+  pageColors: document.getElementById("pageColors"),
 };
 
 const rowEls = {};
@@ -419,11 +426,95 @@ function show(hexInput) {
   renderRamp(current._rgb);
   updateContrast();
   updateStar();
-
-  els.result.classList.remove("hidden");
-  els.hint.classList.add("hidden");
   els.native.value = hex;
   return true;
+}
+
+// --- tabs + page-colour extraction ---
+
+let pageScanned = false;
+
+function switchTab(name) {
+  for (const b of els.tabBtns) b.classList.toggle("is-active", b.dataset.tab === name);
+  for (const [k, panel] of Object.entries(els.panels)) panel.classList.toggle("hidden", k !== name);
+  if (name === "page" && !pageScanned) scanPage();
+}
+
+function pageNote(msg) {
+  els.pageMsg.textContent = msg;
+  els.pageMsg.classList.remove("hidden");
+}
+
+// Runs in the inspected page (no closures) — collect the most-used colours from
+// computed styles and return them as { hex, count }, most common first.
+function collectColors() {
+  const counts = new Map();
+  const add = (c) => {
+    const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/.exec(c || "");
+    if (!m || (m[4] !== undefined && parseFloat(m[4]) < 0.5)) return;
+    const hex = "#" + [m[1], m[2], m[3]].map((n) => (+n).toString(16).padStart(2, "0")).join("");
+    counts.set(hex, (counts.get(hex) || 0) + 1);
+  };
+  const nodes = document.querySelectorAll("*");
+  const cap = Math.min(nodes.length, 9000);
+  for (let i = 0; i < cap; i++) {
+    const s = getComputedStyle(nodes[i]);
+    add(s.color);
+    add(s.backgroundColor);
+    add(s.borderTopColor);
+    add(s.borderRightColor);
+    add(s.borderBottomColor);
+    add(s.borderLeftColor);
+    add(s.fill);
+    add(s.stroke);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 30)
+    .map(([hex, count]) => ({ hex, count }));
+}
+
+function renderPageColors(colors) {
+  els.pageColors.replaceChildren(
+    ...colors.map(({ hex, count }) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className =
+        "h-8 w-full rounded-md border border-slate-300 shadow-sm transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600";
+      b.style.background = hex;
+      b.title = `${fmtHex(hex)} · ${count}`;
+      b.setAttribute("aria-label", fmtHex(hex));
+      b.addEventListener("click", () => {
+        show(hex);
+        switchTab("color");
+      });
+      return b;
+    }),
+  );
+}
+
+async function scanPage() {
+  pageScanned = true;
+  els.pageMsg.classList.add("hidden");
+  els.pageColors.replaceChildren();
+  let tab;
+  try {
+    [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  } catch {
+    /* no tab */
+  }
+  if (!tab?.id) {
+    pageNote(t("pageErr"));
+    return;
+  }
+  try {
+    const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: collectColors });
+    const colors = res?.result || [];
+    if (!colors.length) pageNote(t("pageEmpty"));
+    else renderPageColors(colors);
+  } catch {
+    pageNote(t("pageErr")); // restricted page (chrome://, Web Store, etc.)
+  }
 }
 
 // Record a freshly picked/chosen colour: render it and remember it.
@@ -510,6 +601,9 @@ function init() {
     if (els.favFile.files[0]) importFavs(els.favFile.files[0]);
     els.favFile.value = "";
   });
+
+  for (const b of els.tabBtns) b.addEventListener("click", () => switchTab(b.dataset.tab));
+  els.scanBtn.addEventListener("click", scanPage);
 
   document
     .getElementById("settings")

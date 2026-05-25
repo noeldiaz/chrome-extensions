@@ -1,24 +1,31 @@
 # Picker
 
-A minimal Chrome (MV3) extension: click the toolbar icon, pick any colour on
-screen with the eyedropper, and copy its **HEX**, **RGB**, or **HSL** value in
-one click.
+A Chrome (MV3) colour picker: click the toolbar icon, pick any colour on screen
+with the eyedropper, and copy it in any format in one click. Organised into three
+tabs — **Color**, **Page**, **Tools**.
 
 ## Features
 
 - **Screen eyedropper** — uses the native [`EyeDropper`](https://developer.mozilla.org/docs/Web/API/EyeDropper) API to sample any pixel on screen (Chromium 95+).
-- **Values** — the picked colour shows as a swatch plus HEX / RGB / HSL / HSV; click a row (or the swatch) to copy, with an inline ✓ confirmation.
-- **Nearest Tailwind colour** — the closest colour in the installed Tailwind palette (e.g. `blue-600`), matched in OKLab; click to copy the name.
-- **Manual choice** — a native colour box as a fallback (and for browsers without the eyedropper, e.g. Safari/Firefox).
-- **Recent colours** — your last 12 picks are kept (local only); click one to reload it. The most recent is restored when you reopen the popup.
-- **Dark mode** — follows the OS, toggle to override; remembered per browser.
-- Keyboard shortcut **Alt+Shift+P** (rebindable at `chrome://extensions/shortcuts`).
+- **Formats** — the picked colour as copy-pills: HEX / RGB / HSL / HSV / OKLCH / RGBA / HSLA / 8-digit hex, plus the **nearest Tailwind colour** (OKLab match, e.g. `blue-600`). Choose which are "favourites" (shown first) in Settings; the rest sit under *Other Formats*. Click a pill (or the swatch) to copy — it flashes green.
+- **Shades** — a 50–950 OKLCH ramp from the pick, with the step nearest your colour marked.
+- **Page colours** — the **Page** tab extracts the current tab's most-used colours from its computed styles; click one to load it.
+- **Contrast checker** (Tools) — your colour vs a chosen background → WCAG ratio + AA/AAA pass for normal/large text.
+- **Favourites** — save named colours; rename, remove, JSON export/import.
+- **Recent colours** — your last 12 picks (local only); remove individually or clear all (with confirmation). The most recent is restored on open.
+- **Manual choice** (Tools) — a native colour box (and the fallback where EyeDropper is unsupported, e.g. Safari/Firefox).
+- **Dark mode**, and a keyboard shortcut **Alt+Shift+P** (rebindable at `chrome://extensions/shortcuts`).
 
 ## Permissions
 
-`storage` only — for the theme choice and recent colours. No host access, no
-network, nothing leaves the browser. The eyedropper is a built-in browser API
-and needs no permission.
+- **`storage`** — theme, settings, recent colours, favourites (all local).
+- **`activeTab`** + **`scripting`** — only for the **Page** tab: when you click
+  "Scan this page", Picker reads the current tab's colours from its computed
+  styles. It runs only on that tab, only on your click, reads colour values only,
+  and sends nothing anywhere.
+
+No network requests. The eyedropper is a built-in browser API and needs no permission.
+See [PRIVACY.md](PRIVACY.md).
 
 ## Develop
 

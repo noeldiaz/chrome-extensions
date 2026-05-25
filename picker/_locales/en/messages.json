@@ -45,6 +45,13 @@
     "placeholders": { "error": { "content": "$1" } }
   },
 
+  "tabColor": { "message": "Color" },
+  "tabPage": { "message": "Page" },
+  "tabTools": { "message": "Tools" },
+  "scanPage": { "message": "Scan this page" },
+  "pageErr": { "message": "Can’t read this page." },
+  "pageEmpty": { "message": "No colours found on this page." },
+
   "formatsTitle": { "message": "Favorite Formats" },
   "otherFormatsTitle": { "message": "Other Formats" },
   "shades": { "message": "Shades" },
