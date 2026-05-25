@@ -35,6 +35,8 @@ import {
   apcaContrast,
   accessibleShade,
   gradientCss,
+  exportPalette,
+  EXPORT_FORMATS,
 } from "../lib.js";
 import { TAILWIND_COLORS } from "../palette.js";
 
@@ -244,4 +246,40 @@ test("gradientCss builds a linear-gradient string", () => {
   assert.equal(gradientCss(["#1e88e5"]), ""); // need 2+ stops
   assert.equal(gradientCss(["nope", "#fff"]), ""); // invalid dropped -> <2
   assert.match(gradientCss(["#000", "#fff"], 450), /^linear-gradient\(90deg,/); // angle wraps
+});
+
+test("gradientCss supports radial and conic types", () => {
+  assert.equal(
+    gradientCss(["#000", "#fff"], 90, "radial"),
+    "radial-gradient(circle, #000000 0%, #ffffff 100%)",
+  );
+  assert.equal(
+    gradientCss(["#000", "#fff"], 45, "conic"),
+    "conic-gradient(from 45deg, #000000 0%, #ffffff 100%)",
+  );
+  // four stops stay evenly spaced
+  assert.equal(
+    gradientCss(["#000", "#333", "#999", "#fff"], 0, "linear"),
+    "linear-gradient(0deg, #000000 0%, #333333 33%, #999999 67%, #ffffff 100%)",
+  );
+});
+
+test("exportPalette serializes stops per format", () => {
+  const stops = [["50", "#eff6ff"], ["500", "#1e88e5"], ["900", "#0d2a52"]];
+  assert.equal(
+    exportPalette(stops, "css", "brand"),
+    "--brand-50: #eff6ff;\n--brand-500: #1e88e5;\n--brand-900: #0d2a52;",
+  );
+  assert.equal(
+    exportPalette(stops, "tailwind", "brand"),
+    "'brand': {\n  '50': '#eff6ff',\n  '500': '#1e88e5',\n  '900': '#0d2a52',\n},",
+  );
+  assert.deepEqual(JSON.parse(exportPalette(stops, "json")), {
+    50: "#eff6ff",
+    500: "#1e88e5",
+    900: "#0d2a52",
+  });
+  assert.equal(exportPalette([], "css"), ""); // nothing to export
+  assert.equal(exportPalette([["1", "nope"]], "css"), ""); // invalid hex dropped
+  assert.deepEqual(EXPORT_FORMATS, ["css", "tailwind", "json"]);
 });

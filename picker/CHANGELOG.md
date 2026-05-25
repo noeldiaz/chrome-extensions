@@ -4,6 +4,21 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-05-25
+
+### Added
+- **Adjust** (Color tab) — H/S/L sliders to fine-tune the picked color live;
+  the swatch, formats, ramp, harmonies, and contrast all update as you drag.
+- **Export** (Tools tab) — copy the shade ramp or any harmony as CSS custom
+  properties, a Tailwind config object, or JSON.
+- **Gradient depth** — 2–5 color stops (add/remove) and linear / radial / conic
+  types, alongside the existing angle control.
+
+### Changed
+- Color tab leads with Shades; Tools tab starts with Contrast collapsed and
+  ends with Export then the manual color box.
+- Smaller top action row and tabs to save vertical space.
+
 ## [0.5.0] — 2026-05-25
 
 ### Added

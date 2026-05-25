@@ -52,12 +52,12 @@
           id="pick"
           type="button"
           data-i18n-attr="title:pickColor,aria-label:pickColor"
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white shadow-sm transition hover:bg-slate-50 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:hover:bg-slate-100"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white shadow-sm transition hover:bg-slate-50 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:hover:bg-slate-100"
           title="Pick a color"
           aria-label="Pick a color"
         >
           <!-- realistic pipette from the app icon (gradients), on a light tile so it reads -->
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" class="h-8 w-8" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" class="h-6 w-6" aria-hidden="true">
             <defs>
               <linearGradient id="pkBulb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#546e7a" /><stop offset="1" stop-color="#263238" /></linearGradient>
               <linearGradient id="pkCollar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#eceff1" /><stop offset="0.5" stop-color="#cfd8dc" /><stop offset="1" stop-color="#90a4ae" /></linearGradient>
@@ -83,7 +83,7 @@
         <button
           id="swatch"
           type="button"
-          class="flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white font-mono text-sm font-semibold text-slate-400 shadow-inner transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-800"
+          class="flex h-10 flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white font-mono text-sm font-semibold text-slate-400 shadow-inner transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-800"
           data-i18n-attr="title:copySwatch,aria-label:swatchAria"
           title="Copy HEX"
           aria-label="Picked color"
@@ -92,7 +92,7 @@
           id="fav"
           type="button"
           data-i18n-attr="title:favSave,aria-label:favSave"
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
           title="Save to favorites"
           aria-label="Save to favorites"
         >
@@ -115,7 +115,15 @@
 
       <!-- COLOR tab: formats, shades, favorites, recent -->
       <div id="panel-color" class="tabpanel mt-3" role="tabpanel">
-        <details id="formats" class="disclosure mt-0" open>
+        <details id="shades" class="disclosure mt-0" open>
+          <summary>
+            <span data-i18n="shades">Shades</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div id="ramp" class="mt-1 flex gap-1"></div>
+        </details>
+
+        <details id="formats" class="disclosure" open>
           <summary>
             <span data-i18n="formatsTitle">Favorite Formats</span>
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
@@ -131,12 +139,29 @@
           <div id="otherValues" class="mt-1 grid grid-cols-2 gap-1"></div>
         </details>
 
-        <details id="shades" class="disclosure" open>
+        <!-- fine-tune the picked color (H/S/L) -->
+        <details id="adjustWrap" class="disclosure">
           <summary>
-            <span data-i18n="shades">Shades</span>
+            <span data-i18n="adjust">Adjust</span>
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
           </summary>
-          <div id="ramp" class="mt-1 flex gap-1"></div>
+          <div class="mt-1 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="w-4 shrink-0 text-[10px] font-semibold text-slate-400 dark:text-slate-500">H</span>
+              <input id="adjH" type="range" min="0" max="360" step="1" class="h-1.5 flex-1 cursor-pointer accent-blue-500" data-i18n-attr="aria-label:adjHue" aria-label="Hue" />
+              <span id="adjHv" class="w-8 shrink-0 text-right font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-4 shrink-0 text-[10px] font-semibold text-slate-400 dark:text-slate-500">S</span>
+              <input id="adjS" type="range" min="0" max="100" step="1" class="h-1.5 flex-1 cursor-pointer accent-blue-500" data-i18n-attr="aria-label:adjSat" aria-label="Saturation" />
+              <span id="adjSv" class="w-8 shrink-0 text-right font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-4 shrink-0 text-[10px] font-semibold text-slate-400 dark:text-slate-500">L</span>
+              <input id="adjL" type="range" min="0" max="100" step="1" class="h-1.5 flex-1 cursor-pointer accent-blue-500" data-i18n-attr="aria-label:adjLight" aria-label="Lightness" />
+              <span id="adjLv" class="w-8 shrink-0 text-right font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400"></span>
+            </div>
+          </div>
         </details>
 
         <!-- color-wheel harmonies -->
@@ -214,7 +239,7 @@
 
       <!-- TOOLS tab: contrast checker + manual color -->
       <div id="panel-tools" class="tabpanel mt-3 hidden" role="tabpanel">
-        <details id="contrast" class="disclosure mt-0" open>
+        <details id="contrast" class="disclosure mt-0">
           <summary>
             <span data-i18n="contrast">Contrast</span>
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
@@ -268,9 +293,12 @@
           </summary>
           <div class="mt-1 space-y-2">
             <div class="flex items-center gap-2">
-              <input id="gradA" type="color" value="#1e88e5" data-i18n-attr="title:gradStartTitle,aria-label:gradStartTitle" class="h-7 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800" title="Start color" />
-              <input id="gradB" type="color" value="#ffffff" data-i18n-attr="title:gradEndTitle,aria-label:gradEndTitle" class="h-7 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800" title="End color" />
-              <select id="gradAngle" data-i18n-attr="title:gradAngleTitle,aria-label:gradAngleTitle" class="rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200" title="Angle">
+              <select id="gradType" data-i18n-attr="title:gradTypeTitle,aria-label:gradTypeTitle" class="rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200" title="Type">
+                <option value="linear" data-i18n="gradLinear">Linear</option>
+                <option value="radial" data-i18n="gradRadial">Radial</option>
+                <option value="conic" data-i18n="gradConic">Conic</option>
+              </select>
+              <select id="gradAngle" data-i18n-attr="title:gradAngleTitle,aria-label:gradAngleTitle" class="rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200" title="Angle">
                 <option value="0">0°</option>
                 <option value="45">45°</option>
                 <option value="90" selected>90°</option>
@@ -284,10 +312,30 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-3.5 w-3.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
               </button>
             </div>
+            <div id="gradStops" class="flex flex-wrap items-center gap-1.5"></div>
             <div id="gradPreview" class="h-9 rounded-md border border-slate-200 dark:border-slate-700"></div>
             <button id="gradCopy" type="button" class="val-chip" data-i18n-attr="title:gradCopyTitle,aria-label:gradCopyTitle" title="Copy CSS gradient">
               <span class="val-tag">CSS</span>
               <span id="gradStr" class="min-w-0 flex-1 truncate font-mono"></span>
+            </button>
+          </div>
+        </details>
+
+        <!-- export the shade ramp or a harmony as CSS / Tailwind / JSON -->
+        <details id="exportWrap" class="disclosure">
+          <summary>
+            <span data-i18n="exportTitle">Export</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div class="mt-1 space-y-2">
+            <div class="flex items-center gap-2">
+              <select id="exportSource" data-i18n-attr="aria-label:exportSource" aria-label="Source" class="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"></select>
+              <select id="exportFormat" data-i18n-attr="aria-label:exportFormat" aria-label="Format" class="shrink-0 rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"></select>
+            </div>
+            <pre id="exportOut" class="max-h-32 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-2 font-mono text-[10px] leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"></pre>
+            <button id="exportCopy" type="button" class="val-chip" data-i18n-attr="title:exportCopyTitle,aria-label:exportCopyTitle" title="Copy to clipboard">
+              <span class="val-tag" data-i18n="copy">Copy</span>
+              <span class="min-w-0 flex-1 truncate" data-i18n="exportCopyHint">Copy to clipboard</span>
             </button>
           </div>
         </details>

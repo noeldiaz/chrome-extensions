@@ -138,9 +138,31 @@
 
   "resetDefault": { "message": "Reset to default" },
 
+  "adjust": { "message": "Adjust" },
+  "adjHue": { "message": "Hue" },
+  "adjSat": { "message": "Saturation" },
+  "adjLight": { "message": "Lightness" },
+
+  "exportTitle": { "message": "Export" },
+  "exportSource": { "message": "Palette to export" },
+  "exportFormat": { "message": "Export format" },
+  "exportCopyTitle": { "message": "Copy to clipboard" },
+  "exportCopyHint": { "message": "Copy to clipboard" },
+  "fmtCss": { "message": "CSS vars" },
+  "fmtTailwind": { "message": "Tailwind" },
+  "fmtJson": { "message": "JSON" },
+
   "gradient": { "message": "Gradient" },
-  "gradStartTitle": { "message": "Start color" },
-  "gradEndTitle": { "message": "End color" },
+  "gradTypeTitle": { "message": "Gradient type" },
+  "gradLinear": { "message": "Linear" },
+  "gradRadial": { "message": "Radial" },
+  "gradConic": { "message": "Conic" },
   "gradAngleTitle": { "message": "Gradient angle" },
-  "gradCopyTitle": { "message": "Copy CSS gradient" }
+  "gradCopyTitle": { "message": "Copy CSS gradient" },
+  "gradAddStop": { "message": "Add color stop" },
+  "gradRemoveStop": { "message": "Remove color stop" },
+  "gradStopAria": {
+    "message": "Color stop $n$",
+    "placeholders": { "n": { "content": "$1" } }
+  }
 }

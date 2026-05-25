@@ -12,6 +12,7 @@ import {
   hexToRgb,
   rgbToHex,
   rgbToHsl,
+  hslToRgb,
   rgbToHsv,
   rgbToOklab,
   rgbToOklch,
@@ -29,6 +30,7 @@ import {
   FORMATS,
   DEFAULT_FORMATS,
   harmonies,
+  HARMONIES,
   DEV_FORMATS,
   formatCssVar,
   formatSwiftUI,
@@ -41,6 +43,9 @@ import {
   apcaContrast,
   accessibleShade,
   gradientCss,
+  GRADIENT_TYPES,
+  exportPalette,
+  EXPORT_FORMATS,
 } from "./lib.js";
 import { TAILWIND_COLORS } from "./palette.js";
 
@@ -92,8 +97,18 @@ const els = {
   harmonies: document.getElementById("harmonies"),
   devValues: document.getElementById("devValues"),
   cvd: document.getElementById("cvd"),
-  gradA: document.getElementById("gradA"),
-  gradB: document.getElementById("gradB"),
+  adjH: document.getElementById("adjH"),
+  adjS: document.getElementById("adjS"),
+  adjL: document.getElementById("adjL"),
+  adjHv: document.getElementById("adjHv"),
+  adjSv: document.getElementById("adjSv"),
+  adjLv: document.getElementById("adjLv"),
+  exportSource: document.getElementById("exportSource"),
+  exportFormat: document.getElementById("exportFormat"),
+  exportOut: document.getElementById("exportOut"),
+  exportCopy: document.getElementById("exportCopy"),
+  gradType: document.getElementById("gradType"),
+  gradStops: document.getElementById("gradStops"),
   gradAngle: document.getElementById("gradAngle"),
   gradPreview: document.getElementById("gradPreview"),
   gradCopy: document.getElementById("gradCopy"),
@@ -417,28 +432,158 @@ function updateContrast() {
 }
 
 // --- gradient builder ---
-// gradA follows the current pick until the user edits it (then it's unlinked).
+// Stop 0 follows the current pick until the user edits it (then it's unlinked).
+const GRAD_MAX_STOPS = 5;
+let gradStops = ["#1e88e5", GRAD_END_DEFAULT];
 let gradLinked = true;
 
+const PLUS_ICO = `<svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>`;
+const X_MINI = `<svg class="h-2.5 w-2.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>`;
+
+// Build the stop color-inputs (with hover-✕ remove) plus an add-stop tile.
+function renderGradStops() {
+  const removable = gradStops.length > 2;
+  els.gradStops.replaceChildren(
+    ...gradStops.map((hex, i) => {
+      const wrap = document.createElement("div");
+      wrap.className = "group relative";
+
+      const inp = document.createElement("input");
+      inp.type = "color";
+      inp.value = hex;
+      inp.className = "h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800";
+      inp.setAttribute("aria-label", t("gradStopAria", String(i + 1)));
+      inp.addEventListener("input", () => {
+        gradStops[i] = inp.value;
+        if (i === 0) gradLinked = false;
+        renderGradient();
+      });
+      wrap.appendChild(inp);
+
+      if (removable) {
+        const del = document.createElement("button");
+        del.type = "button";
+        del.title = t("gradRemoveStop");
+        del.setAttribute("aria-label", t("gradRemoveStop"));
+        del.className = "absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-slate-700 text-white shadow transition hover:bg-red-600 focus:flex focus:outline-none group-hover:flex";
+        del.appendChild(svgEl(X_MINI));
+        del.addEventListener("click", () => {
+          gradStops.splice(i, 1);
+          if (i === 0) gradLinked = false;
+          renderGradStops();
+          renderGradient();
+        });
+        wrap.appendChild(del);
+      }
+      return wrap;
+    }),
+  );
+  if (gradStops.length < GRAD_MAX_STOPS) {
+    const add = document.createElement("button");
+    add.type = "button";
+    add.title = t("gradAddStop");
+    add.setAttribute("aria-label", t("gradAddStop"));
+    add.className = "flex h-8 w-10 items-center justify-center rounded border border-dashed border-slate-300 text-slate-400 transition hover:border-blue-400 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:text-slate-500 dark:hover:border-blue-500";
+    add.appendChild(svgEl(PLUS_ICO));
+    add.addEventListener("click", () => {
+      const last = gradStops[gradStops.length - 1].toLowerCase();
+      gradStops.push(last === GRAD_END_DEFAULT ? "#000000" : GRAD_END_DEFAULT);
+      renderGradStops();
+      renderGradient();
+    });
+    els.gradStops.appendChild(add);
+  }
+}
+
 function renderGradient() {
-  const css = gradientCss([els.gradA.value, els.gradB.value], Number(els.gradAngle.value));
+  const type = els.gradType.value;
+  els.gradAngle.disabled = type === "radial"; // angle is meaningless for radial
+  const css = gradientCss(gradStops, Number(els.gradAngle.value), type);
   els.gradPreview.style.background = css;
   els.gradStr.textContent = css;
   els.gradCopy._css = css;
-  // "default" = start still linked to the pick, end white, 90°.
+  // "default" = 2 stops, start linked to the pick, end white, linear, 90°.
   const isDefault =
     gradLinked &&
-    els.gradB.value.toLowerCase() === GRAD_END_DEFAULT &&
-    els.gradAngle.value === GRAD_ANGLE_DEFAULT;
+    type === "linear" &&
+    els.gradAngle.value === GRAD_ANGLE_DEFAULT &&
+    gradStops.length === 2 &&
+    gradStops[1].toLowerCase() === GRAD_END_DEFAULT;
   els.gradReset.classList.toggle("hidden", isDefault);
 }
 
 function resetGradient() {
   gradLinked = true;
-  if (current) els.gradA.value = current._hex;
-  els.gradB.value = GRAD_END_DEFAULT;
+  gradStops = [current ? current._hex : "#1e88e5", GRAD_END_DEFAULT];
+  els.gradType.value = "linear";
   els.gradAngle.value = GRAD_ANGLE_DEFAULT;
+  renderGradStops();
   renderGradient();
+}
+
+// --- fine-tune (H/S/L sliders) ---
+// `adjusting` guards show() from rewriting the sliders mid-drag (HSL rounding
+// would make them jump); only external loads re-sync the slider positions.
+let adjusting = false;
+
+function syncAdjust(rgb) {
+  const { h, s, l } = rgbToHsl(rgb);
+  els.adjH.value = h;
+  els.adjS.value = s;
+  els.adjL.value = l;
+  els.adjHv.textContent = `${h}°`;
+  els.adjSv.textContent = `${s}%`;
+  els.adjLv.textContent = `${l}%`;
+}
+
+function applyAdjust() {
+  const h = Number(els.adjH.value);
+  const s = Number(els.adjS.value);
+  const l = Number(els.adjL.value);
+  els.adjHv.textContent = `${h}°`;
+  els.adjSv.textContent = `${s}%`;
+  els.adjLv.textContent = `${l}%`;
+  adjusting = true;
+  show(rgbToHex(hslToRgb({ h, s, l })));
+  adjusting = false;
+}
+
+// --- palette export (shade ramp / a harmony, as CSS vars / Tailwind / JSON) ---
+function populateExports() {
+  els.exportSource.replaceChildren(
+    ...[
+      { val: "shades", label: t("shades") },
+      ...HARMONIES.map((h) => ({ val: "h:" + h.key, label: t("harmony_" + h.key) })),
+    ].map(({ val, label }) => {
+      const o = document.createElement("option");
+      o.value = val;
+      o.textContent = label;
+      return o;
+    }),
+  );
+  const fmtLabels = { css: t("fmtCss"), tailwind: t("fmtTailwind"), json: t("fmtJson") };
+  els.exportFormat.replaceChildren(
+    ...EXPORT_FORMATS.map((f) => {
+      const o = document.createElement("option");
+      o.value = f;
+      o.textContent = fmtLabels[f];
+      return o;
+    }),
+  );
+}
+
+function exportStops() {
+  if (!current) return [];
+  const src = els.exportSource.value;
+  if (src === "shades") return ramp(current._rgb).map((s) => [String(s.step), s.hex]);
+  const scheme = harmonies(current._hex).find((s) => "h:" + s.key === src);
+  return scheme ? scheme.colors.map((hex, i) => [String(i + 1), hex]) : [];
+}
+
+function renderExport() {
+  const txt = exportPalette(exportStops(), els.exportFormat.value, "color");
+  els.exportOut.textContent = txt;
+  els.exportCopy._txt = txt;
 }
 
 // --- favorites (storage.local: { favorites: [{hex, name}] }) ---
@@ -657,8 +802,11 @@ function show(hexInput) {
   updateContrast();
   updateStar();
   els.native.value = hex;
+  if (!adjusting) syncAdjust(current._rgb);
+  renderExport();
   if (gradLinked) {
-    els.gradA.value = hex;
+    gradStops[0] = hex;
+    renderGradStops();
     renderGradient();
   }
   return true;
@@ -800,6 +948,7 @@ async function loadState() {
 
   buildRows();
   buildDevRows();
+  populateExports();
   renderFavs();
   renderRecent(store.recent);
   // Always show a color so the Formats / Shades / Contrast sections are visible
@@ -838,12 +987,20 @@ function init() {
   els.native.addEventListener("input", () => show(els.native.value));
   els.native.addEventListener("change", () => record(els.native.value));
 
-  // gradient builder: editing A unlinks it from the pick; everything live-updates
-  els.gradA.addEventListener("input", () => {
-    gradLinked = false;
-    renderGradient();
+  // fine-tune sliders nudge the current color live
+  for (const s of [els.adjH, els.adjS, els.adjL]) s.addEventListener("input", applyAdjust);
+
+  // palette export
+  els.exportSource.addEventListener("change", renderExport);
+  els.exportFormat.addEventListener("change", renderExport);
+  els.exportCopy.addEventListener("click", () => {
+    if (!els.exportCopy._txt) return;
+    copy(els.exportCopy._txt);
+    markCopied(els.exportCopy);
   });
-  els.gradB.addEventListener("input", renderGradient);
+
+  // gradient builder: stop colors live-update via renderGradStops; type/angle here
+  els.gradType.addEventListener("change", renderGradient);
   els.gradAngle.addEventListener("change", renderGradient);
   els.gradReset.addEventListener("click", resetGradient);
   els.gradCopy.addEventListener("click", () => {

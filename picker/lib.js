@@ -385,13 +385,32 @@ export function accessibleShade(rgb, bgRgb, threshold = 4.5) {
 }
 
 // --- Gradient builder ------------------------------------------------------
-// CSS linear-gradient from evenly spaced hex stops. Returns "" if <2 valid stops.
-export function gradientCss(stops, angle = 90) {
+// CSS gradient from evenly spaced hex stops. `type` is "linear" | "radial" |
+// "conic" (angle is ignored for radial). Returns "" if <2 valid stops.
+export const GRADIENT_TYPES = ["linear", "radial", "conic"];
+export function gradientCss(stops, angle = 90, type = "linear") {
   const valid = (stops || []).map(normalizeHex).filter(Boolean);
   if (valid.length < 2) return "";
   const a = ((Math.round(angle) % 360) + 360) % 360;
   const list = valid
     .map((hex, i) => `${hex} ${Math.round((i / (valid.length - 1)) * 100)}%`)
     .join(", ");
+  if (type === "radial") return `radial-gradient(circle, ${list})`;
+  if (type === "conic") return `conic-gradient(from ${a}deg, ${list})`;
   return `linear-gradient(${a}deg, ${list})`;
+}
+
+// --- Palette export --------------------------------------------------------
+// Serialize labeled stops to a sharable snippet. `stops` = [[label, hex], …];
+// `format` is "css" (custom properties) | "tailwind" (config object) | "json".
+export const EXPORT_FORMATS = ["css", "tailwind", "json"];
+export function exportPalette(stops, format = "css", name = "color") {
+  const norm = (stops || [])
+    .map(([label, hex]) => [String(label), normalizeHex(hex)])
+    .filter(([, hex]) => hex);
+  if (!norm.length) return "";
+  if (format === "json") return JSON.stringify(Object.fromEntries(norm), null, 2);
+  if (format === "tailwind")
+    return `'${name}': {\n${norm.map(([l, h]) => `  '${l}': '${h}',`).join("\n")}\n},`;
+  return norm.map(([l, h]) => `--${name}-${l}: ${h};`).join("\n");
 }
