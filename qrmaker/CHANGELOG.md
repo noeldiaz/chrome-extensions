@@ -1,0 +1,44 @@
+# Changelog
+
+All notable changes to QRmaker are documented here. Format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
+uses [Semantic Versioning](https://semver.org/).
+
+## [0.5.0] — 2026-05-25
+
+### Added
+- **Glossy blue tile icon** — top-lit blue gradient with a glassy top sheen;
+  the white QR gains a soft drop shadow so it reads as printed/raised,
+  filling the canvas edge-to-edge.
+- **Internationalization** — English (US) baseline via `_locales`.
+- **Options page** with a settings gear and a Close control.
+- **Tabbed options page** — Settings / About, with a sticky header (logo +
+  title left; theme toggle and Close right).
+- Editor config gear, a Save-to-history button, and a sticky layout.
+
+### Changed
+- Structured-aware decode — scanned codes reopen in the form of their type
+  (URL, vCard, geo, etc.).
+
+## [0.4.0] — 2026-05-24
+
+### Added
+- Structured-aware decode groundwork and assorted type handling.
+
+## [0.3.0] — 2026-05-23
+
+### Added
+- "Use my location" button for the geo type.
+- Structured address and note fields for vCard.
+- Drag/paste to scan, plus a "More types" shortcut in the popup.
+
+## [0.2.0] — 2026-05-23
+
+### Added
+- Download/copy of the generated code, an options card, and a styled
+  rendering engine.
+
+## [0.1.0] — 2026-05-23
+
+### Added
+- Initial release: generate a QR code for the active tab's URL.

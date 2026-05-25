@@ -1,0 +1,30 @@
+# Changelog
+
+All notable changes to Refresher are documented here. Format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
+uses [Semantic Versioning](https://semver.org/).
+
+## [0.5.0] — 2026-05-25
+
+### Added
+- **Two-arrow reload icon** — a true reload glyph (two point-symmetric arrows
+  with integrated heads) in a top-lit blue gradient, filling the canvas.
+- **Internationalization** — English (US) baseline via `_locales`.
+- **Options page** with a settings gear and a Close control.
+- **Tabbed options page** — Settings / About, with a sticky header (logo +
+  title left; theme toggle and Close right).
+- Descriptive titles and ARIA labels on the Go/Stop buttons.
+
+### Changed
+- Icons unified across the workspace — edge-to-edge, transparent corners.
+- Extension icon shown to the left of the title in every window.
+- Light theme tuned to match.
+
+### Fixed
+- Guarded the badge text-color setters so Safari (which lacks them) doesn't
+  throw.
+
+## [0.4.1] — 2026-05-22
+
+### Added
+- Initial workspace release: per-tab auto-refresh with live badge countdown.

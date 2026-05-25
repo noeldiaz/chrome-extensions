@@ -4,6 +4,16 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] — 2026-05-25
+
+### Changed
+- Recent strip: the "More" control is now a blue accent pill with a plus
+  icon, shown after the 6 most recent colors, with a wider gap between
+  swatches.
+- Recent Colors options tab lays its chips out in a 3-column grid that fills
+  the available width.
+- Shade-ramp active marker uses a lighter slate ring in light mode.
+
 ## [0.4.0] — 2026-05-25
 
 ### Added
