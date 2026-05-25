@@ -10,6 +10,9 @@
   "h1Options": { "message": "Refresher — Options" },
   "optionsBlank": { "message": "Nothing to configure yet — settings will live here." },
   "close": { "message": "Close" },
+  "tabSettings": { "message": "Settings" },
+  "tabAbout": { "message": "About" },
+  "version": { "message": "Version" },
 
   "minutes": { "message": "Minutes" },
   "seconds": { "message": "Seconds" },

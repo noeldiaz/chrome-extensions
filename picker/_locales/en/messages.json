@@ -57,6 +57,8 @@
   "shades": { "message": "Shades" },
   "shadeCurrent": { "message": "closest to your color" },
   "recentRemove": { "message": "Remove color" },
+  "recentMore": { "message": "More" },
+  "recentMoreTitle": { "message": "See all recent colors in Settings" },
   "remove": { "message": "Remove" },
   "clearRecentConfirm": { "message": "Clear all recent colors? This can’t be undone." },
   "recentRemoveConfirm": { "message": "Remove this color from recent?" },

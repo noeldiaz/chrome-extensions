@@ -29,9 +29,30 @@
         </button>
       </div>
 
-      <p data-i18n="optionsBlank" class="mt-6 text-sm text-slate-500 dark:text-slate-400">
-        Nothing to configure yet — settings will live here.
-      </p>
+      <!-- tabs -->
+      <div role="tablist" class="mt-6 flex gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800">
+        <button id="otab-settings" type="button" role="tab" class="tab-btn is-active" data-tab="settings" data-i18n="tabSettings">Settings</button>
+        <button id="otab-about" type="button" role="tab" class="tab-btn" data-tab="about" data-i18n="tabAbout">About</button>
+      </div>
+
+      <div id="opanel-settings" class="tabpanel" role="tabpanel">
+        <p data-i18n="optionsBlank" class="mt-4 text-sm text-slate-500 dark:text-slate-400">
+          Nothing to configure yet — settings will live here.
+        </p>
+      </div>
+
+      <div id="opanel-about" class="tabpanel hidden" role="tabpanel">
+        <section class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div class="flex items-center gap-3">
+            <img src="icons/icon48.png" alt="" class="h-10 w-10 shrink-0" />
+            <div>
+              <div class="text-sm font-semibold text-slate-800 dark:text-slate-100" data-i18n="appName">Refresher</div>
+              <div id="aboutVersion" class="text-xs text-slate-500 dark:text-slate-400"></div>
+            </div>
+          </div>
+          <p class="mt-3 text-xs text-slate-500 dark:text-slate-400" data-i18n="appDesc">Refresh chosen browser tabs on intervals you control.</p>
+        </section>
+      </div>
     </div>
     <footer class="sticky bottom-0 z-10 border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
       <div class="mx-auto flex w-full max-w-xl justify-end px-6 py-3">

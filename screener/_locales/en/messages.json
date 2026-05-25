@@ -7,6 +7,9 @@
   "themeToggle": { "message": "Toggle dark mode" },
   "settings": { "message": "Settings" },
   "close": { "message": "Close" },
+  "tabSettings": { "message": "Settings" },
+  "tabAbout": { "message": "About" },
+  "version": { "message": "Version" },
   "copy": { "message": "Copy" },
   "cancel": { "message": "Cancel" },
 

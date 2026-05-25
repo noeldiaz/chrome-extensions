@@ -50,6 +50,10 @@
   .tab-btn.is-active {
     @apply bg-white text-slate-800 shadow-sm dark:bg-slate-700 dark:text-slate-100;
   }
+  /* the shade-ramp swatch nearest the picked color */
+  .shade-active {
+    @apply relative z-10 ring-2 ring-slate-500 ring-offset-2 ring-offset-slate-100 dark:ring-slate-300 dark:ring-offset-slate-900;
+  }
 }
 
 /* The popup grows with content but Chrome caps it at ~600px tall. Past that it

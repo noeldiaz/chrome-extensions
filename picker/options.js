@@ -79,8 +79,11 @@ async function renderRecentList() {
 async function buildFormatToggles() {
   const { formats = DEFAULT_FORMATS } = await chrome.storage.local.get({ formats: DEFAULT_FORMATS });
   const visible = { ...DEFAULT_FORMATS, ...formats };
+  // Show checked (favorite) formats first; stable sort keeps FORMATS order within
+  // each group. Only sorts on open, so toggling doesn't make checkboxes jump.
+  const ordered = [...FORMATS].sort((a, b) => (visible[b.key] ? 1 : 0) - (visible[a.key] ? 1 : 0));
   $("formatList").replaceChildren(
-    ...FORMATS.map(({ key, label }) => {
+    ...ordered.map(({ key, label }) => {
       const lab = document.createElement("label");
       lab.className = "flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200";
       const cb = document.createElement("input");
@@ -158,6 +161,13 @@ async function init() {
       for (const x of tabs) x.classList.toggle("is-active", x === b);
       for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
     });
+  }
+
+  // Deep-link: the popup's "More" sets optionsTab to open a specific tab.
+  const { optionsTab } = await chrome.storage.local.get({ optionsTab: "" });
+  if (optionsTab) {
+    await chrome.storage.local.remove("optionsTab");
+    [...tabs].find((b) => b.dataset.tab === optionsTab)?.click();
   }
 
   // Footer Close: remove this options tab (window.close is unreliable for a tab).

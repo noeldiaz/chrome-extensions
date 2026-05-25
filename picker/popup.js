@@ -205,13 +205,10 @@ function renderRamp(rgb) {
         "relative h-8 flex-1 transition hover:scale-y-125 focus:outline-none focus:ring-2 focus:ring-blue-400 first:rounded-l-md last:rounded-r-md";
       b.style.background = hex;
       if (i === activeIdx) {
-        // inset ring in a contrasting color + the matching step number
-        const txt = contrastText(hexToRgb(hex));
-        b.style.boxShadow = `inset 0 0 0 2px ${txt}`;
-        b.style.color = txt;
-        b.style.zIndex = "10";
+        // theme-aware ring (dark on light, light on dark) + the matching step number
+        b.classList.add("shade-active", "flex", "items-center", "justify-center", "text-[9px]", "font-bold", "tabular-nums");
+        b.style.color = contrastText(hexToRgb(hex));
         b.textContent = String(step);
-        b.classList.add("flex", "items-center", "justify-center", "text-[9px]", "font-bold", "tabular-nums");
         b.setAttribute("aria-current", "true");
         b.title = `${step} · ${fmtHex(hex)} — ${t("shadeCurrent")}`;
         b.setAttribute("aria-label", `${step} ${fmtHex(hex)} ${t("shadeCurrent")}`);
@@ -376,40 +373,57 @@ async function importFavs(file) {
 
 // --- recent picks (storage.local: { recent: ["#rrggbb", …] }) ---
 
+function recentSwatch(hex) {
+  const wrap = document.createElement("div");
+  wrap.className = "group relative";
+
+  const b = document.createElement("button");
+  b.type = "button";
+  b.title = fmtHex(hex);
+  b.setAttribute("aria-label", `${t("favLoad")} ${fmtHex(hex)}`);
+  b.className =
+    "h-7 w-7 rounded-md border border-slate-300 shadow-sm transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600";
+  b.style.background = hex;
+  b.addEventListener("click", () => show(hex));
+
+  // hover/focus ✕ to remove just this color
+  const del = document.createElement("button");
+  del.type = "button";
+  del.title = t("recentRemove");
+  del.setAttribute("aria-label", `${t("recentRemove")} ${fmtHex(hex)}`);
+  del.className =
+    "absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-slate-700 text-white shadow transition hover:bg-red-600 focus:flex focus:outline-none group-hover:flex";
+  del.innerHTML =
+    '<svg class="h-2.5 w-2.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
+  del.addEventListener("click", (e) => {
+    e.stopPropagation();
+    removeRecent(hex);
+  });
+
+  wrap.append(b, del);
+  return wrap;
+}
+
+const RECENT_SHOWN = 7;
 function renderRecent(list) {
   els.recentWrap.classList.toggle("hidden", !list.length);
-  els.recent.replaceChildren(
-    ...list.map((hex) => {
-      const wrap = document.createElement("div");
-      wrap.className = "group relative";
-
-      const b = document.createElement("button");
-      b.type = "button";
-      b.title = fmtHex(hex);
-      b.setAttribute("aria-label", `${t("favLoad")} ${fmtHex(hex)}`);
-      b.className =
-        "h-7 w-7 rounded-md border border-slate-300 shadow-sm transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600";
-      b.style.background = hex;
-      b.addEventListener("click", () => show(hex));
-
-      // hover/focus ✕ to remove just this color
-      const del = document.createElement("button");
-      del.type = "button";
-      del.title = t("recentRemove");
-      del.setAttribute("aria-label", `${t("recentRemove")} ${fmtHex(hex)}`);
-      del.className =
-        "absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-slate-700 text-white shadow transition hover:bg-red-600 focus:flex focus:outline-none group-hover:flex";
-      del.innerHTML =
-        '<svg class="h-2.5 w-2.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
-      del.addEventListener("click", (e) => {
-        e.stopPropagation();
-        removeRecent(hex);
-      });
-
-      wrap.append(b, del);
-      return wrap;
-    }),
-  );
+  const overflow = list.length > RECENT_SHOWN;
+  els.recent.replaceChildren(...(overflow ? list.slice(0, RECENT_SHOWN) : list).map(recentSwatch));
+  if (overflow) {
+    // "More" → open Settings on the Recent Colors tab (flag read by options.js)
+    const more = document.createElement("button");
+    more.type = "button";
+    more.textContent = t("recentMore");
+    more.title = t("recentMoreTitle");
+    more.setAttribute("aria-label", t("recentMoreTitle"));
+    more.className =
+      "ml-auto inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-slate-300 px-2 text-[10px] font-semibold text-slate-500 transition hover:border-blue-400 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600 dark:text-slate-400 dark:hover:text-slate-200";
+    more.addEventListener("click", async () => {
+      await chrome.storage.local.set({ optionsTab: "recent" });
+      chrome.runtime.openOptionsPage();
+    });
+    els.recent.appendChild(more);
+  }
 }
 
 async function removeRecent(hex) {

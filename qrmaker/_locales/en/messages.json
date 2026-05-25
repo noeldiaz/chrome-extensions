@@ -11,6 +11,9 @@
   "optionsBlank": { "message": "Nothing to configure yet — settings will live here." },
   "viewCreatedCodes": { "message": "View created codes" },
   "close": { "message": "Close" },
+  "tabSettings": { "message": "Settings" },
+  "tabAbout": { "message": "About" },
+  "version": { "message": "Version" },
   "copy": { "message": "Copy" },
   "cancel": { "message": "Cancel" },
 

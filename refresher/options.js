@@ -2,7 +2,7 @@
 // carries the same light/dark theme wiring the popup uses (Refresher has no
 // shared theme module, so it's inlined here) plus localization.
 
-import { localize } from "./i18n.js";
+import { localize, t } from "./i18n.js";
 
 const themeToggleEl = document.getElementById("theme-toggle");
 const moonIconEl = document.getElementById("moon-icon");
@@ -45,6 +45,16 @@ document.getElementById("winClose").addEventListener("click", async () => {
   }
   window.close();
 });
+
+// Tabs: Settings / About
+document.getElementById("aboutVersion").textContent = `${t("version")} ${chrome.runtime.getManifest().version}`;
+const opanels = { settings: document.getElementById("opanel-settings"), about: document.getElementById("opanel-about") };
+const tabBtns = document.querySelectorAll(".tab-btn");
+for (const b of tabBtns)
+  b.addEventListener("click", () => {
+    for (const x of tabBtns) x.classList.toggle("is-active", x === b);
+    for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
+  });
 
 localize();
 loadTheme();
