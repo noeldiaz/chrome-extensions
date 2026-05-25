@@ -10,6 +10,7 @@ import { confirmDialog } from "./dialog.js";
 import {
   normalizeHex,
   hexToRgb,
+  rgbToHex,
   rgbToHsl,
   rgbToHsv,
   rgbToOklab,
@@ -27,11 +28,27 @@ import {
   nearestTailwind,
   FORMATS,
   DEFAULT_FORMATS,
+  harmonies,
+  DEV_FORMATS,
+  formatCssVar,
+  formatSwiftUI,
+  formatUIColor,
+  formatAndroid,
+  formatFlutter,
+  formatUnity,
+  simulateCvd,
+  CVD_TYPES,
+  apcaContrast,
+  accessibleShade,
+  gradientCss,
 } from "./lib.js";
 import { TAILWIND_COLORS } from "./palette.js";
 
 const MAX_RECENT = 12;
 const MAX_FAVS = 100;
+const CONTRAST_BG_DEFAULT = "#ffffff"; // contrast tool's default background
+const GRAD_END_DEFAULT = "#ffffff"; // gradient end color default
+const GRAD_ANGLE_DEFAULT = "90"; // gradient angle default
 
 let hexUpper = true; // HEX letter case (options)
 let visibleFormats = { ...DEFAULT_FORMATS }; // which rows show (options)
@@ -63,9 +80,25 @@ const els = {
   ramp: document.getElementById("ramp"),
   cbg: document.getElementById("cbg"),
   cbgPick: document.getElementById("cbgPick"),
+  cbgReset: document.getElementById("cbgReset"),
   cratio: document.getElementById("cratio"),
   cpreview: document.getElementById("cpreview"),
   cbadges: document.getElementById("cbadges"),
+  apca: document.getElementById("apca"),
+  apcaTip: document.getElementById("apcaTip"),
+  fixShade: document.getElementById("fixShade"),
+  fixSwatch: document.getElementById("fixSwatch"),
+  fixLabel: document.getElementById("fixLabel"),
+  harmonies: document.getElementById("harmonies"),
+  devValues: document.getElementById("devValues"),
+  cvd: document.getElementById("cvd"),
+  gradA: document.getElementById("gradA"),
+  gradB: document.getElementById("gradB"),
+  gradAngle: document.getElementById("gradAngle"),
+  gradPreview: document.getElementById("gradPreview"),
+  gradCopy: document.getElementById("gradCopy"),
+  gradStr: document.getElementById("gradStr"),
+  gradReset: document.getElementById("gradReset"),
   native: document.getElementById("native"),
   favWrap: document.getElementById("favWrap"),
   favList: document.getElementById("favList"),
@@ -88,6 +121,7 @@ const els = {
 };
 
 const rowEls = {};
+const devRowEls = {};
 
 const X_ICO = `<svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>`;
 
@@ -139,6 +173,13 @@ function values(hex) {
     hsla: formatHsla(hsl),
     hex8: H + (hexUpper ? "FF" : "ff"),
     tw: tw.name,
+    // developer formats (Code section)
+    cssVar: formatCssVar(hex),
+    swiftui: formatSwiftUI(rgb),
+    uicolor: formatUIColor(rgb),
+    android: formatAndroid(hex),
+    flutter: formatFlutter(hex),
+    unity: formatUnity(rgb),
   };
 }
 
@@ -181,6 +222,94 @@ function buildRows() {
   }
   els.formatsSection.classList.toggle("hidden", !els.values.childElementCount);
   els.otherSection.classList.toggle("hidden", !els.otherValues.childElementCount);
+}
+
+// Build the developer-format pills (Swift/Android/Flutter/…) once; show() fills
+// their text. Same click-to-copy behavior as the value rows.
+function buildDevRows() {
+  els.devValues.replaceChildren();
+  for (const { key, tag } of DEV_FORMATS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "val-chip";
+
+    const lab = document.createElement("span");
+    lab.className = "val-tag";
+    lab.textContent = tag;
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "min-w-0 flex-1 truncate font-mono";
+
+    btn.append(lab, nameEl);
+    btn.title = `${t("copy")} ${tag}`;
+    btn.setAttribute("aria-label", `${t("copy")} ${tag}`);
+    btn.addEventListener("click", () => {
+      if (!current) return;
+      copy(current[key]);
+      markCopied(btn);
+    });
+    els.devValues.appendChild(btn);
+    devRowEls[key] = nameEl;
+  }
+}
+
+// Render the color-wheel harmony schemes for the current color: one labeled row
+// of click-to-load swatches per scheme (base swatch first, ringed).
+function renderHarmonies(hex) {
+  els.harmonies.replaceChildren(
+    ...harmonies(hex).map(({ key, colors }) => {
+      const row = document.createElement("div");
+
+      const lab = document.createElement("div");
+      lab.className = "mb-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500";
+      lab.textContent = t("harmony_" + key);
+
+      const swatches = document.createElement("div");
+      swatches.className = "flex gap-1.5";
+      colors.forEach((c, i) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className =
+          "h-7 flex-1 rounded-md border border-slate-300 shadow-sm transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600" +
+          (i === 0 ? " ring-1 ring-slate-400 dark:ring-slate-300" : "");
+        b.style.background = c;
+        b.title = fmtHex(c) + (i === 0 ? ` · ${t("harmonyBase")}` : "");
+        b.setAttribute("aria-label", `${t("favLoad")} ${fmtHex(c)}`);
+        b.addEventListener("click", () => show(c));
+        swatches.appendChild(b);
+      });
+
+      row.append(lab, swatches);
+      return row;
+    }),
+  );
+}
+
+// Render the picked color as seen with each type of color blindness.
+function renderCvd(rgb) {
+  els.cvd.replaceChildren(
+    ...CVD_TYPES.map((type) => {
+      const hex = rgbToHex(simulateCvd(rgb, type));
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className =
+        "flex flex-col items-center gap-1 rounded-md border border-slate-200 bg-white p-1 shadow-sm transition hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500";
+      cell.title = `${t("cvd_" + type)} · ${fmtHex(hex)}`;
+      cell.setAttribute("aria-label", `${t("cvd_" + type)} ${fmtHex(hex)}`);
+
+      const sw = document.createElement("span");
+      sw.className = "h-8 w-full rounded";
+      sw.style.background = hex;
+
+      const lab = document.createElement("span");
+      lab.className = "text-[9px] font-semibold text-slate-500 dark:text-slate-400";
+      lab.textContent = t("cvdShort_" + type);
+
+      cell.append(sw, lab);
+      cell.addEventListener("click", () => show(hex));
+      return cell;
+    }),
+  );
 }
 
 function renderRamp(rgb) {
@@ -248,14 +377,68 @@ function renderBadges(lv) {
   );
 }
 
+// Qualitative APCA tier for a |Lc| value (rough WCAG-3 draft guidance).
+function apcaTier(absLc) {
+  if (absLc >= 75) return t("apcaBody");
+  if (absLc >= 60) return t("apcaContent");
+  if (absLc >= 45) return t("apcaLarge");
+  if (absLc >= 30) return t("apcaUi");
+  return t("apcaFail");
+}
+
 function updateContrast() {
   if (!current) return;
   const bg = hexToRgb(els.cbg.value) || { r: 255, g: 255, b: 255 };
   const ratio = contrastRatio(current._rgb, bg);
+  const levels = wcagLevels(ratio);
   els.cratio.textContent = `${ratio.toFixed(2)} : 1`;
   els.cpreview.style.background = els.cbg.value;
   els.cpreview.style.color = current._hex;
-  renderBadges(wcagLevels(ratio));
+  renderBadges(levels);
+  els.cbgReset.classList.toggle("hidden", els.cbg.value.toLowerCase() === CONTRAST_BG_DEFAULT);
+
+  // APCA (perceptual) contrast — current color as text over the chosen bg.
+  const lc = apcaContrast(current._rgb, bg);
+  els.apca.textContent = `Lc ${Math.abs(lc).toFixed(0)}`;
+  els.apcaTip.textContent = apcaTier(Math.abs(lc));
+
+  // When the pick fails AA for normal text, offer the nearest shade that passes.
+  const fix = levels.aaNormal ? null : accessibleShade(current._rgb, bg);
+  if (fix && fix.hex !== current._hex) {
+    els.fixSwatch.style.background = fix.hex;
+    els.fixLabel.textContent = t("useAccessible", [String(fix.step), `${fix.ratio.toFixed(1)}:1`]);
+    els.fixShade.dataset.hex = fix.hex;
+    els.fixShade.classList.remove("hidden");
+    els.fixShade.classList.add("flex");
+  } else {
+    els.fixShade.classList.add("hidden");
+    els.fixShade.classList.remove("flex");
+  }
+}
+
+// --- gradient builder ---
+// gradA follows the current pick until the user edits it (then it's unlinked).
+let gradLinked = true;
+
+function renderGradient() {
+  const css = gradientCss([els.gradA.value, els.gradB.value], Number(els.gradAngle.value));
+  els.gradPreview.style.background = css;
+  els.gradStr.textContent = css;
+  els.gradCopy._css = css;
+  // "default" = start still linked to the pick, end white, 90°.
+  const isDefault =
+    gradLinked &&
+    els.gradB.value.toLowerCase() === GRAD_END_DEFAULT &&
+    els.gradAngle.value === GRAD_ANGLE_DEFAULT;
+  els.gradReset.classList.toggle("hidden", isDefault);
+}
+
+function resetGradient() {
+  gradLinked = true;
+  if (current) els.gradA.value = current._hex;
+  els.gradB.value = GRAD_END_DEFAULT;
+  els.gradAngle.value = GRAD_ANGLE_DEFAULT;
+  renderGradient();
 }
 
 // --- favorites (storage.local: { favorites: [{hex, name}] }) ---
@@ -465,11 +648,19 @@ function show(hexInput) {
     r.nameEl.textContent = stripFn(current[key]);
     if (r.chipEl) r.chipEl.style.background = current._twHex;
   }
+  // dev formats show their literal verbatim (no fn-stripping)
+  for (const { key } of DEV_FORMATS) devRowEls[key].textContent = current[key];
 
   renderRamp(current._rgb);
+  renderHarmonies(hex);
+  renderCvd(current._rgb);
   updateContrast();
   updateStar();
   els.native.value = hex;
+  if (gradLinked) {
+    els.gradA.value = hex;
+    renderGradient();
+  }
   return true;
 }
 
@@ -608,6 +799,7 @@ async function loadState() {
   favorites = store.favorites;
 
   buildRows();
+  buildDevRows();
   renderFavs();
   renderRecent(store.recent);
   // Always show a color so the Formats / Shades / Contrast sections are visible
@@ -635,8 +827,30 @@ function init() {
   els.swatch.addEventListener("click", () => current && copy(current.hex));
   els.fav.addEventListener("click", toggleFav);
   els.cbg.addEventListener("input", updateContrast);
+  els.cbgReset.addEventListener("click", () => {
+    els.cbg.value = CONTRAST_BG_DEFAULT;
+    updateContrast();
+  });
+  els.fixShade.addEventListener("click", () => {
+    const h = els.fixShade.dataset.hex;
+    if (h) show(h);
+  });
   els.native.addEventListener("input", () => show(els.native.value));
   els.native.addEventListener("change", () => record(els.native.value));
+
+  // gradient builder: editing A unlinks it from the pick; everything live-updates
+  els.gradA.addEventListener("input", () => {
+    gradLinked = false;
+    renderGradient();
+  });
+  els.gradB.addEventListener("input", renderGradient);
+  els.gradAngle.addEventListener("change", renderGradient);
+  els.gradReset.addEventListener("click", resetGradient);
+  els.gradCopy.addEventListener("click", () => {
+    if (!els.gradCopy._css) return;
+    copy(els.gradCopy._css);
+    markCopied(els.gradCopy);
+  });
 
   els.favExport.addEventListener("click", exportFavs);
   els.favImport.addEventListener("click", () => els.favFile.click());

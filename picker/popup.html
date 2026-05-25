@@ -139,6 +139,24 @@
           <div id="ramp" class="mt-1 flex gap-1"></div>
         </details>
 
+        <!-- color-wheel harmonies -->
+        <details id="harmoniesWrap" class="disclosure">
+          <summary>
+            <span data-i18n="harmonies">Harmonies</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div id="harmonies" class="mt-1 space-y-1.5"></div>
+        </details>
+
+        <!-- developer formats (Swift / Android / Flutter / …) -->
+        <details id="devWrap" class="disclosure">
+          <summary>
+            <span data-i18n="devFormats">Code</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div id="devValues" class="mt-1 grid grid-cols-2 gap-1"></div>
+        </details>
+
         <!-- favorites -->
         <details id="favWrap" class="disclosure hidden" open>
           <summary>
@@ -208,17 +226,74 @@
               <button id="cbgPick" type="button" data-i18n-attr="title:pickColor,aria-label:pickColor" class="rounded p-1 text-slate-400 transition hover:text-slate-700 focus:outline-none dark:text-slate-500 dark:hover:text-slate-200" title="Pick a color" aria-label="Pick a color">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="currentColor" class="h-5 w-5" aria-hidden="true"><g transform="rotate(45 64 64)"><path d="M54 47 Q54 44 57 44 L71 44 Q74 44 74 47 L74 100 L64 122 L54 100 Z" /><rect x="50" y="33" width="28" height="12" rx="3" /><path d="M64 -12 C49 -12 43 0 43 12 C43 26 52 34 64 34 C76 34 85 26 85 12 C85 0 79 -12 64 -12 Z" /><path d="M64 124 C60 132 55 136 55 141 a9 9 0 0 0 18 0 C73 136 69 132 64 124 Z" /></g></svg>
               </button>
+              <button id="cbgReset" type="button" data-i18n-attr="title:resetDefault,aria-label:resetDefault" class="reset-btn hidden" title="Reset to default">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-3.5 w-3.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+              </button>
               <span id="cratio" class="ml-auto font-mono text-sm font-semibold tabular-nums"></span>
             </div>
             <div id="cpreview" class="mt-2 flex items-center justify-center gap-3 rounded-lg border border-slate-200 py-2 text-sm font-semibold dark:border-slate-700">
               <span>Aa</span><span class="text-lg">Aa</span>
             </div>
             <div id="cbadges" class="mt-2 grid grid-cols-4 gap-1 text-center text-[10px] font-semibold"></div>
+            <div class="mt-2 flex items-center gap-2">
+              <span class="cap mb-0" data-i18n="apca">APCA</span>
+              <span id="apcaTip" class="text-[10px] text-slate-400 dark:text-slate-500"></span>
+              <span id="apca" class="ml-auto font-mono text-sm font-semibold tabular-nums"></span>
+            </div>
+            <button
+              id="fixShade"
+              type="button"
+              class="mt-2 hidden w-full items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-2 py-1.5 text-left text-[11px] font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
+            >
+              <span id="fixSwatch" class="h-4 w-4 shrink-0 rounded border border-black/10 dark:border-white/20"></span>
+              <span id="fixLabel" class="min-w-0 flex-1 truncate"></span>
+            </button>
+          </div>
+        </details>
+
+        <!-- color-vision (CVD) simulation -->
+        <details id="cvdWrap" class="disclosure">
+          <summary>
+            <span data-i18n="colorVision">Color Vision</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div id="cvd" class="mt-1 grid grid-cols-3 gap-1.5"></div>
+        </details>
+
+        <!-- gradient builder -->
+        <details id="gradWrap" class="disclosure">
+          <summary>
+            <span data-i18n="gradient">Gradient</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div class="mt-1 space-y-2">
+            <div class="flex items-center gap-2">
+              <input id="gradA" type="color" value="#1e88e5" data-i18n-attr="title:gradStartTitle,aria-label:gradStartTitle" class="h-7 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800" title="Start color" />
+              <input id="gradB" type="color" value="#ffffff" data-i18n-attr="title:gradEndTitle,aria-label:gradEndTitle" class="h-7 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800" title="End color" />
+              <select id="gradAngle" data-i18n-attr="title:gradAngleTitle,aria-label:gradAngleTitle" class="rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200" title="Angle">
+                <option value="0">0°</option>
+                <option value="45">45°</option>
+                <option value="90" selected>90°</option>
+                <option value="135">135°</option>
+                <option value="180">180°</option>
+                <option value="225">225°</option>
+                <option value="270">270°</option>
+                <option value="315">315°</option>
+              </select>
+              <button id="gradReset" type="button" data-i18n-attr="title:resetDefault,aria-label:resetDefault" class="reset-btn hidden" title="Reset to default">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-3.5 w-3.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+              </button>
+            </div>
+            <div id="gradPreview" class="h-9 rounded-md border border-slate-200 dark:border-slate-700"></div>
+            <button id="gradCopy" type="button" class="val-chip" data-i18n-attr="title:gradCopyTitle,aria-label:gradCopyTitle" title="Copy CSS gradient">
+              <span class="val-tag">CSS</span>
+              <span id="gradStr" class="min-w-0 flex-1 truncate font-mono"></span>
+            </button>
           </div>
         </details>
 
         <div class="mt-4 flex items-center gap-3">
-          <label class="cap mb-0 w-20 shrink-0 leading-tight" for="native" data-i18n="orChoose">or choose a color</label>
+          <label class="cap mb-0 flex-1 leading-tight" for="native" data-i18n="orChoose">or choose a color</label>
           <input
             id="native"
             type="color"

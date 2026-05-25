@@ -50,6 +50,10 @@
   .tab-btn.is-active {
     @apply bg-white text-slate-800 shadow-sm dark:bg-slate-700 dark:text-slate-100;
   }
+  /* tiny "reset to default" affordance, shown only when a tool's inputs drift */
+  .reset-btn {
+    @apply rounded p-1 text-slate-400 transition hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:text-slate-500 dark:hover:text-slate-200;
+  }
   /* the shade-ramp swatch nearest the picked color */
   .shade-active {
     @apply relative z-10 ring-2 ring-slate-400 ring-offset-2 ring-offset-slate-100 dark:ring-slate-300 dark:ring-offset-slate-900;

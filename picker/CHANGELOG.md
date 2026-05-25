@@ -4,6 +4,31 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-05-25
+
+### Added
+- **Harmonies** (Color tab) — complementary, analogous, triadic, split, and
+  tetradic schemes off the picked color; base swatch first, click any to load.
+- **Code formats** (Color tab) — copy the color as SwiftUI, UIKit, Android,
+  Flutter, Unity float, or a CSS custom property.
+- **Color Vision** (Tools tab) — preview the color under protanopia,
+  deuteranopia, and tritanopia (Machado 2009); click a card to load it.
+- **Gradient builder** (Tools tab) — start (linked to the pick), end, and an
+  8-way angle → live preview and a copyable `linear-gradient(…)`.
+- **APCA contrast** (Tools tab) — perceptual Lc value and tier alongside the
+  WCAG ratio.
+- **Accessible-shade suggestion** — when the pick fails WCAG AA against the
+  chosen background, offer the nearest passing shade from its ramp.
+- **Reset controls** on the Contrast and Gradient tools, shown only when their
+  inputs differ from the defaults.
+
+### Changed
+- "or choose a color" row split 50/50 between the label and the color box.
+
+### Fixed
+- Color Vision cards now use a surface fill so they no longer blend into the
+  popup background.
+
 ## [0.4.1] — 2026-05-25
 
 ### Changed

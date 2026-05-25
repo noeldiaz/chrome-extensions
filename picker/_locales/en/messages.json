@@ -105,5 +105,42 @@
   "optTwLoaded": {
     "message": "Tailwind v$v$ · $n$ colors loaded",
     "placeholders": { "v": { "content": "$1" }, "n": { "content": "$2" } }
-  }
+  },
+
+  "harmonies": { "message": "Harmonies" },
+  "harmonyBase": { "message": "base color" },
+  "harmony_complementary": { "message": "Complementary" },
+  "harmony_analogous": { "message": "Analogous" },
+  "harmony_triadic": { "message": "Triadic" },
+  "harmony_split": { "message": "Split complementary" },
+  "harmony_tetradic": { "message": "Tetradic" },
+
+  "devFormats": { "message": "Code" },
+
+  "colorVision": { "message": "Color Vision" },
+  "cvdShort_protanopia": { "message": "Protan" },
+  "cvdShort_deuteranopia": { "message": "Deutan" },
+  "cvdShort_tritanopia": { "message": "Tritan" },
+  "cvd_protanopia": { "message": "Protanopia (no red)" },
+  "cvd_deuteranopia": { "message": "Deuteranopia (no green)" },
+  "cvd_tritanopia": { "message": "Tritanopia (no blue)" },
+
+  "apca": { "message": "APCA" },
+  "apcaBody": { "message": "body text" },
+  "apcaContent": { "message": "content text" },
+  "apcaLarge": { "message": "large text" },
+  "apcaUi": { "message": "UI / non-text" },
+  "apcaFail": { "message": "too low" },
+  "useAccessible": {
+    "message": "Use shade $step$ — passes AA at $ratio$",
+    "placeholders": { "step": { "content": "$1" }, "ratio": { "content": "$2" } }
+  },
+
+  "resetDefault": { "message": "Reset to default" },
+
+  "gradient": { "message": "Gradient" },
+  "gradStartTitle": { "message": "Start color" },
+  "gradEndTitle": { "message": "End color" },
+  "gradAngleTitle": { "message": "Gradient angle" },
+  "gradCopyTitle": { "message": "Copy CSS gradient" }
 }

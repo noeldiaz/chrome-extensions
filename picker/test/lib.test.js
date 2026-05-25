@@ -21,6 +21,20 @@ import {
   wcagLevels,
   ramp,
   nearestTailwind,
+  hslToRgb,
+  harmonies,
+  HARMONIES,
+  DEV_FORMATS,
+  formatCssVar,
+  formatSwiftUI,
+  formatUIColor,
+  formatAndroid,
+  formatFlutter,
+  formatUnity,
+  simulateCvd,
+  apcaContrast,
+  accessibleShade,
+  gradientCss,
 } from "../lib.js";
 import { TAILWIND_COLORS } from "../palette.js";
 
@@ -139,4 +153,95 @@ test("contrastText picks legible foreground", () => {
   assert.equal(contrastText({ r: 30, g: 136, b: 229 }), "#000000"); // medium blue, L≈0.235
   assert.equal(contrastText({ r: 17, g: 24, b: 39 }), "#ffffff"); // slate-900
   assert.equal(contrastText({ r: 251, g: 191, b: 36 }), "#000000"); // amber
+});
+
+test("hslToRgb inverts rgbToHsl within rounding", () => {
+  assert.deepEqual(hslToRgb({ h: 0, s: 0, l: 0 }), { r: 0, g: 0, b: 0 });
+  assert.deepEqual(hslToRgb({ h: 0, s: 0, l: 100 }), { r: 255, g: 255, b: 255 });
+  assert.deepEqual(hslToRgb({ h: 0, s: 100, l: 50 }), { r: 255, g: 0, b: 0 });
+  assert.deepEqual(hslToRgb({ h: 240, s: 100, l: 50 }), { r: 0, g: 0, b: 255 });
+  for (const hex of ["#1e88e5", "#fb2c36", "#00bc7d", "#abcdef"]) {
+    const rgb = hexToRgb(hex);
+    const back = hslToRgb(rgbToHsl(rgb));
+    assert.ok(Math.abs(back.r - rgb.r) <= 2, `${hex} r`);
+    assert.ok(Math.abs(back.g - rgb.g) <= 2, `${hex} g`);
+    assert.ok(Math.abs(back.b - rgb.b) <= 2, `${hex} b`);
+  }
+  // hue wraps
+  assert.deepEqual(hslToRgb({ h: 360, s: 100, l: 50 }), hslToRgb({ h: 0, s: 100, l: 50 }));
+});
+
+test("harmonies put the base first and rotate hue", () => {
+  const schemes = harmonies("#1e88e5");
+  assert.equal(schemes.length, HARMONIES.length);
+  for (const s of schemes) {
+    assert.equal(s.colors[0], "#1e88e5"); // base first
+    for (const c of s.colors) assert.match(c, /^#[0-9a-f]{6}$/);
+  }
+  const comp = schemes.find((s) => s.key === "complementary");
+  assert.equal(comp.colors.length, 2);
+  // complement hue ≈ base hue + 180
+  const baseH = rgbToHsl(hexToRgb("#1e88e5")).h;
+  const compH = rgbToHsl(hexToRgb(comp.colors[1])).h;
+  assert.ok(Math.abs(((compH - baseH + 360) % 360) - 180) <= 2);
+  assert.equal(harmonies("nope").length, 0);
+});
+
+test("dev formatters render platform literals", () => {
+  const rgb = { r: 30, g: 136, b: 229 };
+  assert.equal(formatCssVar("#1E88E5"), "--color: #1e88e5;");
+  assert.equal(formatSwiftUI(rgb), "Color(red: 0.118, green: 0.533, blue: 0.898)");
+  assert.equal(formatUIColor(rgb), "UIColor(red: 0.118, green: 0.533, blue: 0.898, alpha: 1.0)");
+  assert.equal(formatAndroid("#1e88e5"), "0xFF1E88E5");
+  assert.equal(formatFlutter("#1e88e5"), "Color(0xFF1E88E5)");
+  assert.equal(formatUnity(rgb), "new Color(0.118f, 0.533f, 0.898f)");
+  // every DEV_FORMATS key is a non-empty tag
+  for (const d of DEV_FORMATS) assert.ok(d.key && d.tag);
+});
+
+test("simulateCvd preserves neutrals and stays in gamut", () => {
+  for (const type of ["protanopia", "deuteranopia", "tritanopia"]) {
+    assert.deepEqual(simulateCvd({ r: 0, g: 0, b: 0 }, type), { r: 0, g: 0, b: 0 });
+    assert.deepEqual(simulateCvd({ r: 255, g: 255, b: 255 }, type), { r: 255, g: 255, b: 255 });
+    const gray = simulateCvd({ r: 128, g: 128, b: 128 }, type);
+    assert.ok(Math.abs(gray.r - 128) <= 2 && Math.abs(gray.g - 128) <= 2 && Math.abs(gray.b - 128) <= 2);
+    const out = simulateCvd({ r: 220, g: 20, b: 60 }, type);
+    for (const c of [out.r, out.g, out.b]) assert.ok(c >= 0 && c <= 255 && Number.isInteger(c));
+  }
+  // protanopes confuse red/green: pure red shifts noticeably
+  const red = simulateCvd({ r: 255, g: 0, b: 0 }, "protanopia");
+  assert.notDeepEqual(red, { r: 255, g: 0, b: 0 });
+});
+
+test("apcaContrast matches reference Lc values", () => {
+  const black = { r: 0, g: 0, b: 0 };
+  const white = { r: 255, g: 255, b: 255 };
+  assert.ok(Math.abs(apcaContrast(black, white) - 106.04) < 0.5); // black on white
+  assert.ok(Math.abs(apcaContrast(white, black) + 107.88) < 0.5); // white on black (negative)
+  assert.equal(apcaContrast(white, white), 0); // no contrast
+});
+
+test("accessibleShade returns the nearest passing ramp step", () => {
+  // light blue on white: the picked color itself fails AA, a darker step passes
+  const fix = accessibleShade({ r: 96, g: 165, b: 250 }, { r: 255, g: 255, b: 255 });
+  assert.ok(fix, "expected a passing shade");
+  assert.ok([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].includes(fix.step));
+  assert.ok(fix.ratio >= 4.5);
+  assert.match(fix.hex, /^#[0-9a-f]{6}$/);
+  // 21:1 is only reachable by pure black on white; no colored ramp step hits it -> null
+  assert.equal(accessibleShade({ r: 96, g: 165, b: 250 }, { r: 255, g: 255, b: 255 }, 21), null);
+});
+
+test("gradientCss builds a linear-gradient string", () => {
+  assert.equal(
+    gradientCss(["#1e88e5", "#ffffff"], 90),
+    "linear-gradient(90deg, #1e88e5 0%, #ffffff 100%)",
+  );
+  assert.equal(
+    gradientCss(["#000", "#888", "#fff"], 45),
+    "linear-gradient(45deg, #000000 0%, #888888 50%, #ffffff 100%)",
+  );
+  assert.equal(gradientCss(["#1e88e5"]), ""); // need 2+ stops
+  assert.equal(gradientCss(["nope", "#fff"]), ""); // invalid dropped -> <2
+  assert.match(gradientCss(["#000", "#fff"], 450), /^linear-gradient\(90deg,/); // angle wraps
 });
