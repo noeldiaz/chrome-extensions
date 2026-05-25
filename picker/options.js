@@ -57,6 +57,12 @@ function recentChip(hex) {
 }
 
 async function removeRecentColor(hex) {
+  const ok = await confirmDialog({
+    message: t("recentRemoveConfirm"),
+    confirmText: t("remove"),
+    cancelText: t("cancel"),
+  });
+  if (!ok) return;
   const { recent = [] } = await chrome.storage.local.get({ recent: [] });
   await chrome.storage.local.set({ recent: recent.filter((c) => c !== hex) });
   renderRecentList();
@@ -120,7 +126,7 @@ async function init() {
   await buildFormatToggles();
   await buildCopyOnPick();
 
-  // Recent colours
+  // Recent colors
   await renderRecentList();
   $("clearRecent").addEventListener("click", async () => {
     const ok = await confirmDialog({
@@ -134,7 +140,7 @@ async function init() {
     flash(t("optCleared"));
   });
 
-  // Tailwind palette version (so you can tell when a new Tailwind ships new colours)
+  // Tailwind palette version (so you can tell when a new Tailwind ships new colors)
   $("twInfo").textContent = t("optTwLoaded", [TAILWIND_VERSION, String(TAILWIND_COLORS.length)]);
 
   // Footer Close: remove this options tab (window.close is unreliable for a tab).

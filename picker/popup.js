@@ -1,8 +1,8 @@
-// Picker popup: pick a colour from anywhere on screen with the native EyeDropper
+// Picker popup: pick a color from anywhere on screen with the native EyeDropper
 // API, show it as a swatch + a set of formats (HEX/RGB/HSL/HSV/OKLCH/… + the
-// nearest Tailwind colour), plus a shade ramp and a WCAG contrast checker. Click
+// nearest Tailwind color), plus a shade ramp and a WCAG contrast checker. Click
 // any value to copy. A native <input type="color"> is the fallback where
-// EyeDropper is unsupported (Firefox, Safari). Recent picks, favourites, the last
+// EyeDropper is unsupported (Firefox, Safari). Recent picks, favorites, the last
 // pick, and preferences persist in chrome.storage.local.
 import { initTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
@@ -41,6 +41,14 @@ let current = null; // formatted strings + _hex/_rgb/_twHex
 let statusTimer = null;
 
 const fmtHex = (hex) => (hexUpper ? hex.toUpperCase() : hex.toLowerCase());
+
+// Display form for a value pill: drop the redundant `fn(...)` wrapper (the pill's
+// label already names the format) and show just the inside. The full string is
+// still what gets copied.
+const stripFn = (s) => {
+  const m = /^[a-z]+\((.*)\)$/i.exec(s);
+  return m ? m[1] : s;
+};
 
 const els = {
   pick: document.getElementById("pick"),
@@ -134,7 +142,7 @@ function values(hex) {
   };
 }
 
-// Build every format row once, sending the chosen ("favourite") ones to the
+// Build every format row once, sending the chosen ("favorite") ones to the
 // Favorite Formats section and the rest to Other Formats. Both stay populated so
 // show() can update them all; empty sections are hidden.
 function buildRows() {
@@ -145,6 +153,11 @@ function buildRows() {
     btn.type = "button";
     btn.className = "val-chip";
 
+    const lab = document.createElement("span");
+    lab.className = "val-tag";
+    lab.textContent = tag;
+    btn.appendChild(lab);
+
     let chipEl = null;
     if (chip) {
       chipEl = document.createElement("span");
@@ -152,6 +165,7 @@ function buildRows() {
       btn.appendChild(chipEl);
     }
     const nameEl = document.createElement("span");
+    nameEl.className = "min-w-0 flex-1 truncate font-mono";
     btn.appendChild(nameEl);
 
     btn.title = key === "tw" ? t("copyTw") : `${t("copy")} ${tag}`;
@@ -171,7 +185,7 @@ function buildRows() {
 
 function renderRamp(rgb) {
   const items = ramp(rgb);
-  // Mark the swatch nearest the picked colour (OKLab distance).
+  // Mark the swatch nearest the picked color (OKLab distance).
   const q = rgbToOklab(rgb);
   let activeIdx = 0;
   let bd = Infinity;
@@ -191,7 +205,7 @@ function renderRamp(rgb) {
         "relative h-8 flex-1 transition hover:scale-y-125 focus:outline-none focus:ring-2 focus:ring-blue-400 first:rounded-l-md last:rounded-r-md";
       b.style.background = hex;
       if (i === activeIdx) {
-        // inset ring in a contrasting colour + the matching step number
+        // inset ring in a contrasting color + the matching step number
         const txt = contrastText(hexToRgb(hex));
         b.style.boxShadow = `inset 0 0 0 2px ${txt}`;
         b.style.color = txt;
@@ -247,7 +261,7 @@ function updateContrast() {
   renderBadges(wcagLevels(ratio));
 }
 
-// --- favourites (storage.local: { favorites: [{hex, name}] }) ---
+// --- favorites (storage.local: { favorites: [{hex, name}] }) ---
 
 const isFav = (hex) => favorites.some((f) => f.hex === hex);
 
@@ -309,6 +323,7 @@ async function toggleFav() {
   if (!current) return;
   const hex = current._hex;
   if (isFav(hex)) {
+    if (!(await confirmRemoveFav())) return;
     favorites = favorites.filter((f) => f.hex !== hex);
   } else {
     favorites = [{ hex, name: current.tw || "" }, ...favorites].slice(0, MAX_FAVS);
@@ -318,7 +333,11 @@ async function toggleFav() {
   updateStar();
 }
 
+const confirmRemoveFav = () =>
+  confirmDialog({ message: t("favRemoveConfirm"), confirmText: t("remove"), cancelText: t("cancel") });
+
 async function removeFav(hex) {
+  if (!(await confirmRemoveFav())) return;
   favorites = favorites.filter((f) => f.hex !== hex);
   await saveFavs();
   renderFavs();
@@ -331,7 +350,7 @@ function exportFavs() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "picker-favourites.json";
+  a.download = "picker-favorites.json";
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -373,7 +392,7 @@ function renderRecent(list) {
       b.style.background = hex;
       b.addEventListener("click", () => show(hex));
 
-      // hover/focus ✕ to remove just this colour
+      // hover/focus ✕ to remove just this color
       const del = document.createElement("button");
       del.type = "button";
       del.title = t("recentRemove");
@@ -394,6 +413,12 @@ function renderRecent(list) {
 }
 
 async function removeRecent(hex) {
+  const ok = await confirmDialog({
+    message: t("recentRemoveConfirm"),
+    confirmText: t("remove"),
+    cancelText: t("cancel"),
+  });
+  if (!ok) return;
   const { recent = [] } = await chrome.storage.local.get({ recent: [] });
   const next = recent.filter((c) => c !== hex);
   await chrome.storage.local.set({ recent: next });
@@ -419,7 +444,7 @@ function show(hexInput) {
 
   for (const { key } of FORMATS) {
     const r = rowEls[key];
-    r.nameEl.textContent = current[key];
+    r.nameEl.textContent = stripFn(current[key]);
     if (r.chipEl) r.chipEl.style.background = current._twHex;
   }
 
@@ -430,7 +455,7 @@ function show(hexInput) {
   return true;
 }
 
-// --- tabs + page-colour extraction ---
+// --- tabs + page-color extraction ---
 
 let pageScanned = false;
 
@@ -445,7 +470,7 @@ function pageNote(msg) {
   els.pageMsg.classList.remove("hidden");
 }
 
-// Runs in the inspected page (no closures) — collect the most-used colours from
+// Runs in the inspected page (no closures) — collect the most-used colors from
 // computed styles and return them as { hex, count }, most common first.
 function collectColors() {
   const counts = new Map();
@@ -517,7 +542,7 @@ async function scanPage() {
   }
 }
 
-// Record a freshly picked/chosen colour: render it and remember it.
+// Record a freshly picked/chosen color: render it and remember it.
 async function record(hexInput) {
   const hex = normalizeHex(hexInput);
   if (!hex || !show(hex)) return;
@@ -567,8 +592,8 @@ async function loadState() {
   buildRows();
   renderFavs();
   renderRecent(store.recent);
-  // Always show a colour so the Formats / Shades / Contrast sections are visible
-  // on open: restore the last pick, else the first favourite, else the default.
+  // Always show a color so the Formats / Shades / Contrast sections are visible
+  // on open: restore the last pick, else the first favorite, else the default.
   show(store.recent[0] || favorites[0]?.hex || els.native.value);
 }
 

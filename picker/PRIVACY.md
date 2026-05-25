@@ -2,8 +2,8 @@
 
 _Last updated: 2026-05-25_
 
-Picker is a Chrome extension that picks a colour from your screen and shows its
-HEX / RGB / HSL / HSV values (and the nearest Tailwind colour). Everything
+Picker is a Chrome extension that picks a color from your screen and shows its
+HEX / RGB / HSL / HSV values (and the nearest Tailwind color). Everything
 happens on your own device.
 
 ## What Picker does with your data
@@ -16,23 +16,23 @@ network requests at all**. The extension works fully offline.
 
 | Data | Where it goes | Why |
 |------|---------------|-----|
-| The pixel colour you pick | Read in memory and shown in the popup | To display and copy its value |
-| Recent colours (your last 12 picks) | Stored locally in your browser (`chrome.storage.local`) | So you can reload a recent colour |
+| The pixel color you pick | Read in memory and shown in the popup | To display and copy its value |
+| Recent colors (your last 12 picks) | Stored locally in your browser (`chrome.storage.local`) | So you can reload a recent color |
 | HEX letter-case setting and theme | Stored locally in your browser (`chrome.storage.local`) | To remember your preferences |
-| Favourites (saved colours + names) | Stored locally in your browser (`chrome.storage.local`) | So you can keep a palette |
+| Favorites (saved colors + names) | Stored locally in your browser (`chrome.storage.local`) | So you can keep a palette |
 | A value you copy (HEX/RGB/HSL/HSV/OKLCH/… or a Tailwind name) | Written to your clipboard when you click | So you can paste it |
-| Colours on the current page | Read from the page's computed styles locally when you click “Scan this page”, then shown in the popup | To list the page's colours in the Page tab |
+| Colors on the current page | Read from the page's computed styles locally when you click “Scan this page”, then shown in the popup | To list the page's colors in the Page tab |
 
 All of the above stays on your device. Uninstalling the extension, clearing its
-storage, or using "Clear recent colours" in settings removes it.
+storage, or using "Clear recent colors" in settings removes it.
 
 ## Permissions and why they are needed
 
-- **`storage`** — remember your recent colours, favourites, settings, and theme.
+- **`storage`** — remember your recent colors, favorites, settings, and theme.
 - **`activeTab`** + **`scripting`** — used **only** for the **Page** tab. When you
-  click “Scan this page”, Picker reads the current tab's *colours* from its
+  click “Scan this page”, Picker reads the current tab's *colors* from its
   elements' computed styles so it can list them. This runs only on the tab you're
-  viewing, only when you ask; it reads colour values — not page text, form data,
+  viewing, only when you ask; it reads color values — not page text, form data,
   or URLs — and sends nothing anywhere. No access to other tabs or your browsing
   history, and no access until you invoke the extension.
 
@@ -43,7 +43,7 @@ clipboard API and only runs when you click.
 
 ## Network access
 
-Picker makes **no network requests**. It has no servers to talk to. Page-colour
+Picker makes **no network requests**. It has no servers to talk to. Page-color
 scanning happens entirely in your browser.
 
 ## Children's privacy

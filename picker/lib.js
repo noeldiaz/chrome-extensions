@@ -1,4 +1,4 @@
-// Pure colour math + formatting for Picker. No DOM, no chrome.* — unit-tested
+// Pure color math + formatting for Picker. No DOM, no chrome.* — unit-tested
 // headless with node:test (see test/lib.test.js). popup.js imports from here.
 
 export function clamp(n, lo, hi) {
@@ -6,7 +6,7 @@ export function clamp(n, lo, hi) {
 }
 
 // Accepts "#rgb", "rgb", "#rrggbb", "rrggbb" (any case, surrounding space ok).
-// Returns canonical lowercase "#rrggbb", or null if it isn't a valid hex colour.
+// Returns canonical lowercase "#rrggbb", or null if it isn't a valid hex color.
 export function normalizeHex(input) {
   if (typeof input !== "string") return null;
   let s = input.trim().replace(/^#/, "").toLowerCase();
@@ -79,12 +79,12 @@ export const formatHex = (input) => {
 export const formatRgb = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 export const formatHsl = ({ h, s, l }) => `hsl(${h}, ${s}%, ${l}%)`;
 export const formatHsv = ({ h, s, v }) => `hsv(${h}, ${s}%, ${v}%)`;
-// Picked colours are opaque, so the alpha forms are fixed at 1 / ff.
+// Picked colors are opaque, so the alpha forms are fixed at 1 / ff.
 export const formatRgba = ({ r, g, b }) => `rgba(${r}, ${g}, ${b}, 1)`;
 export const formatHsla = ({ h, s, l }) => `hsla(${h}, ${s}%, ${l}%, 1)`;
 
 // sRGB {r,g,b} 0-255 -> OKLab {L,a,b}. Perceptually uniform, so Euclidean
-// distance here is a good "closest colour" metric (Björn Ottosson's OKLab).
+// distance here is a good "closest color" metric (Björn Ottosson's OKLab).
 export function rgbToOklab({ r, g, b }) {
   const lin = (c) => {
     c /= 255;
@@ -106,7 +106,7 @@ export function rgbToOklab({ r, g, b }) {
   };
 }
 
-// Closest Tailwind colour to {r,g,b}, by OKLab distance.
+// Closest Tailwind color to {r,g,b}, by OKLab distance.
 // `palette` = [{ name, hex, L, a, b }] (see palette.js). Returns { name, hex, dist }.
 export function nearestTailwind(rgb, palette) {
   const q = rgbToOklab(rgb);
@@ -134,12 +134,12 @@ export function relativeLuminance({ r, g, b }) {
   return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 }
 
-// Pick black or white text for legibility on a colour. Returns "#000000"/"#ffffff".
+// Pick black or white text for legibility on a color. Returns "#000000"/"#ffffff".
 export function contrastText(rgb) {
   return relativeLuminance(rgb) > 0.179 ? "#000000" : "#ffffff";
 }
 
-// WCAG contrast ratio between two colours (1 to 21).
+// WCAG contrast ratio between two colors (1 to 21).
 export function contrastRatio(a, b) {
   const l1 = relativeLuminance(a);
   const l2 = relativeLuminance(b);
@@ -190,7 +190,7 @@ export function oklchToRgb(L, C, h) {
   };
 }
 
-// A 50-950 shade/tint ramp from a colour: keep its OKLCH hue, retarget lightness
+// A 50-950 shade/tint ramp from a color: keep its OKLCH hue, retarget lightness
 // to Tailwind-like steps, and taper chroma at the extremes so the ends stay
 // natural. Returns [{ step, hex }] (gamut-clamped).
 const RAMP = [
@@ -207,7 +207,7 @@ export function ramp(rgb) {
 }
 
 // Display formats in popup order. `tag` = the row's short label; `chip` rows
-// (nearest Tailwind) show a colour swatch instead of plain text. Shared by the
+// (nearest Tailwind) show a color swatch instead of plain text. Shared by the
 // popup (which rows to show) and the settings page (visibility + default copy).
 export const FORMATS = [
   { key: "hex", tag: "HEX", label: "HEX" },

@@ -1,7 +1,7 @@
 {
   "appName": { "message": "Picker" },
   "appDesc": {
-    "message": "Pick any colour on screen with the eyedropper and copy its HEX, RGB, or HSL value in one click."
+    "message": "Pick any color on screen with the eyedropper and copy its HEX, RGB, or HSL value in one click."
   },
 
   "themeToggle": { "message": "Toggle dark mode" },
@@ -13,31 +13,31 @@
   "optHexCaseHint": { "message": "How HEX values are shown and copied." },
   "optHexUpper": { "message": "Uppercase — #1E88E5" },
   "optHexLower": { "message": "Lowercase — #1e88e5" },
-  "optRecent": { "message": "Recent colours" },
+  "optRecent": { "message": "Recent colors" },
   "optRecentHint": {
     "message": "Your last $count$ picks are kept in this browser. Click a swatch in the popup to reload it.",
     "placeholders": { "count": { "content": "$1" } }
   },
-  "optClearRecent": { "message": "Clear recent colours" },
-  "optCleared": { "message": "Recent colours cleared." },
+  "optClearRecent": { "message": "Clear recent colors" },
+  "optCleared": { "message": "Recent colors cleared." },
 
-  "pickColor": { "message": "Pick a colour" },
-  "orChoose": { "message": "or choose a colour" },
-  "swatchAria": { "message": "Picked colour" },
+  "pickColor": { "message": "Pick a color" },
+  "orChoose": { "message": "or choose a color" },
+  "swatchAria": { "message": "Picked color" },
   "recent": { "message": "Recent" },
-  "recentClear": { "message": "Clear recent colours" },
-  "emptyHint": { "message": "Click “Pick a colour”, then click anywhere on screen." },
+  "recentClear": { "message": "Clear recent colors" },
+  "emptyHint": { "message": "Click “Pick a color”, then click anywhere on screen." },
   "noEyedropper": {
-    "message": "This browser has no screen eyedropper — use the colour box below instead."
+    "message": "This browser has no screen eyedropper — use the color box below instead."
   },
   "copy": { "message": "Copy" },
   "copySwatch": { "message": "Copy HEX" },
-  "copyTw": { "message": "Copy Tailwind colour name" },
-  "tailwindAria": { "message": "Nearest Tailwind colour" },
+  "copyTw": { "message": "Copy Tailwind color name" },
+  "tailwindAria": { "message": "Nearest Tailwind color" },
   "copied": { "message": "Copied!" },
   "pickCancelled": { "message": "Pick cancelled." },
   "errPick": {
-    "message": "Couldn't pick a colour: $error$",
+    "message": "Couldn't pick a color: $error$",
     "placeholders": { "error": { "content": "$1" } }
   },
   "errCopy": {
@@ -50,14 +50,17 @@
   "tabTools": { "message": "Tools" },
   "scanPage": { "message": "Scan this page" },
   "pageErr": { "message": "Can’t read this page." },
-  "pageEmpty": { "message": "No colours found on this page." },
+  "pageEmpty": { "message": "No colors found on this page." },
 
   "formatsTitle": { "message": "Favorite Formats" },
   "otherFormatsTitle": { "message": "Other Formats" },
   "shades": { "message": "Shades" },
-  "shadeCurrent": { "message": "closest to your colour" },
-  "recentRemove": { "message": "Remove colour" },
-  "clearRecentConfirm": { "message": "Clear all recent colours? This can’t be undone." },
+  "shadeCurrent": { "message": "closest to your color" },
+  "recentRemove": { "message": "Remove color" },
+  "remove": { "message": "Remove" },
+  "clearRecentConfirm": { "message": "Clear all recent colors? This can’t be undone." },
+  "recentRemoveConfirm": { "message": "Remove this color from recent?" },
+  "favRemoveConfirm": { "message": "Remove this favorite?" },
   "confirmClear": { "message": "Clear all" },
   "cancel": { "message": "Cancel" },
   "contrast": { "message": "Contrast" },
@@ -65,14 +68,14 @@
   "normalText": { "message": "Normal" },
   "largeText": { "message": "Large" },
 
-  "favorites": { "message": "Favourites" },
-  "favSave": { "message": "Save to favourites" },
-  "favRemove": { "message": "Remove favourite" },
-  "favLoad": { "message": "Load favourite" },
-  "favExport": { "message": "Export favourites" },
-  "favImport": { "message": "Import favourites" },
+  "favorites": { "message": "Favorites" },
+  "favSave": { "message": "Save to favorites" },
+  "favRemove": { "message": "Remove favorite" },
+  "favLoad": { "message": "Load favorite" },
+  "favExport": { "message": "Export favorites" },
+  "favImport": { "message": "Import favorites" },
   "favImported": {
-    "message": "Imported $count$ colours.",
+    "message": "Imported $count$ colors.",
     "placeholders": { "count": { "content": "$1" } }
   },
   "errImport": {
@@ -84,7 +87,7 @@
   "optFormatsHint": { "message": "Checked formats show under “Favorite Formats” in the popup; the rest live under “Other Formats”." },
   "optCopyOnPick": { "message": "Copy on pick" },
   "optCopyOnPickHint": {
-    "message": "Automatically copy this format to the clipboard right after you pick a colour."
+    "message": "Automatically copy this format to the clipboard right after you pick a color."
   },
   "copyOff": { "message": "Don’t auto-copy" },
   "optTwPalette": { "message": "Tailwind palette" },
@@ -92,7 +95,7 @@
     "message": "The “nearest Tailwind” match uses the palette bundled at build time."
   },
   "optTwLoaded": {
-    "message": "Tailwind v$v$ · $n$ colours loaded",
+    "message": "Tailwind v$v$ · $n$ colors loaded",
     "placeholders": { "v": { "content": "$1" }, "n": { "content": "$2" } }
   }
 }
