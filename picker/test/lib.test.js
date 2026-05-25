@@ -11,7 +11,15 @@ import {
   formatRgb,
   formatHsl,
   formatHsv,
+  formatRgba,
+  formatHsla,
+  formatOklch,
+  rgbToOklch,
+  oklchToRgb,
   contrastText,
+  contrastRatio,
+  wcagLevels,
+  ramp,
   nearestTailwind,
 } from "../lib.js";
 import { TAILWIND_COLORS } from "../palette.js";
@@ -87,6 +95,42 @@ test("nearestTailwind matches exact palette hexes to their name", () => {
   assert.equal(nearestTailwind({ r: 255, g: 255, b: 255 }, TAILWIND_COLORS).name, "white");
   assert.equal(nearestTailwind({ r: 0, g: 0, b: 0 }, TAILWIND_COLORS).name, "black");
   assert.match(nearestTailwind({ r: 21, g: 93, b: 252 }, TAILWIND_COLORS).name, /^blue-/);
+});
+
+test("alpha + oklch formatters render the standard strings", () => {
+  assert.equal(formatRgba({ r: 30, g: 136, b: 229 }), "rgba(30, 136, 229, 1)");
+  assert.equal(formatHsla({ h: 207, s: 79, l: 51 }), "hsla(207, 79%, 51%, 1)");
+  assert.match(formatOklch(rgbToOklch({ r: 255, g: 255, b: 255 })), /^oklch\(100\.0% 0\.000 /);
+});
+
+test("rgbToOklch <-> oklchToRgb round-trips within sRGB", () => {
+  for (const hex of ["#1e88e5", "#fb2c36", "#00bc7d", "#808080"]) {
+    const rgb = hexToRgb(hex);
+    const { L, C, h } = rgbToOklch(rgb);
+    const back = oklchToRgb(L, C, h);
+    assert.ok(Math.abs(back.r - rgb.r) <= 1, `${hex} r`);
+    assert.ok(Math.abs(back.g - rgb.g) <= 1, `${hex} g`);
+    assert.ok(Math.abs(back.b - rgb.b) <= 1, `${hex} b`);
+  }
+});
+
+test("contrastRatio + wcagLevels match WCAG", () => {
+  assert.equal(Math.round(contrastRatio({ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 })), 21);
+  assert.equal(contrastRatio({ r: 10, g: 10, b: 10 }, { r: 10, g: 10, b: 10 }), 1);
+  const lv = wcagLevels(4.5);
+  assert.deepEqual(lv, { aaNormal: true, aaaNormal: false, aaLarge: true, aaaLarge: true });
+  assert.equal(wcagLevels(7).aaaNormal, true);
+  assert.equal(wcagLevels(2.9).aaLarge, false);
+});
+
+test("ramp yields 11 steps from light to dark", () => {
+  const r = ramp({ r: 30, g: 136, b: 229 });
+  assert.equal(r.length, 11);
+  assert.deepEqual(r.map((s) => s.step), [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]);
+  // every entry is a valid hex, and lightness decreases across the ramp
+  for (const s of r) assert.ok(/^#[0-9a-f]{6}$/.test(s.hex), s.hex);
+  const lum = (hex) => rgbToOklch(hexToRgb(hex)).L;
+  assert.ok(lum(r[0].hex) > lum(r[10].hex));
 });
 
 test("contrastText picks legible foreground", () => {

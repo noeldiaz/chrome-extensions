@@ -43,5 +43,49 @@
   "errCopy": {
     "message": "Couldn't copy: $error$",
     "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "formatsTitle": { "message": "Favorite Formats" },
+  "otherFormatsTitle": { "message": "Other Formats" },
+  "shades": { "message": "Shades" },
+  "shadeCurrent": { "message": "closest to your colour" },
+  "recentRemove": { "message": "Remove colour" },
+  "clearRecentConfirm": { "message": "Clear all recent colours? This can’t be undone." },
+  "confirmClear": { "message": "Clear all" },
+  "cancel": { "message": "Cancel" },
+  "contrast": { "message": "Contrast" },
+  "contrastAgainst": { "message": "Against" },
+  "normalText": { "message": "Normal" },
+  "largeText": { "message": "Large" },
+
+  "favorites": { "message": "Favourites" },
+  "favSave": { "message": "Save to favourites" },
+  "favRemove": { "message": "Remove favourite" },
+  "favLoad": { "message": "Load favourite" },
+  "favExport": { "message": "Export favourites" },
+  "favImport": { "message": "Import favourites" },
+  "favImported": {
+    "message": "Imported $count$ colours.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "errImport": {
+    "message": "Couldn't import: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "optFormats": { "message": "Favorite formats" },
+  "optFormatsHint": { "message": "Checked formats show under “Favorite Formats” in the popup; the rest live under “Other Formats”." },
+  "optCopyOnPick": { "message": "Copy on pick" },
+  "optCopyOnPickHint": {
+    "message": "Automatically copy this format to the clipboard right after you pick a colour."
+  },
+  "copyOff": { "message": "Don’t auto-copy" },
+  "optTwPalette": { "message": "Tailwind palette" },
+  "optTwPaletteHint": {
+    "message": "The “nearest Tailwind” match uses the palette bundled at build time."
+  },
+  "optTwLoaded": {
+    "message": "Tailwind v$v$ · $n$ colours loaded",
+    "placeholders": { "v": { "content": "$1" }, "n": { "content": "$2" } }
   }
 }

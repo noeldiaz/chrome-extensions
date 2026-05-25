@@ -46,49 +46,122 @@
 
       <div class="my-3 border-t border-slate-200 dark:border-slate-700"></div>
 
-      <!-- pick action -->
-      <button id="pick" type="button" class="pick-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 6l3 3m-9.5 9.5L3 21l2.5-5.5L15.5 5.5a2.12 2.12 0 113 3L8.5 18.5z" />
-        </svg>
-        <span data-i18n="pickColor">Pick a colour</span>
-      </button>
-
-      <!-- no-eyedropper notice (browsers without the EyeDropper API) -->
-      <p id="noEd" class="mt-2 hidden text-xs text-amber-600 dark:text-amber-400" data-i18n="noEyedropper">
-        This browser has no screen eyedropper — use the colour box below instead.
-      </p>
-
-      <!-- result -->
-      <div id="result" class="mt-3 hidden">
+      <!-- top row: pick (square, icon only) + swatch + favourite, all compact -->
+      <div class="flex items-stretch gap-2">
+        <button
+          id="pick"
+          type="button"
+          data-i18n-attr="title:pickColor,aria-label:pickColor"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Pick a colour"
+          aria-label="Pick a colour"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-6 w-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 6l3 3m-9.5 9.5L3 21l2.5-5.5L15.5 5.5a2.12 2.12 0 113 3L8.5 18.5z" />
+          </svg>
+        </button>
         <button
           id="swatch"
           type="button"
-          class="flex h-20 w-full items-center justify-center rounded-xl border border-slate-200 font-mono text-base font-semibold shadow-inner transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-700"
+          class="flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white font-mono text-sm font-semibold text-slate-400 shadow-inner transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-800"
           data-i18n-attr="title:copySwatch,aria-label:swatchAria"
           title="Copy HEX"
           aria-label="Picked colour"
         ></button>
-
-        <!-- value rows (HEX/RGB/HSL/HSV + nearest Tailwind) are built in popup.js -->
-        <div id="values" class="mt-3 space-y-1.5"></div>
+        <button
+          id="fav"
+          type="button"
+          data-i18n-attr="title:favSave,aria-label:favSave"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
+          title="Save to favourites"
+          aria-label="Save to favourites"
+        >
+          <svg id="fav-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.5l2.3 4.67 5.15.75-3.73 3.63.88 5.13-4.6-2.42-4.6 2.42.88-5.13L4.07 8.92l5.15-.75 2.26-4.67z" />
+          </svg>
+        </button>
       </div>
 
-      <!-- empty hint (before first pick) -->
+      <p id="noEd" class="mt-2 hidden text-xs text-amber-600 dark:text-amber-400" data-i18n="noEyedropper">
+        This browser has no screen eyedropper — use the colour box below instead.
+      </p>
       <p id="hint" class="mt-3 text-center text-xs text-slate-400 dark:text-slate-500" data-i18n="emptyHint">
         Click “Pick a colour”, then click anywhere on screen.
       </p>
 
-      <!-- native colour input fallback / manual choice -->
-      <div class="mt-4">
-        <label class="cap" for="native" data-i18n="orChoose">or choose a colour</label>
-        <input
-          id="native"
-          type="color"
-          value="#1e88e5"
-          class="h-9 w-full cursor-pointer rounded-md border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800"
-        />
+      <!-- result -->
+      <div id="result" class="hidden">
+        <!-- value formats (collapsible; which appear is set in Settings) -->
+        <details id="formats" class="disclosure" open>
+          <summary>
+            <span data-i18n="formatsTitle">Favorite Formats</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <!-- favourite (chosen) format pills are built in popup.js -->
+          <div id="values" class="mt-1 flex flex-wrap gap-1.5"></div>
+        </details>
+
+        <!-- the formats not chosen as favourites -->
+        <details id="otherFormats" class="disclosure">
+          <summary>
+            <span data-i18n="otherFormatsTitle">Other Formats</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div id="otherValues" class="mt-1 flex flex-wrap gap-1.5"></div>
+        </details>
+
+        <!-- shade / tint ramp -->
+        <details id="shades" class="disclosure">
+          <summary>
+            <span data-i18n="shades">Shades</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div id="ramp" class="mt-1 flex gap-1"></div>
+        </details>
+
+        <!-- contrast checker -->
+        <details id="contrast" class="disclosure">
+          <summary>
+            <span data-i18n="contrast">Contrast</span>
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </summary>
+          <div class="mt-1">
+            <div class="flex items-center gap-2">
+              <span class="cap mb-0" data-i18n="contrastAgainst">Against</span>
+              <input id="cbg" type="color" value="#ffffff" class="h-7 w-12 cursor-pointer rounded border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800" />
+              <button id="cbgPick" type="button" data-i18n-attr="title:pickColor,aria-label:pickColor" class="rounded p-1 text-slate-400 transition hover:text-slate-700 focus:outline-none dark:text-slate-500 dark:hover:text-slate-200" title="Pick a colour" aria-label="Pick a colour">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 6l3 3m-9.5 9.5L3 21l2.5-5.5L15.5 5.5a2.12 2.12 0 113 3L8.5 18.5z" /></svg>
+              </button>
+              <span id="cratio" class="ml-auto font-mono text-sm font-semibold tabular-nums"></span>
+            </div>
+            <!-- preview of the two colours together -->
+            <div id="cpreview" class="mt-2 flex items-center justify-center gap-3 rounded-lg border border-slate-200 py-2 text-sm font-semibold dark:border-slate-700">
+              <span>Aa</span><span class="text-lg">Aa</span>
+            </div>
+            <div id="cbadges" class="mt-2 grid grid-cols-4 gap-1 text-center text-[10px] font-semibold"></div>
+          </div>
+        </details>
       </div>
+
+      <!-- favourites (collapsible) -->
+      <details id="favWrap" class="disclosure hidden" open>
+        <summary>
+          <span data-i18n="favorites">Favourites</span>
+          <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+        </summary>
+        <div class="mt-1">
+          <div class="mb-1 flex justify-end gap-1">
+            <button id="favExport" type="button" data-i18n-attr="title:favExport,aria-label:favExport" class="rounded p-1 text-slate-400 transition hover:text-slate-700 focus:outline-none dark:text-slate-500 dark:hover:text-slate-200" title="Export favourites" aria-label="Export favourites">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            </button>
+            <button id="favImport" type="button" data-i18n-attr="title:favImport,aria-label:favImport" class="rounded p-1 text-slate-400 transition hover:text-slate-700 focus:outline-none dark:text-slate-500 dark:hover:text-slate-200" title="Import favourites" aria-label="Import favourites">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 7.5L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+            </button>
+          </div>
+          <div id="favList" class="space-y-1"></div>
+          <input id="favFile" type="file" accept="application/json,.json" class="hidden" />
+        </div>
+      </details>
 
       <!-- recent picks -->
       <div id="recentWrap" class="mt-4 hidden">
@@ -110,7 +183,17 @@
         <div id="recent" class="mt-1 flex flex-wrap gap-1.5"></div>
       </div>
 
-      <!-- transient status (copied / cancelled / error) -->
+      <!-- native colour input fallback / manual choice -->
+      <div class="mt-4 flex items-center gap-3">
+        <label class="cap mb-0 w-20 shrink-0 leading-tight" for="native" data-i18n="orChoose">or choose a colour</label>
+        <input
+          id="native"
+          type="color"
+          value="#1e88e5"
+          class="h-9 flex-1 cursor-pointer rounded-md border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800"
+        />
+      </div>
+
       <p id="status" class="mt-3 hidden text-center text-xs font-medium text-blue-600 dark:text-blue-400" role="status" aria-live="polite"></p>
     </div>
 

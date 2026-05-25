@@ -79,6 +79,9 @@ export const formatHex = (input) => {
 export const formatRgb = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 export const formatHsl = ({ h, s, l }) => `hsl(${h}, ${s}%, ${l}%)`;
 export const formatHsv = ({ h, s, v }) => `hsv(${h}, ${s}%, ${v}%)`;
+// Picked colours are opaque, so the alpha forms are fixed at 1 / ff.
+export const formatRgba = ({ r, g, b }) => `rgba(${r}, ${g}, ${b}, 1)`;
+export const formatHsla = ({ h, s, l }) => `hsla(${h}, ${s}%, ${l}%, 1)`;
 
 // sRGB {r,g,b} 0-255 -> OKLab {L,a,b}. Perceptually uniform, so Euclidean
 // distance here is a good "closest colour" metric (Björn Ottosson's OKLab).
@@ -122,13 +125,105 @@ export function nearestTailwind(rgb, palette) {
   return best && { name: best.name, hex: best.hex, dist: Math.sqrt(bd) };
 }
 
-// Pick black or white text for legibility on a colour, via WCAG relative
-// luminance. Returns "#000000" or "#ffffff".
-export function contrastText({ r, g, b }) {
+// WCAG relative luminance of {r,g,b} (0-1).
+export function relativeLuminance({ r, g, b }) {
   const f = (c) => {
     c /= 255;
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   };
-  const lum = 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-  return lum > 0.179 ? "#000000" : "#ffffff";
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 }
+
+// Pick black or white text for legibility on a colour. Returns "#000000"/"#ffffff".
+export function contrastText(rgb) {
+  return relativeLuminance(rgb) > 0.179 ? "#000000" : "#ffffff";
+}
+
+// WCAG contrast ratio between two colours (1 to 21).
+export function contrastRatio(a, b) {
+  const l1 = relativeLuminance(a);
+  const l2 = relativeLuminance(b);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+// WCAG pass/fail for a ratio, normal vs large (≥18.66px bold / 24px) text.
+export function wcagLevels(ratio) {
+  return {
+    aaNormal: ratio >= 4.5,
+    aaaNormal: ratio >= 7,
+    aaLarge: ratio >= 3,
+    aaaLarge: ratio >= 4.5,
+  };
+}
+
+// sRGB {r,g,b} -> OKLCH { L (0-1), C, h (0-360) }.
+export function rgbToOklch(rgb) {
+  const { L, a, b } = rgbToOklab(rgb);
+  const C = Math.hypot(a, b);
+  let h = (Math.atan2(b, a) * 180) / Math.PI;
+  if (h < 0) h += 360;
+  return { L, C, h };
+}
+
+export const formatOklch = ({ L, C, h }) =>
+  `oklch(${(L * 100).toFixed(1)}% ${C.toFixed(3)} ${h.toFixed(1)})`;
+
+// OKLCH (L 0-1, C, h deg) -> sRGB {r,g,b} 0-255 (gamut-clamped).
+export function oklchToRgb(L, C, h) {
+  const hr = (h * Math.PI) / 180;
+  const a = C * Math.cos(hr);
+  const b = C * Math.sin(hr);
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+  const l = l_ ** 3;
+  const m = m_ ** 3;
+  const s = s_ ** 3;
+  const to8 = (c) => {
+    const v = c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
+    return Math.round(clamp(v, 0, 1) * 255);
+  };
+  return {
+    r: to8(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    g: to8(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    b: to8(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+  };
+}
+
+// A 50-950 shade/tint ramp from a colour: keep its OKLCH hue, retarget lightness
+// to Tailwind-like steps, and taper chroma at the extremes so the ends stay
+// natural. Returns [{ step, hex }] (gamut-clamped).
+const RAMP = [
+  [50, 0.97], [100, 0.94], [200, 0.88], [300, 0.81], [400, 0.72], [500, 0.64],
+  [600, 0.56], [700, 0.49], [800, 0.44], [900, 0.4], [950, 0.27],
+];
+export function ramp(rgb) {
+  const { C, h } = rgbToOklch(rgb);
+  return RAMP.map(([step, L]) => {
+    const t = 1 - Math.abs(L - 0.62) / 0.62; // 1 near mid lightness, 0 at the ends
+    const c = C * clamp(0.4 + 0.6 * t, 0.35, 1);
+    return { step, hex: rgbToHex(oklchToRgb(L, c, h)) };
+  });
+}
+
+// Display formats in popup order. `tag` = the row's short label; `chip` rows
+// (nearest Tailwind) show a colour swatch instead of plain text. Shared by the
+// popup (which rows to show) and the settings page (visibility + default copy).
+export const FORMATS = [
+  { key: "hex", tag: "HEX", label: "HEX" },
+  { key: "rgb", tag: "RGB", label: "RGB" },
+  { key: "hsl", tag: "HSL", label: "HSL" },
+  { key: "hsv", tag: "HSV", label: "HSV" },
+  { key: "oklch", tag: "OKLCH", label: "OKLCH" },
+  { key: "rgba", tag: "RGBA", label: "RGBA" },
+  { key: "hsla", tag: "HSLA", label: "HSLA" },
+  { key: "hex8", tag: "HEX8", label: "HEX (8-digit)" },
+  { key: "tw", tag: "TW", label: "Nearest Tailwind", chip: true },
+];
+
+// Shown by default: HEX, RGB, and nearest Tailwind. Users enable the rest in
+// settings (Value formats).
+export const DEFAULT_FORMATS = {
+  hex: true, rgb: true, hsl: false, hsv: false, oklch: false,
+  rgba: false, hsla: false, hex8: false, tw: true,
+};

@@ -6,6 +6,7 @@
 @source "../popup.js";
 @source "../options.html";
 @source "../options.js";
+@source "../dialog.js";
 
 @layer base {
   body {
@@ -14,22 +15,49 @@
 }
 
 @layer components {
-  /* Primary "pick a colour" action. */
-  .pick-btn {
-    @apply flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50;
+  /* A copyable value pill. Click to copy; flashes green (.is-copied) as feedback.
+     Pills flow and wrap so short formats sit side by side. */
+  .val-chip {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs text-slate-700 transition hover:border-blue-400 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-blue-950;
   }
-  /* A value row: monospace value + copy button, click anywhere to copy. */
-  .val-row {
-    @apply flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-blue-400 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300
-           dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500 dark:hover:bg-blue-950;
+  .val-chip.is-copied {
+    @apply border-green-500 bg-green-50 text-green-700 dark:border-green-500 dark:bg-green-950 dark:text-green-300;
   }
-  .val-label {
-    @apply w-8 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500;
+  .disclosure {
+    @apply mt-3;
   }
-  .val-text {
-    @apply flex-1 truncate font-mono text-sm text-slate-800 dark:text-slate-100;
+  .disclosure > summary {
+    @apply flex cursor-pointer list-none items-center justify-between py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 transition hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200;
+  }
+  .disclosure > summary > svg {
+    @apply transition-transform;
+  }
+  .disclosure[open] > summary > svg {
+    transform: rotate(180deg);
   }
   .cap {
     @apply mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400;
   }
 }
+
+/* The popup grows with content but Chrome caps it at ~600px tall. Past that it
+   scrolls — keep a thin, subtle scrollbar so the overflow is reachable without
+   the chunky default bar. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-400) transparent;
+}
+html::-webkit-scrollbar {
+  width: 8px;
+}
+html::-webkit-scrollbar-thumb {
+  background-color: var(--color-slate-400);
+  border-radius: 9999px;
+}
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* hide the default disclosure triangle on the collapsible sections */
+summary::-webkit-details-marker { display: none; }
