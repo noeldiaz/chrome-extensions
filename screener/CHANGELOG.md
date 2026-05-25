@@ -4,6 +4,18 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-05-25
+
+### Added
+- **Sync across devices** (opt-in) — a Settings toggle keeps your ticket
+  endpoint and token in sync via the browser's account sync. Off by default.
+- **Tickets options tab** — the endpoint/token settings and the "What gets
+  sent" note now live on their own tab, each in a card.
+
+### Changed
+- The editor hides the **Submit ticket** button until a ticket endpoint is
+  configured (Download and Copy still work); it appears live once one is set.
+
 ## [0.2.0] — 2026-05-25
 
 ### Added

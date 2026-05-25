@@ -43,11 +43,28 @@
       <!-- tabs -->
       <div role="tablist" class="flex gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800">
         <button id="otab-settings" type="button" role="tab" class="tab-btn is-active" data-tab="settings" data-i18n="tabSettings">Settings</button>
+        <button id="otab-tickets" type="button" role="tab" class="tab-btn" data-tab="tickets" data-i18n="tabTickets">Tickets</button>
         <button id="otab-about" type="button" role="tab" class="tab-btn" data-tab="about" data-i18n="tabAbout">About</button>
       </div>
 
       <div id="opanel-settings" class="tabpanel mt-4" role="tabpanel">
-      <p class="text-sm text-slate-500 dark:text-slate-400">
+      <!-- Sync across devices -->
+      <section class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <label class="flex items-start gap-3">
+          <input id="syncToggle" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
+          <span class="min-w-0">
+            <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200" data-i18n="optSync">Sync across devices</span>
+            <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400" data-i18n="optSyncHint">Keep your ticket endpoint and token in sync across the devices where you’re signed in to this browser. Off by default.</span>
+          </span>
+        </label>
+      </section>
+      </div>
+
+      <div id="opanel-tickets" class="tabpanel mt-4 hidden" role="tabpanel">
+      <!-- Ticket endpoint -->
+      <section class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200" data-i18n="optEndpointTitle">Ticket endpoint</h2>
+      <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
         Where the <strong>Submit ticket</strong> button sends a screenshot. Leave blank to use only Download and Copy.
       </p>
 
@@ -87,8 +104,9 @@
           <p id="status" class="text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
         </div>
       </div>
+      </section>
 
-      <div class="mt-8 rounded-md border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+      <div class="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
         <p class="mb-2 font-semibold text-slate-600 dark:text-slate-300" data-i18n="whatGetsSentTitle">What gets sent</p>
         <p>A <code>multipart/form-data</code> POST with: <code>title</code>, <code>description</code>, <code>screenshot</code> (PNG file), <code>page_url</code>, and <code>meta</code> (JSON). The bearer token, if set, goes in the <code>Authorization</code> header. The token is stored locally in this browser and never sent anywhere except your endpoint.</p>
       </div>

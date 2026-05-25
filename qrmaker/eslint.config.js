@@ -17,6 +17,7 @@ export default [
       "icons.js",
       "i18n.js",
       "options.js",
+      "sync.js",
     ],
     languageOptions: {
       ecmaVersion: 2023,

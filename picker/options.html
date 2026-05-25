@@ -50,6 +50,17 @@
 
       <!-- SETTINGS -->
       <div id="opanel-settings" class="tabpanel" role="tabpanel">
+        <!-- Sync across devices -->
+        <section class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <label class="flex items-start gap-3">
+            <input id="syncToggle" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
+            <span class="min-w-0">
+              <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200" data-i18n="optSync">Sync across devices</span>
+              <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400" data-i18n="optSyncHint">Keep your settings, favorites, and recent colors in sync across the devices where you’re signed in to this browser. Off by default.</span>
+            </span>
+          </label>
+        </section>
+
         <!-- Copy on pick -->
         <section class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <label for="copyOnPick" class="block text-sm font-semibold text-slate-700 dark:text-slate-200" data-i18n="optCopyOnPick">Copy on pick</label>

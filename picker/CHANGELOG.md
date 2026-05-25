@@ -4,6 +4,14 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-05-25
+
+### Added
+- **Sync across devices** (opt-in) — a Settings toggle keeps your formats, HEX
+  case, copy-on-pick, favorites, and recent colors in sync via the browser's
+  account sync. Off by default; the popup live-updates when another device
+  changes the data.
+
 ## [0.6.0] — 2026-05-25
 
 ### Added

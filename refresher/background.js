@@ -6,6 +6,7 @@ import {
   secondsUntil,
   formatMMSS,
 } from "./lib.js";
+import { syncGet } from "./sync.js";
 
 async function getTargets() {
   const { targets } = await chrome.storage.local.get({ targets: {} });
@@ -120,7 +121,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 // Scroll preservation is opt-in: enabled in the popup AND backed by a granted
 // optional host permission. Both must hold or we plain-reload.
 async function scrollPreserveOn() {
-  const { preserveScroll } = await chrome.storage.local.get({ preserveScroll: false });
+  const { preserveScroll } = await syncGet({ preserveScroll: false });
   if (!preserveScroll) return false;
   return chrome.permissions.contains({ origins: SCROLL_ORIGINS });
 }

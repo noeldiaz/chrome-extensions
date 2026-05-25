@@ -10,6 +10,7 @@ import {
   readInterval as parseInterval,
 } from "./lib.js";
 import { localize, t } from "./i18n.js";
+import { syncGet, syncSet, isSyncOn } from "./sync.js";
 
 const minutesEl = document.getElementById("minutes");
 const secondsEl = document.getElementById("seconds");
@@ -184,7 +185,7 @@ async function commitIntervalFields() {
   const { minutes, seconds, total } = readInterval();
   minutesEl.value = minutes;
   secondsEl.value = seconds;
-  await chrome.storage.local.set({ minutes, seconds });
+  await syncSet({ minutes, seconds });
   highlightActivePreset(total);
   return { minutes, seconds, total };
 }
@@ -258,9 +259,9 @@ preserveScrollEl.addEventListener("change", async () => {
       return;
     }
     statusEl.textContent = "";
-    await chrome.storage.local.set({ preserveScroll: true });
+    await syncSet({ preserveScroll: true });
   } else {
-    await chrome.storage.local.set({ preserveScroll: false });
+    await syncSet({ preserveScroll: false });
     await chrome.permissions.remove({ origins: SCROLL_ORIGINS }); // tidy up the grant
   }
 });
@@ -287,20 +288,32 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.targets) renderList();
 });
 
+// Live-refresh the refresh defaults (interval + scroll) when another signed-in
+// device changes them — only meaningful while sync is the active area.
+chrome.storage.onChanged.addListener(async (_changes, area) => {
+  if (area === "sync" && (await isSyncOn())) await loadDefaults();
+});
+
 async function loadPreserveScroll() {
-  const { preserveScroll } = await chrome.storage.local.get({ preserveScroll: false });
+  const { preserveScroll } = await syncGet({ preserveScroll: false });
   // Reflect the real grant — the user may have revoked the host permission in settings.
   const granted = preserveScroll && (await chrome.permissions.contains({ origins: SCROLL_ORIGINS }));
   preserveScrollEl.checked = granted;
-  if (preserveScroll && !granted) await chrome.storage.local.set({ preserveScroll: false });
+  if (preserveScroll && !granted) await syncSet({ preserveScroll: false });
 }
 
-async function load() {
-  const { minutes, seconds } = await chrome.storage.local.get({ minutes: 15, seconds: 0 });
+// Load the synced refresh defaults (interval + scroll) into the popup fields.
+// Shared by initial load() and the sync onChanged listener.
+async function loadDefaults() {
+  const { minutes, seconds } = await syncGet({ minutes: 15, seconds: 0 });
   minutesEl.value = minutes;
   secondsEl.value = seconds;
   highlightActivePreset(minutes * 60 + seconds);
   await loadPreserveScroll();
+}
+
+async function load() {
+  await loadDefaults();
   await renderList();
 }
 

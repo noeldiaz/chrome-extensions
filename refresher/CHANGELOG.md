@@ -4,6 +4,13 @@ All notable changes to Refresher are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-05-25
+
+### Added
+- **Sync across devices** (opt-in) — a Settings toggle keeps your refresh
+  defaults (interval and scroll preservation) in sync via the browser's account
+  sync. Off by default; per-tab refresh rules stay local to each device.
+
 ## [0.5.0] — 2026-05-25
 
 ### Added

@@ -1,8 +1,9 @@
-// Placeholder options page — settings will be added here later. For now it only
-// carries the same light/dark theme wiring the popup uses (Refresher has no
-// shared theme module, so it's inlined here) plus localization.
+// Refresher options page. Carries the "Sync across devices" toggle plus the
+// same light/dark theme wiring the popup uses (Refresher has no shared theme
+// module, so it's inlined here) and localization.
 
 import { localize, t } from "./i18n.js";
+import { isSyncOn, setSyncEnabled } from "./sync.js";
 
 const themeToggleEl = document.getElementById("theme-toggle");
 const moonIconEl = document.getElementById("moon-icon");
@@ -56,5 +57,22 @@ for (const b of tabBtns)
     for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
   });
 
+// Sync across devices (opt-in). Toggling migrates the synced refresh defaults,
+// then we reload so the page reflects the now-active storage area.
+const syncToggleEl = document.getElementById("syncToggle");
+syncToggleEl.addEventListener("change", async (e) => {
+  const on = e.target.checked;
+  try {
+    await setSyncEnabled(on);
+    location.reload();
+  } catch (err) {
+    e.target.checked = !on; // revert (e.g. over the sync quota)
+    console.error(t("optSyncErr", String(err?.message || err)));
+  }
+});
+
 localize();
 loadTheme();
+(async () => {
+  syncToggleEl.checked = await isSyncOn();
+})();

@@ -8,11 +8,19 @@
   "settings": { "message": "Settings" },
   "titleOptions": { "message": "Refresher — Options" },
   "h1Options": { "message": "Refresher — Options" },
-  "optionsBlank": { "message": "Nothing to configure yet — settings will live here." },
   "close": { "message": "Close" },
   "tabSettings": { "message": "Settings" },
   "tabAbout": { "message": "About" },
   "version": { "message": "Version" },
+
+  "optSync": { "message": "Sync across devices" },
+  "optSyncHint": {
+    "message": "Keep your refresh defaults (interval and scroll preservation) in sync across the devices where you’re signed in to this browser. Off by default."
+  },
+  "optSyncErr": {
+    "message": "Couldn’t turn on sync: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
 
   "minutes": { "message": "Minutes" },
   "seconds": { "message": "Seconds" },

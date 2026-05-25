@@ -1,12 +1,30 @@
 import { initTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
+import { isSyncOn, setSyncEnabled } from "./sync.js";
 
 const $ = (id) => document.getElementById(id);
 
-// Placeholder options page — settings will be added here later. For now it just
-// shares the theme + localization wiring used by the rest of the extension.
+// QRmaker options page. Shares the theme + localization wiring used by the rest
+// of the extension; the one setting so far is the opt-in cross-device sync.
 localize();
 initTheme({ toggle: $("theme-toggle"), moon: $("moon-icon"), sun: $("sun-icon") });
+
+// Sync across devices (opt-in). Toggling migrates the synced presets, then we
+// reload so the page reflects the now-active storage area.
+(async () => {
+  $("syncToggle").checked = await isSyncOn();
+})();
+$("syncToggle").addEventListener("change", async (e) => {
+  const on = e.target.checked;
+  try {
+    await setSyncEnabled(on);
+    location.reload();
+  } catch (err) {
+    e.target.checked = !on; // revert (e.g. over the sync quota)
+    // eslint-disable-next-line no-console -- no on-page status element here yet
+    console.error(t("optSyncErr", String(err?.message || err)));
+  }
+});
 
 // Tabs: Settings / About
 $("aboutVersion").textContent = `${t("version")} ${chrome.runtime.getManifest().version}`;

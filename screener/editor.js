@@ -4,6 +4,7 @@ import { FEATURES } from "./build-config.js";
 import { captureFilename, originPatternFromUrl } from "./lib.js";
 import { takeCapture } from "./idb.js";
 import { Annotator } from "./annotator.js";
+import { syncGet, isSyncOn } from "./sync.js";
 
 const stageEl = document.getElementById("stage");
 const emptyEl = document.getElementById("empty");
@@ -272,10 +273,10 @@ async function init() {
     anno.onZoom = (pct) => (zoomLabelEl.textContent = pct + "%");
     await anno.load(current.dataUrl);
 
-    settings = await chrome.storage.local.get({ endpoint: "", token: "" });
+    settings = await syncGet({ endpoint: "", token: "" });
     downloadEl.disabled = false;
     copyEl.disabled = false;
-    submitEl.disabled = false;
+    applySubmitVisibility();
     wireToolbar();
     wireShortcuts();
   } catch (e) {
@@ -283,11 +284,22 @@ async function init() {
   }
 }
 
-// Keep settings fresh if the user edits Options in another tab.
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== "local") return;
+// Submit goes only to a configured endpoint — hide the button when there's none
+// (Download and Copy still work). Re-evaluated whenever the endpoint changes.
+function applySubmitVisibility() {
+  const ok = !!settings.endpoint;
+  submitEl.hidden = !ok;
+  submitEl.disabled = !ok;
+}
+
+// Keep settings fresh if the user edits Options in another tab (or another
+// signed-in device, when sync is on — those changes land in the sync area).
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  const active = (await isSyncOn()) ? "sync" : "local";
+  if (area !== active) return;
   if (changes.endpoint) settings.endpoint = changes.endpoint.newValue || "";
   if (changes.token) settings.token = changes.token.newValue || "";
+  if (changes.endpoint) applySubmitVisibility();
 });
 
 downloadEl.addEventListener("click", download);

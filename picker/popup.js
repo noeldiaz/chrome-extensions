@@ -7,6 +7,7 @@
 import { initTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
 import { confirmDialog } from "./dialog.js";
+import { syncGet, syncSet, isSyncOn } from "./sync.js";
 import {
   normalizeHex,
   hexToRgb,
@@ -43,7 +44,6 @@ import {
   apcaContrast,
   accessibleShade,
   gradientCss,
-  GRADIENT_TYPES,
   exportPalette,
   EXPORT_FORMATS,
 } from "./lib.js";
@@ -600,7 +600,7 @@ function updateStar() {
 }
 
 async function saveFavs() {
-  await chrome.storage.local.set({ favorites });
+  await syncSet({ favorites });
 }
 
 function renderFavs() {
@@ -765,16 +765,16 @@ async function removeRecent(hex) {
     cancelText: t("cancel"),
   });
   if (!ok) return;
-  const { recent = [] } = await chrome.storage.local.get({ recent: [] });
+  const { recent = [] } = await syncGet({ recent: [] });
   const next = recent.filter((c) => c !== hex);
-  await chrome.storage.local.set({ recent: next });
+  await syncSet({ recent: next });
   renderRecent(next);
 }
 
 async function pushRecent(hex) {
-  const { recent = [] } = await chrome.storage.local.get({ recent: [] });
+  const { recent = [] } = await syncGet({ recent: [] });
   const next = [hex, ...recent.filter((c) => c !== hex)].slice(0, MAX_RECENT);
-  await chrome.storage.local.set({ recent: next });
+  await syncSet({ recent: next });
   renderRecent(next);
 }
 
@@ -934,7 +934,7 @@ async function pickInto(input) {
 }
 
 async function loadState() {
-  const store = await chrome.storage.local.get({
+  const store = await syncGet({
     recent: [],
     favorites: [],
     hexUpper: true,
@@ -1030,8 +1030,13 @@ function init() {
       cancelText: t("cancel"),
     });
     if (!ok) return;
-    await chrome.storage.local.set({ recent: [] });
+    await syncSet({ recent: [] });
     renderRecent([]);
+  });
+
+  // Live-refresh when another signed-in device changes the synced data.
+  chrome.storage.onChanged.addListener(async (_changes, areaName) => {
+    if (areaName === "sync" && (await isSyncOn())) loadState();
   });
 
   loadState();

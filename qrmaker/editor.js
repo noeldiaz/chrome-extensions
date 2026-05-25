@@ -21,6 +21,7 @@ import {
   getHistoryItem,
   updateHistoryItem,
 } from "./idb.js";
+import { syncGet, syncSet } from "./sync.js";
 import { initTheme } from "./theme.js";
 
 const PREVIEW_SIZE = 256;
@@ -514,13 +515,13 @@ async function applyConfig(cfg) {
 }
 
 async function loadPresets() {
-  const stored = await chrome.storage.local.get({ presets: [], defaultPresetId: null });
+  const stored = await syncGet({ presets: [], defaultPresetId: null });
   presets = Array.isArray(stored.presets) ? stored.presets : [];
   defaultPresetId = stored.defaultPresetId;
 }
 
 async function persistPresets() {
-  await chrome.storage.local.set({ presets, defaultPresetId });
+  await syncSet({ presets, defaultPresetId });
 }
 
 function selectedPresetId() {

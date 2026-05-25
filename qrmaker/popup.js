@@ -1,5 +1,6 @@
 import { downloadFilename, clamp, degToRad } from "./lib.js";
 import { getLogos, addHistory } from "./idb.js";
+import { syncGet, isSyncOn } from "./sync.js";
 import { initTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
 
@@ -136,7 +137,7 @@ function seedFromBase() {
 // Adopt the user's default preset (if any) as the styling base.
 async function loadDefaultPreset() {
   try {
-    const { presets, defaultPresetId } = await chrome.storage.local.get({
+    const { presets, defaultPresetId } = await syncGet({
       presets: [],
       defaultPresetId: null,
     });
@@ -363,6 +364,14 @@ async function main() {
   autoGrow();
   updatePreview();
 }
+
+// Live-refresh when another signed-in device changes the synced presets.
+chrome.storage.onChanged.addListener(async (_changes, areaName) => {
+  if (areaName === "sync" && (await isSyncOn())) {
+    await loadDefaultPreset(); // re-seed the styling base from the (possibly new) default
+    updatePreview();
+  }
+});
 
 localize();
 initTheme({ toggle: themeToggleEl, moon: moonIconEl, sun: sunIconEl });

@@ -1,11 +1,13 @@
 import { loadTheme, wireTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
 import { isValidHttpUrl } from "./lib.js";
+import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
 
 const endpointEl = document.getElementById("endpoint");
 const tokenEl = document.getElementById("token");
 const saveEl = document.getElementById("save");
 const statusEl = document.getElementById("status");
+const syncToggleEl = document.getElementById("syncToggle");
 
 let statusTimer = null;
 function flash(message, ok = true) {
@@ -35,7 +37,7 @@ async function save() {
     flash(t("enterValidUrl"), false);
     return;
   }
-  await chrome.storage.local.set({ endpoint, token });
+  await syncSet({ endpoint, token });
   if (token && isInsecure(endpoint)) {
     flash(t("savedInsecure"), false);
   } else {
@@ -44,9 +46,25 @@ async function save() {
 }
 
 async function load() {
-  const { endpoint, token } = await chrome.storage.local.get({ endpoint: "", token: "" });
+  const { endpoint, token } = await syncGet({ endpoint: "", token: "" });
   endpointEl.value = endpoint;
   tokenEl.value = token;
+}
+
+// Sync across devices (opt-in). Toggling migrates the synced data, then we
+// reload so every field reflects the now-active storage area.
+async function initSync() {
+  syncToggleEl.checked = await isSyncOn();
+  syncToggleEl.addEventListener("change", async (e) => {
+    const on = e.target.checked;
+    try {
+      await setSyncEnabled(on);
+      location.reload();
+    } catch (err) {
+      e.target.checked = !on; // revert (e.g. over the sync quota)
+      flash(t("optSyncErr", String(err?.message || err)), false);
+    }
+  });
 }
 
 saveEl.addEventListener("click", save);
@@ -72,9 +90,13 @@ document.getElementById("winClose").addEventListener("click", async () => {
   window.close();
 });
 
-// Tabs: Settings / About
+// Tabs: Settings / Tickets / About
 document.getElementById("aboutVersion").textContent = `${t("version")} ${chrome.runtime.getManifest().version}`;
-const opanels = { settings: document.getElementById("opanel-settings"), about: document.getElementById("opanel-about") };
+const opanels = {
+  settings: document.getElementById("opanel-settings"),
+  tickets: document.getElementById("opanel-tickets"),
+  about: document.getElementById("opanel-about"),
+};
 const tabBtns = document.querySelectorAll(".tab-btn");
 for (const b of tabBtns)
   b.addEventListener("click", () => {
@@ -85,4 +107,5 @@ for (const b of tabBtns)
 localize();
 wireTheme(document.getElementById("theme-toggle"));
 loadTheme();
+initSync();
 load();

@@ -4,7 +4,7 @@ import globals from "globals";
 export default [
   js.configs.recommended,
   {
-    files: ["popup.js", "options.js", "lib.js", "palette.js", "theme.js", "i18n.js", "dialog.js"],
+    files: ["popup.js", "options.js", "lib.js", "palette.js", "theme.js", "i18n.js", "dialog.js", "sync.js"],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",

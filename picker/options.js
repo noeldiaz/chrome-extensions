@@ -4,6 +4,7 @@ import { initTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
 import { confirmDialog } from "./dialog.js";
 import { FORMATS, DEFAULT_FORMATS } from "./lib.js";
+import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
 import { TAILWIND_VERSION, TAILWIND_COLORS } from "./palette.js";
 
 const $ = (id) => document.getElementById(id);
@@ -63,13 +64,13 @@ async function removeRecentColor(hex) {
     cancelText: t("cancel"),
   });
   if (!ok) return;
-  const { recent = [] } = await chrome.storage.local.get({ recent: [] });
-  await chrome.storage.local.set({ recent: recent.filter((c) => c !== hex) });
+  const { recent = [] } = await syncGet({ recent: [] });
+  await syncSet({ recent: recent.filter((c) => c !== hex) });
   renderRecentList();
 }
 
 async function renderRecentList() {
-  const { recent = [] } = await chrome.storage.local.get({ recent: [] });
+  const { recent = [] } = await syncGet({ recent: [] });
   $("recentHint").textContent = t("optRecentHint", String(recent.length));
   $("clearRecent").classList.toggle("hidden", !recent.length);
   $("recentList").replaceChildren(...recent.map(recentChip));
@@ -77,7 +78,7 @@ async function renderRecentList() {
 
 // Format-visibility checkboxes, built from the shared FORMATS list.
 async function buildFormatToggles() {
-  const { formats = DEFAULT_FORMATS } = await chrome.storage.local.get({ formats: DEFAULT_FORMATS });
+  const { formats = DEFAULT_FORMATS } = await syncGet({ formats: DEFAULT_FORMATS });
   const visible = { ...DEFAULT_FORMATS, ...formats };
   // Show checked (favorite) formats first; stable sort keeps FORMATS order within
   // each group. Only sorts on open, so toggling doesn't make checkboxes jump.
@@ -92,7 +93,7 @@ async function buildFormatToggles() {
       cb.className = "h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900";
       cb.addEventListener("change", async () => {
         visible[key] = cb.checked;
-        await chrome.storage.local.set({ formats: visible });
+        await syncSet({ formats: visible });
       });
       const span = document.createElement("span");
       span.textContent = label;
@@ -104,13 +105,13 @@ async function buildFormatToggles() {
 
 // "Copy on pick" dropdown: Off + every format.
 async function buildCopyOnPick() {
-  const { copyOnPick = "" } = await chrome.storage.local.get({ copyOnPick: "" });
+  const { copyOnPick = "" } = await syncGet({ copyOnPick: "" });
   const sel = $("copyOnPick");
   const off = new Option(t("copyOff") || "Don’t auto-copy", "");
   sel.append(off, ...FORMATS.map(({ key, label }) => new Option(label, key)));
   sel.value = copyOnPick;
   sel.addEventListener("change", async () => {
-    await chrome.storage.local.set({ copyOnPick: sel.value });
+    await syncSet({ copyOnPick: sel.value });
   });
 }
 
@@ -119,11 +120,25 @@ async function init() {
   initTheme({ toggle: $("theme-toggle"), moon: $("moon-icon"), sun: $("sun-icon") });
 
   // HEX letter case
-  const { hexUpper = true } = await chrome.storage.local.get({ hexUpper: true });
+  const { hexUpper = true } = await syncGet({ hexUpper: true });
   $("hexCase").value = hexUpper ? "upper" : "lower";
   $("hexCase").addEventListener("change", async (e) => {
-    await chrome.storage.local.set({ hexUpper: e.target.value === "upper" });
+    await syncSet({ hexUpper: e.target.value === "upper" });
     renderRecentList(); // re-case the swatch labels
+  });
+
+  // Sync across devices (opt-in). Toggling migrates the synced data, then we
+  // reload so every section reflects the now-active storage area.
+  $("syncToggle").checked = await isSyncOn();
+  $("syncToggle").addEventListener("change", async (e) => {
+    const on = e.target.checked;
+    try {
+      await setSyncEnabled(on);
+      location.reload();
+    } catch (err) {
+      e.target.checked = !on; // revert (e.g. over the sync quota)
+      flash(t("optSyncErr", String(err?.message || err)));
+    }
   });
 
   await buildFormatToggles();
@@ -138,7 +153,7 @@ async function init() {
       cancelText: t("cancel"),
     });
     if (!ok) return;
-    await chrome.storage.local.set({ recent: [] });
+    await syncSet({ recent: [] });
     await renderRecentList();
     flash(t("optCleared"));
   });

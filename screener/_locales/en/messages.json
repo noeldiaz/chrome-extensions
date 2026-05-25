@@ -8,6 +8,7 @@
   "settings": { "message": "Settings" },
   "close": { "message": "Close" },
   "tabSettings": { "message": "Settings" },
+  "tabTickets": { "message": "Tickets" },
   "tabAbout": { "message": "About" },
   "version": { "message": "Version" },
   "copy": { "message": "Copy" },
@@ -72,6 +73,7 @@
 
   "titleOptions": { "message": "Screener — Options" },
   "h1Options": { "message": "Screener — Options" },
+  "optEndpointTitle": { "message": "Ticket endpoint" },
   "endpointLabel": { "message": "Ticket endpoint URL" },
   "endpointPlaceholder": { "message": "https://your-app.test/api/tickets" },
   "tokenLabel": { "message": "Bearer token" },
@@ -79,6 +81,14 @@
   "tokenPlaceholder": { "message": "Sent as Authorization: Bearer …" },
   "save": { "message": "Save" },
   "whatGetsSentTitle": { "message": "What gets sent" },
+  "optSync": { "message": "Sync across devices" },
+  "optSyncHint": {
+    "message": "Keep your ticket endpoint and token in sync across the devices where you’re signed in to this browser. Off by default."
+  },
+  "optSyncErr": {
+    "message": "Couldn’t turn on sync: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
 
   "copiedToClipboard": { "message": "Copied to clipboard." },
   "errCopy": {
