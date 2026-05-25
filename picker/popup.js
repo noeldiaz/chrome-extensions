@@ -382,7 +382,7 @@ function recentSwatch(hex) {
   b.title = fmtHex(hex);
   b.setAttribute("aria-label", `${t("favLoad")} ${fmtHex(hex)}`);
   b.className =
-    "h-7 w-7 rounded-md border border-slate-300 shadow-sm transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600";
+    "block h-7 w-7 rounded-md border border-slate-300 shadow-sm transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600";
   b.style.background = hex;
   b.addEventListener("click", () => show(hex));
 
