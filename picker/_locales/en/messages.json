@@ -1,0 +1,42 @@
+{
+  "appName": { "message": "Picker" },
+  "appDesc": {
+    "message": "Pick any colour on screen with the eyedropper and copy its HEX, RGB, or HSL value in one click."
+  },
+
+  "themeToggle": { "message": "Toggle dark mode" },
+  "settings": { "message": "Settings" },
+  "titleOptions": { "message": "Picker — Settings" },
+  "h1Options": { "message": "Picker — Settings" },
+  "close": { "message": "Close" },
+  "optHexCase": { "message": "HEX letter case" },
+  "optHexCaseHint": { "message": "How HEX values are shown and copied." },
+  "optHexUpper": { "message": "Uppercase — #1E88E5" },
+  "optHexLower": { "message": "Lowercase — #1e88e5" },
+  "optRecent": { "message": "Recent colours" },
+  "optRecentHint": {
+    "message": "Your last $count$ picks are kept in this browser. Click a swatch in the popup to reload it.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "optClearRecent": { "message": "Clear recent colours" },
+  "optCleared": { "message": "Recent colours cleared." },
+
+  "pickColor": { "message": "Pick a colour" },
+  "orChoose": { "message": "or choose a colour" },
+  "swatchAria": { "message": "Picked colour" },
+  "recent": { "message": "Recent" },
+  "recentClear": { "message": "Clear recent colours" },
+  "emptyHint": { "message": "Click “Pick a colour”, then click anywhere on screen." },
+  "noEyedropper": {
+    "message": "This browser has no screen eyedropper — use the colour box below instead."
+  },
+  "copyHex": { "message": "Copy HEX" },
+  "copyRgb": { "message": "Copy RGB" },
+  "copyHsl": { "message": "Copy HSL" },
+  "copied": { "message": "Copied!" },
+  "pickCancelled": { "message": "Pick cancelled." },
+  "errPick": {
+    "message": "Couldn't pick a colour: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  }
+}

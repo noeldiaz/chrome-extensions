@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body class="invisible w-80 bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div class="p-4">
+      <!-- header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <img src="icons/icon32.png" alt="" class="h-5 w-5 shrink-0 self-center" />
+          <h1 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Picker</h1>
+        </div>
+        <div class="flex items-center gap-1">
+          <button
+            id="settings"
+            type="button"
+            data-i18n-attr="title:settings,aria-label:settings"
+            class="rounded p-1 text-slate-500 transition hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
+            title="Settings"
+            aria-label="Settings"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+          <button
+            id="theme-toggle"
+            type="button"
+            data-i18n-attr="title:themeToggle,aria-label:themeToggle"
+            class="rounded p-1 text-slate-500 transition hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
+            title="Toggle dark mode"
+            aria-label="Toggle dark mode"
+          >
+            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="my-3 border-t border-slate-200 dark:border-slate-700"></div>
+
+      <!-- pick action -->
+      <button id="pick" type="button" class="pick-btn" data-i18n="pickColor">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 6l3 3m-9.5 9.5L3 21l2.5-5.5L15.5 5.5a2.12 2.12 0 113 3L8.5 18.5z" />
+        </svg>
+        <span>Pick a colour</span>
+      </button>
+
+      <!-- no-eyedropper notice (browsers without the EyeDropper API) -->
+      <p id="noEd" class="mt-2 hidden text-xs text-amber-600 dark:text-amber-400" data-i18n="noEyedropper">
+        This browser has no screen eyedropper — use the colour box below instead.
+      </p>
+
+      <!-- result -->
+      <div id="result" class="mt-3 hidden">
+        <div
+          id="swatch"
+          class="flex h-20 items-center justify-center rounded-xl border border-slate-200 font-mono text-base font-semibold shadow-inner dark:border-slate-700"
+          data-i18n-attr="aria-label:swatchAria"
+          aria-label="Picked colour"
+        ></div>
+
+        <div class="mt-3 space-y-1.5">
+          <button id="copyHex" type="button" class="val-row" data-i18n-attr="title:copyHex">
+            <span class="val-label">Hex</span>
+            <span id="hex" class="val-text"></span>
+            <svg class="copy-ico h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m0 0H6.75m0 0v3.75" />
+            </svg>
+          </button>
+          <button id="copyRgb" type="button" class="val-row" data-i18n-attr="title:copyRgb">
+            <span class="val-label">Rgb</span>
+            <span id="rgb" class="val-text"></span>
+            <svg class="copy-ico h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m0 0H6.75m0 0v3.75" />
+            </svg>
+          </button>
+          <button id="copyHsl" type="button" class="val-row" data-i18n-attr="title:copyHsl">
+            <span class="val-label">Hsl</span>
+            <span id="hsl" class="val-text"></span>
+            <svg class="copy-ico h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m0 0H6.75m0 0v3.75" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- empty hint (before first pick) -->
+      <p id="hint" class="mt-3 text-center text-xs text-slate-400 dark:text-slate-500" data-i18n="emptyHint">
+        Click “Pick a colour”, then click anywhere on screen.
+      </p>
+
+      <!-- native colour input fallback / manual choice -->
+      <div class="mt-4">
+        <label class="cap" for="native" data-i18n="orChoose">or choose a colour</label>
+        <input
+          id="native"
+          type="color"
+          value="#1e88e5"
+          class="h-9 w-full cursor-pointer rounded-md border border-slate-300 bg-white p-0.5 dark:border-slate-600 dark:bg-slate-800"
+        />
+      </div>
+
+      <!-- recent picks -->
+      <div id="recentWrap" class="mt-4 hidden">
+        <div class="flex items-center justify-between">
+          <span class="cap mb-0" data-i18n="recent">Recent</span>
+          <button
+            id="clearRecent"
+            type="button"
+            data-i18n-attr="title:recentClear,aria-label:recentClear"
+            class="rounded p-1 text-slate-400 transition hover:text-red-500 focus:outline-none dark:text-slate-500"
+            title="Clear recent colours"
+            aria-label="Clear recent colours"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.35 9m-4.78 0L9.26 9M9.97 4.5h4.06M19.5 5.25l-.84 12.6a2.25 2.25 0 01-2.24 2.1H7.58a2.25 2.25 0 01-2.24-2.1L4.5 5.25M3.75 5.25h16.5" />
+            </svg>
+          </button>
+        </div>
+        <div id="recent" class="mt-1 flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <!-- transient status (copied / cancelled / error) -->
+      <p id="status" class="mt-3 hidden text-center text-xs font-medium text-blue-600 dark:text-blue-400" role="status" aria-live="polite"></p>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

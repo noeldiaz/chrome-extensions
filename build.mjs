@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ROOT, "dist");
-const EXTENSIONS = ["qrmaker", "refresher", "screener"];
+const EXTENSIONS = ["qrmaker", "refresher", "screener", "picker"];
 
 const TARGETS = {
   chrome: {

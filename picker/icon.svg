@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bulb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#546e7a"/>
+      <stop offset="1" stop-color="#263238"/>
+    </linearGradient>
+    <linearGradient id="collar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#eceff1"/>
+      <stop offset="0.5" stop-color="#cfd8dc"/>
+      <stop offset="1" stop-color="#90a4ae"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#eceff1"/>
+      <stop offset="1" stop-color="#cfd8dc"/>
+    </linearGradient>
+    <linearGradient id="liquid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#42a5f5"/>
+      <stop offset="1" stop-color="#1565c0"/>
+    </linearGradient>
+    <clipPath id="tubeClip">
+      <path d="M54 47 Q54 44 57 44 L71 44 Q74 44 74 47 L74 100 L64 122 L54 100 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- rainbow colour-wheel ring, fills the corners the diagonal dropper leaves empty -->
+  <g>
+    <path d="M64.00 4.00 A60 60 0 0 1 94.00 12.04 L83.50 30.23 A39 39 0 0 0 64.00 25.00 Z" fill="#ee5f2f"/>
+    <path d="M94.00 12.04 A60 60 0 0 1 115.96 34.00 L97.77 44.50 A39 39 0 0 0 83.50 30.23 Z" fill="#eebe2f"/>
+    <path d="M115.96 34.00 A60 60 0 0 1 124.00 64.00 L103.00 64.00 A39 39 0 0 0 97.77 44.50 Z" fill="#beee2f"/>
+    <path d="M124.00 64.00 A60 60 0 0 1 115.96 94.00 L97.77 83.50 A39 39 0 0 0 103.00 64.00 Z" fill="#5fee2f"/>
+    <path d="M115.96 94.00 A60 60 0 0 1 94.00 115.96 L83.50 97.77 A39 39 0 0 0 97.77 83.50 Z" fill="#2fee5f"/>
+    <path d="M94.00 115.96 A60 60 0 0 1 64.00 124.00 L64.00 103.00 A39 39 0 0 0 83.50 97.77 Z" fill="#2feebe"/>
+    <path d="M64.00 124.00 A60 60 0 0 1 34.00 115.96 L44.50 97.77 A39 39 0 0 0 64.00 103.00 Z" fill="#2fbeee"/>
+    <path d="M34.00 115.96 A60 60 0 0 1 12.04 94.00 L30.23 83.50 A39 39 0 0 0 44.50 97.77 Z" fill="#2f5fee"/>
+    <path d="M12.04 94.00 A60 60 0 0 1 4.00 64.00 L25.00 64.00 A39 39 0 0 0 30.23 83.50 Z" fill="#5f2fee"/>
+    <path d="M4.00 64.00 A60 60 0 0 1 12.04 34.00 L30.23 44.50 A39 39 0 0 0 25.00 64.00 Z" fill="#be2fee"/>
+    <path d="M12.04 34.00 A60 60 0 0 1 34.00 12.04 L44.50 30.23 A39 39 0 0 0 30.23 44.50 Z" fill="#ee2fbe"/>
+    <path d="M34.00 12.04 A60 60 0 0 1 64.00 4.00 L64.00 25.00 A39 39 0 0 0 44.50 30.23 Z" fill="#ee2f5f"/>
+  </g>
+
+  <!-- pipette on top, rotated 45° (bulb upper-right, tip lower-left) -->
+  <g transform="rotate(45 64 64)">
+    <path d="M54 47 Q54 44 57 44 L71 44 Q74 44 74 47 L74 100 L64 122 L54 100 Z"
+          fill="url(#glass)" stroke="#90a4ae" stroke-width="2" stroke-linejoin="round"/>
+    <g clip-path="url(#tubeClip)">
+      <rect x="53" y="84" width="22" height="42" fill="url(#liquid)"/>
+      <rect x="53" y="84" width="22" height="2.5" fill="#1e88e5" opacity="0.6"/>
+      <rect x="57" y="45" width="5" height="70" rx="2.5" fill="#ffffff" opacity="0.55"/>
+    </g>
+    <rect x="50" y="33" width="28" height="12" rx="3" fill="url(#collar)" stroke="#90a4ae" stroke-width="0.75"/>
+    <path d="M64 -12 C49 -12 43 0 43 12 C43 26 52 34 64 34 C76 34 85 26 85 12 C85 0 79 -12 64 -12 Z" fill="url(#bulb)"/>
+    <ellipse cx="55" cy="3" rx="7" ry="11" fill="#ffffff" opacity="0.22"/>
+    <path d="M64 124 C60 132 55 136 55 141 a9 9 0 0 0 18 0 C73 136 69 132 64 124 Z" fill="url(#liquid)"/>
+    <ellipse cx="60" cy="138" rx="2.4" ry="3.2" fill="#ffffff" opacity="0.45"/>
+  </g>
+</svg>
