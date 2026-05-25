@@ -4,6 +4,25 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-05-25
+
+### Added
+- **Numbered comment pins** — a new annotation tool: click to drop numbered
+  pins (blue/white) on the capture, add an editable comment in a floating card,
+  hover to preview, and pins renumber 1..N when one is removed. On export, a
+  numbered legend of the comments is appended beneath the image.
+- **Firefox support** — a `firefox` build target (`node build.mjs firefox
+  screener`); full-screen capture is off there (no offscreen API), like Safari.
+- Icons on the editor's Copy / Submit ticket / Download buttons.
+
+### Changed
+- README and privacy docs updated for the comment pins and the opt-in Sync.
+- Localized the Tickets-tab copy.
+
+### Fixed
+- Renamed a shadowed `t` (i18n) binding in the annotator/editor.
+- Packaging file list now includes `sync.js` and `build-config.js`.
+
 ## [0.3.0] — 2026-05-25
 
 ### Added

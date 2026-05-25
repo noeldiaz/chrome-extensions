@@ -10,6 +10,8 @@ chrome-extensions/
   refresher/        Periodic tab refresher (MV3)
   screener/         Screenshot capture, annotate, and ticket submit (MV3)
   qrmaker/          QR code for the active tab's URL (MV3)
+  picker/           On-screen color picker / eyedropper (MV3)
+  build.mjs         Multi-target packager → dist/<target>/<ext>/
   <next-extension>/
 ```
 
@@ -23,6 +25,7 @@ new subdirectories here, not as separate repos.
 | [refresher](refresher/) | Refresh chosen browser tabs on intervals you control |
 | [screener](screener/) | Capture, annotate, and submit screenshots as support tickets |
 | [qrmaker](qrmaker/) | Show a scannable QR code for the current tab's URL |
+| [picker](picker/) | Pick any on-screen color with the eyedropper; copy HEX/RGB/HSL and more |
 
 ## Working in an extension
 
@@ -42,6 +45,22 @@ npm run lint       # eslint
 2. Open `chrome://extensions`, enable **Developer mode**.
 3. **Load unpacked** → select the extension's directory.
 
+### Packaging for other browsers
+
+The source folders are the Chromium build as-is. `build.mjs` emits per-target
+folders under `dist/<target>/<ext>/`, applying manifest/permission/feature
+differences automatically:
+
+```bash
+node build.mjs                 # chrome (default), all extensions
+node build.mjs safari          # Safari (no offscreen/downloads)
+node build.mjs firefox         # Firefox (event-page background + gecko id)
+node build.mjs all             # every target
+node build.mjs firefox screener  # one target, one extension
+```
+
+`dist/` is git-ignored. See [SAFARI.md](SAFARI.md) for Safari/Firefox details.
+
 ## Conventions
 
 - **Manifest V3**, service-worker background, narrow permissions.
@@ -51,4 +70,7 @@ npm run lint       # eslint
 
 ## Requirements
 
-Node 18+ (for the built-in `node:test` runner) and a Chromium browser. Minimum Chrome version is per-extension (Refresher 110+, Screener 116+, QRmaker 110+).
+Node 18+ (for the built-in `node:test` runner) and a Chromium browser. Minimum
+Chrome version is per-extension (Refresher 110+, Screener 116+, QRmaker 110+,
+Picker 95+). Safari and Firefox 121+ are supported via `build.mjs` targets
+(see [SAFARI.md](SAFARI.md)).

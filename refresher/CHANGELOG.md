@@ -4,6 +4,15 @@ All notable changes to Refresher are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-05-25
+
+### Added
+- **Firefox support** — a `firefox` build target (`node build.mjs firefox
+  refresher`); the background is packaged as an event page (no service worker).
+
+### Changed
+- README, privacy policy, and store copy clarified for the opt-in Sync feature.
+
 ## [0.6.0] — 2026-05-25
 
 ### Added

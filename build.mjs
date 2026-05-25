@@ -3,6 +3,7 @@
 //
 //   node build.mjs                 # chrome (default), all extensions
 //   node build.mjs safari          # safari, all extensions
+//   node build.mjs firefox         # firefox, all extensions
 //   node build.mjs all             # every target, all extensions
 //   node build.mjs safari screener # one target, one extension
 //
@@ -32,6 +33,15 @@ const TARGETS = {
     features: { fullscreenCapture: false, nativeDownloads: false },
     dropPermissions: ["offscreen", "downloads"],
     dropFiles: ["offscreen.html", "offscreen.js"],
+  },
+  firefox: {
+    // Firefox MV3: no offscreen API (so no full-page capture), but chrome.downloads
+    // is supported. Background runs as an event page, not a service worker, and an
+    // add-on id is required — see transformManifest's gecko branch.
+    features: { fullscreenCapture: false, nativeDownloads: true },
+    dropPermissions: ["offscreen"],
+    dropFiles: ["offscreen.html", "offscreen.js"],
+    gecko: true,
   },
 };
 
@@ -67,12 +77,24 @@ function copyExt(srcDir, outDir) {
   }
 }
 
-function transformManifest(outDir, target) {
-  if (!target.dropPermissions.length) return;
+function transformManifest(outDir, target, ext) {
+  if (!target.dropPermissions.length && !target.gecko) return;
   const p = join(outDir, "manifest.json");
   const m = JSON.parse(readFileSync(p, "utf8"));
-  if (Array.isArray(m.permissions)) {
+  if (target.dropPermissions.length && Array.isArray(m.permissions)) {
     m.permissions = m.permissions.filter((x) => !target.dropPermissions.includes(x));
+  }
+  if (target.gecko) {
+    // Firefox MV3 runs the background as a non-persistent event page (no service
+    // worker), needs a stable add-on id, and ignores Chromium-only keys.
+    if (m.background?.service_worker) {
+      m.background = {
+        scripts: [m.background.service_worker],
+        ...(m.background.type ? { type: m.background.type } : {}),
+      };
+    }
+    m.browser_specific_settings = { gecko: { id: `${ext}@noeldiaz.dev`, strict_min_version: "121.0" } };
+    delete m.minimum_chrome_version;
   }
   writeFileSync(p, JSON.stringify(m, null, 2) + "\n");
 }
@@ -105,7 +127,7 @@ function build(targetName, only) {
     buildCss(srcDir, ext);
     rmSync(outDir, { recursive: true, force: true });
     copyExt(srcDir, outDir);
-    transformManifest(outDir, target);
+    transformManifest(outDir, target, ext);
     writeBuildConfig(srcDir, outDir, targetName, target);
     dropFiles(outDir, target);
   }

@@ -92,8 +92,8 @@ function wireToolbar() {
 }
 
 function isTyping(e) {
-  const t = e.target;
-  return t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT" || t.isContentEditable);
+  const el = e.target;
+  return el && (el.tagName === "TEXTAREA" || el.tagName === "INPUT" || el.isContentEditable);
 }
 
 function wireShortcuts() {
@@ -108,7 +108,7 @@ function wireShortcuts() {
     if (e.key === "+" || e.key === "=") return anno.zoomBy(1.25);
     if (e.key === "-") return anno.zoomBy(0.8);
     if (e.key === "0") return anno.fitToWindow();
-    const map = { v: "select", r: "rect", a: "arrow", p: "pen", t: "text" };
+    const map = { v: "select", r: "rect", a: "arrow", p: "pen", t: "text", c: "comment" };
     const name = map[e.key.toLowerCase()];
     if (name) activateTool(name);
   });
@@ -263,7 +263,7 @@ async function init() {
     }
     const m = current.meta || {};
     metaEl.textContent = m.pageTitle || m.pageUrl || "";
-    document.title = `Screener — ${m.pageTitle || "Editor"}`;
+    document.title = m.pageTitle ? `Screener — ${m.pageTitle}` : t("titleEditor");
 
     anno = new Annotator(stageEl);
     anno.onChange = (canUndo, canRedo) => {

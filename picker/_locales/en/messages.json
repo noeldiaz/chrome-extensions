@@ -7,7 +7,6 @@
   "themeToggle": { "message": "Toggle dark mode" },
   "settings": { "message": "Settings" },
   "titleOptions": { "message": "Picker — Settings" },
-  "h1Options": { "message": "Picker — Settings" },
   "close": { "message": "Close" },
   "optHexCase": { "message": "HEX letter case" },
   "optHexCaseHint": { "message": "How HEX values are shown and copied." },
@@ -34,7 +33,6 @@
   "swatchAria": { "message": "Picked color" },
   "recent": { "message": "Recent" },
   "recentClear": { "message": "Clear recent colors" },
-  "emptyHint": { "message": "Click “Pick a color”, then click anywhere on screen." },
   "noEyedropper": {
     "message": "This browser has no screen eyedropper — use the color box below instead."
   },
@@ -97,7 +95,6 @@
   "tabRecent": { "message": "Recent Colors" },
   "tabAbout": { "message": "About" },
   "version": { "message": "Version" },
-  "aboutRepo": { "message": "View on GitHub" },
 
   "optFormats": { "message": "Favorite formats" },
   "optFormatsHint": { "message": "Checked formats show under “Favorite Formats” in the popup; the rest live under “Other Formats”." },

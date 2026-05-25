@@ -43,8 +43,11 @@ FEATURES
 • Dark and light themes that follow your system preference.
 
 PRIVACY
-Refresher collects no data. Everything is stored locally in your browser and nothing
-is ever sent anywhere. No analytics, no tracking, no network requests.
+Refresher collects no data. By default everything is stored locally in your browser
+and the extension sends nothing anywhere. No analytics, no tracking, no network
+requests of its own. An optional "Sync across devices" toggle (off by default) lets
+the browser roam just your refresh defaults — interval and scroll preservation —
+through your own browser account; the data still never goes to the developer.
 ```
 
 ---
@@ -62,7 +65,7 @@ interval the user sets.
 
 | Permission | Justification |
 |------------|---------------|
-| `storage` | Saves the user's selected tabs, refresh intervals, per-tab statistics, and theme preference locally so they persist between browser sessions. |
+| `storage` | Saves the user's selected tabs, refresh intervals, per-tab statistics, and theme preference locally so they persist between browser sessions. Also covers the optional account-synced storage used when the user enables "Sync across devices," which roams only the refresh defaults (interval and scroll preservation) via `chrome.storage.sync`. |
 | `alarms` | Schedules the periodic reloads at the user-chosen interval. Chrome's periodic alarm minimum is 30 seconds. |
 | `tabs` | Reloads the specific tabs the user selected (by tab id) and reads their titles to show which tabs are being refreshed and keep that label current after the page navigates. |
 | `scripting` | Reads and restores the page's scroll position around a reload. Used only when the optional "Preserve scroll position" setting is enabled. |
@@ -71,9 +74,12 @@ interval the user sets.
 **Are you using remote code?** No — all code is bundled in the package.
 
 **Data usage** — declare that the extension does **not** collect or use any of the
-listed data types. Local-only `chrome.storage.local` is not off-device collection.
-Certify all three: not sold to third parties; not used or transferred for purposes
-unrelated to the single purpose; not used to determine creditworthiness / lending.
+listed data types. `chrome.storage.local` is not off-device collection; the
+optional `chrome.storage.sync` (used only if the user enables "Sync across
+devices") roams the refresh defaults through the user's own browser account, not
+to the developer, so it is likewise not developer collection. Certify all three:
+not sold to third parties; not used or transferred for purposes unrelated to the
+single purpose; not used to determine creditworthiness / lending.
 
 **Privacy policy URL**
 

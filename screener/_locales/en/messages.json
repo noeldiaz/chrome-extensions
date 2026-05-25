@@ -35,6 +35,12 @@
   "toolPenAria": { "message": "Pen" },
   "toolTextTitle": { "message": "Text (T)" },
   "toolTextAria": { "message": "Text" },
+  "toolCommentTitle": { "message": "Comment pin (C)" },
+  "toolCommentAria": { "message": "Numbered comment pin" },
+  "commentPlaceholder": { "message": "Add a comment…" },
+  "commentHint": { "message": "Enter to save · Esc to cancel" },
+  "commentDeletePin": { "message": "Delete pin" },
+  "commentsLegendTitle": { "message": "Comments" },
   "toolRedactTitle": { "message": "Redact — solid block" },
   "toolRedactAria": { "message": "Redact with a solid block" },
   "toolPixelateTitle": { "message": "Redact — pixelate" },
@@ -74,6 +80,7 @@
   "titleOptions": { "message": "Screener — Options" },
   "h1Options": { "message": "Screener — Options" },
   "optEndpointTitle": { "message": "Ticket endpoint" },
+  "optEndpointDesc": { "message": "Where the Submit ticket button sends a screenshot. Leave blank to use only Download and Copy." },
   "endpointLabel": { "message": "Ticket endpoint URL" },
   "endpointPlaceholder": { "message": "https://your-app.test/api/tickets" },
   "tokenLabel": { "message": "Bearer token" },
@@ -81,6 +88,7 @@
   "tokenPlaceholder": { "message": "Sent as Authorization: Bearer …" },
   "save": { "message": "Save" },
   "whatGetsSentTitle": { "message": "What gets sent" },
+  "whatGetsSentBody": { "message": "A multipart/form-data POST with: title, description, screenshot (PNG file), page_url, and meta (JSON). The bearer token, if set, goes in the Authorization header. The token is stored locally in this browser and never sent anywhere except your endpoint." },
   "optSync": { "message": "Sync across devices" },
   "optSyncHint": {
     "message": "Keep your ticket endpoint and token in sync across the devices where you’re signed in to this browser. Off by default."

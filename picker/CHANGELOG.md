@@ -4,6 +4,21 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-05-25
+
+### Added
+- **Firefox support** — a `firefox` build target (`node build.mjs firefox picker`)
+  produces a Firefox 121+ package; `EyeDropper` is unavailable there, so the
+  native color box takes over (as on Safari).
+
+### Changed
+- README rewritten to cover the full current feature set (Adjust, Harmonies,
+  Code, Color Vision, Gradient, APCA, Export, Sync).
+- Privacy policy clarified for the opt-in Sync feature.
+
+### Removed
+- Dead code: unused `GRADIENT_TYPES` export and a few orphaned message keys.
+
 ## [0.7.0] — 2026-05-25
 
 ### Added

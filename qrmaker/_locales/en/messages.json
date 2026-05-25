@@ -8,7 +8,6 @@
   "settings": { "message": "Settings" },
   "titleOptions": { "message": "QRmaker — Options" },
   "h1Options": { "message": "QRmaker — Options" },
-  "optionsBlank": { "message": "Nothing to configure yet — settings will live here." },
   "optSync": { "message": "Sync across devices" },
   "optSyncHint": {
     "message": "Keep your saved style presets in sync across the devices where you’re signed in to this browser. Off by default."

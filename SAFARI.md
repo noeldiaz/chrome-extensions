@@ -1,17 +1,21 @@
-# Safari builds
+# Safari & Firefox builds
 
 The extensions share one source tree. Per-target differences (manifest
 permissions, runtime feature flags, dropped files) are applied by `build.mjs`,
 which emits ready-to-package folders under `dist/<target>/<ext>/`.
 
 ```bash
-node build.mjs safari        # build all three for Safari → dist/safari/*
+node build.mjs safari            # all extensions for Safari → dist/safari/*
+node build.mjs firefox           # all extensions for Firefox → dist/firefox/*
 node build.mjs safari screener   # just one
-node build.mjs all           # every target (chrome + safari)
+node build.mjs all               # every target (chrome + safari + firefox)
 ```
 
 `dist/` is git-ignored — it's rebuildable output. Attach packaged builds to
 releases, don't commit them.
+
+Safari packaging/signing is the bulk of this doc; the [Firefox](#firefox) section
+at the end covers that target.
 
 ## Requirements
 
@@ -37,6 +41,10 @@ xcrun safari-web-extension-converter dist/safari/refresher \
 xcrun safari-web-extension-converter dist/safari/screener \
   --macos-only --app-name "Screener"  --bundle-identifier com.noeldiaz.Screener \
   --project-location dist/xcode/screener --no-open --force
+
+xcrun safari-web-extension-converter dist/safari/picker \
+  --macos-only --app-name "Picker"    --bundle-identifier com.noeldiaz.Picker \
+  --project-location dist/xcode/picker --no-open --force
 ```
 
 Each produces an Xcode project (a thin container app wrapping the web
@@ -136,6 +144,7 @@ xcrun stapler staple <App>.app          # then re-zip the stapled .app to distri
 | screener  | Full-screen capture removed (`offscreen` + `getDisplayMedia` unsupported); `chrome.downloads` → `<a download>` fallback. `offscreen`/`downloads` stripped from the manifest, `offscreen.{html,js}` dropped. Driven by `screener/build-config.js` → `FEATURES`. |
 | refresher | Badge color setters are no-ops if Safari lacks them (text still shows). No build-time change. |
 | qrmaker   | None — already uses `<a download>` and guards window resize. |
+| picker    | No `EyeDropper` (Chromium-only) — the screen-pick button is disabled and the native color box takes over. No build-time change. |
 
 ## Caveats to validate on real Safari
 
@@ -150,3 +159,52 @@ build:
   in Safari's settings. The commands still fire.
 - **refresher badge** — `setBadgeText` shows, but the blue background / white text
   may be ignored (Safari styles badges its own way).
+
+## Firefox
+
+Firefox 121+ supports MV3. The `firefox` target adapts the manifest automatically:
+
+```bash
+node build.mjs firefox           # all extensions → dist/firefox/*
+node build.mjs firefox picker    # just one
+```
+
+What `build.mjs` changes for Firefox (`transformManifest` gecko branch + `TARGETS.firefox`):
+
+- **Background** → event page. `background.service_worker` becomes
+  `background.scripts: ["background.js"]` (keeping `type: "module"`); Firefox MV3
+  has no service-worker background. picker has no background, so it's unaffected.
+- **Add-on id** — adds `browser_specific_settings.gecko.id` (`<ext>@noeldiaz.dev`,
+  `strict_min_version: "121.0"`). Required for installation and for `storage.sync`.
+- **`offscreen`** stripped (Firefox has no offscreen API), and `offscreen.{html,js}`
+  dropped — so screener's full-page capture is off, same as Safari. `chrome.downloads`
+  **is** supported in Firefox, so it stays (unlike Safari).
+- **`minimum_chrome_version`** removed (Chromium-only key).
+
+### Load temporarily
+
+1. `node build.mjs firefox <ext>`.
+2. `about:debugging#/runtime/this-firefox` → **Load Temporary Add-on…** → pick any
+   file in `dist/firefox/<ext>/` (e.g. `manifest.json`). Reloads on browser restart.
+
+### Package for signing (AMO)
+
+```bash
+cd dist/firefox/<ext> && zip -r -FS ../<ext>-firefox.zip . -x '*.DS_Store'
+# then submit the zip at addons.mozilla.org (or: web-ext sign --channel=unlisted)
+```
+
+### Per-extension notes (validate on real Firefox)
+
+| Extension | Firefox notes |
+|-----------|---------------|
+| picker    | `EyeDropper` is unsupported — native color-box fallback takes over (same as Safari). `storage.sync`, `scripting`, page-scan all supported. |
+| refresher | Badge text shows; `chrome.alarms`/`tabs` supported. Event-page background must re-register listeners at top level (already does). |
+| screener  | Full-page capture off (no offscreen); visible-tab capture + `downloads` work. |
+| qrmaker   | `<a download>` + `storage.sync` work; `chrome.storage.session` is supported in Firefox 115+. |
+
+> **Not yet load-tested on Firefox.** The build is structurally correct, but the
+> `chrome.*` promise calls and event-page background lifetime should be verified by
+> loading each temporary add-on. If any `chrome.*` async call doesn't resolve, add
+> [`webextension-polyfill`](https://github.com/mozilla/webextension-polyfill) and
+> switch to `browser.*`.

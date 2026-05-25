@@ -387,7 +387,6 @@ export function accessibleShade(rgb, bgRgb, threshold = 4.5) {
 // --- Gradient builder ------------------------------------------------------
 // CSS gradient from evenly spaced hex stops. `type` is "linear" | "radial" |
 // "conic" (angle is ignored for radial). Returns "" if <2 valid stops.
-export const GRADIENT_TYPES = ["linear", "radial", "conic"];
 export function gradientCss(stops, angle = 90, type = "linear") {
   const valid = (stops || []).map(normalizeHex).filter(Boolean);
   if (valid.length < 2) return "";

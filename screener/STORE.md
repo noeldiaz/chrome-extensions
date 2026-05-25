@@ -50,7 +50,10 @@ SEND
 PRIVACY
 Screener has no server of its own. Download and Copy are fully local. It only
 makes a network request when you click Submit, and only to the endpoint you
-configured. No analytics, no tracking, nothing sent to the developer.
+configured. No analytics, no tracking, nothing sent to the developer. An optional
+"Sync across devices" toggle (off by default) lets the browser roam just your
+endpoint URL and token through your own browser account; that sync is done by the
+browser, and the data still never reaches the developer.
 ```
 
 ---
@@ -74,7 +77,7 @@ submission to an endpoint the user configures.
 | `offscreen` | Full-screen capture uses `getDisplayMedia`, which requires a DOM document; the Manifest V3 service worker has none, so it runs in an offscreen document. |
 | `downloads` | Save the finished screenshot as a PNG file. |
 | `clipboardWrite` | Copy the finished screenshot to the system clipboard. |
-| `storage` | Store the user's ticket endpoint URL, bearer token, and theme preference locally. |
+| `storage` | Store the user's ticket endpoint URL, bearer token, and theme preference locally. Also covers the optional account-synced storage used when the user enables "Sync across devices," which roams the endpoint URL and bearer token via `chrome.storage.sync`. |
 | Host permissions (`http://*/*`, `https://*/*`, optional) | Send a submitted ticket to the user-configured endpoint. Declared optional and requested at runtime only when the user first submits, scoped to that endpoint's origin. Not requested at install. |
 
 **Are you using remote code?** No — all code, including the bundled Konva
@@ -83,10 +86,14 @@ library (`vendor/konva.min.js`), ships in the package.
 **Data usage** — Screener does not collect data for the developer. It transmits
 user-authored content (the screenshot and the title/description) **only** to the
 first-party endpoint the user configures, and **only** on the explicit Submit
-action. Disclose this honestly on the data form: the item handles/transfers
-"Website content" (screenshots may contain page content) at the user's direction
-to the user's own server. Certify: not sold to third parties; not used for
-purposes unrelated to the single purpose; not used for creditworthiness/lending.
+action. If the user enables the optional "Sync across devices," the endpoint URL
+and bearer token are roamed through the user's own browser account via
+`chrome.storage.sync` — done by the browser, not sent to the developer, so it is
+not developer collection. Disclose the Submit flow honestly on the data form: the
+item handles/transfers "Website content" (screenshots may contain page content)
+at the user's direction to the user's own server. Certify: not sold to third
+parties; not used for purposes unrelated to the single purpose; not used for
+creditworthiness/lending.
 
 **Privacy policy URL**
 

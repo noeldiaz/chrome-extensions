@@ -34,6 +34,10 @@ Manifest V3.
   gradient, sizes, logo, and frame) as a named preset, reapply it from a
   dropdown, and mark one as the **default** that loads automatically (and styles
   the popup's quick code too).
+- **Sync across devices** *(opt-in)* — turn on **Sync across devices** in
+  Settings to keep your saved style **presets** (and the default preset) in sync
+  on every device where you're signed in to this browser. Off by default; the
+  saved logo images and the page-scan handoff always stay local to each device.
 - **Right-click menus** — make a code for the **page**, a **link**, a **text
   selection**, or an **image address**; opens the editor prefilled.
 - **Decode / scan** — right-click any image → **Scan QR code from this image**,
@@ -66,7 +70,7 @@ device.
 | Permission | Why |
 |------------|-----|
 | `activeTab` | Read the current tab's URL when you open the popup. No install-time host access. |
-| `storage` | Remember your theme, design presets, and default preset. |
+| `storage` | Remember your theme, design presets, and default preset — kept locally, or in your browser's synced storage when you turn on **Sync across devices**. |
 | `clipboardWrite` | Copy the QR image to the clipboard. |
 | `contextMenus` | Add the right-click "Create QR code…" and "Scan…" entries. |
 | `scripting` | Inject the decoder into the current tab when you choose "Scan QR codes on this page" — paired with `activeTab`, so only that tab, only on your click. |
@@ -94,7 +98,7 @@ directory).
 ```bash
 npm run build:css && zip -r qrmaker.zip \
   manifest.json popup.html popup.js editor.html editor.js result.html result.js \
-  history.html history.js options.html options.js background.js scanpage.js lib.js idb.js theme.js icons.js i18n.js popup.css \
+  history.html history.js options.html options.js background.js scanpage.js lib.js idb.js sync.js theme.js icons.js i18n.js popup.css \
   _locales \
   vendor/qr-code-styling.js vendor/jsqr.js \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
@@ -126,8 +130,13 @@ include them.
   the `history` IndexedDB store) with re-encoded previews, re-open in editor,
   delete, and clear-all.
 - `options.html` / `options.js` — the options page (`options_ui`, opened by the
-  popup's gear via `chrome.runtime.openOptionsPage()`); a themed placeholder for
-  now.
+  popup's gear via `chrome.runtime.openOptionsPage()`): a **Settings** tab with
+  the opt-in **Sync across devices** toggle, and an **About** tab.
+- `sync.js` — the storage helper behind the sync toggle: `syncGet`/`syncSet`
+  target `chrome.storage.sync` when sync is on (else `chrome.storage.local`), and
+  toggling it migrates the synced keys (`presets`, `defaultPresetId`) between the
+  two areas. The opt-in flag, theme, page-scan handoff, and logo images stay
+  local.
 - `vendor/jsqr.js` — vendored [jsQR](https://github.com/cozmo/jsQR)
   (Apache-2.0) decoder, loaded via classic `<script>`.
 - `lib.js` — pure helpers (URL gating, display truncation, download filename,
@@ -151,6 +160,21 @@ include them.
 
 Vanilla JS (ES module). qr-code-styling is the only runtime dependency,
 vendored locally.
+
+## Safari / Firefox
+
+Build the non-Chrome targets from the repo root:
+
+```bash
+node build.mjs firefox qrmaker
+node build.mjs safari qrmaker
+```
+
+QRmaker needs no Chrome-only features stripped: downloads use a plain
+`<a download>` (works everywhere) and the scan window guards its `window`
+resize, so both targets run as-is. `chrome.storage.session` (the page-scan
+handoff) is supported on Firefox 115+. See [../SAFARI.md](../SAFARI.md) for the
+full cross-browser build and porting notes.
 
 ## License
 
