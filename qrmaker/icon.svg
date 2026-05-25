@@ -1,6 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 120 120">
-  <rect x="4" y="4" width="120" height="120" rx="24" fill="#1e88e5"/>
-  <!-- three QR finder patterns -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4aa3f2"/>
+      <stop offset="0.55" stop-color="#1e88e5"/>
+      <stop offset="1" stop-color="#135cb0"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="tileClip"><rect x="0" y="0" width="128" height="128" rx="26"/></clipPath>
+  </defs>
+
+  <!-- glossy blue tile -->
+  <rect x="0" y="0" width="128" height="128" rx="26" fill="url(#tile)"/>
+  <g clip-path="url(#tileClip)">
+    <rect x="0" y="0" width="128" height="62" fill="url(#sheen)"/>
+  </g>
+
+  <!-- QR: drop shadow then white, looks printed/raised -->
+  <g fill="#0c3c78" opacity="0.28" transform="translate(0,2)">
+    <path d="M18 18h32v32H18zM26 26v16h16V26z" fill-rule="evenodd"/>
+    <rect x="30" y="30" width="8" height="8"/>
+    <path d="M78 18h32v32H78zM86 26v16h16V26z" fill-rule="evenodd"/>
+    <rect x="90" y="30" width="8" height="8"/>
+    <path d="M18 78h32v32H18zM26 86v16h16V86z" fill-rule="evenodd"/>
+    <rect x="30" y="90" width="8" height="8"/>
+    <rect x="62" y="62" width="10" height="10"/>
+    <rect x="80" y="62" width="10" height="10"/>
+    <rect x="98" y="62" width="10" height="10"/>
+    <rect x="62" y="80" width="10" height="10"/>
+    <rect x="80" y="80" width="10" height="10"/>
+    <rect x="62" y="98" width="10" height="10"/>
+    <rect x="98" y="80" width="10" height="10"/>
+    <rect x="80" y="98" width="10" height="10"/>
+    <rect x="98" y="98" width="10" height="10"/>
+  </g>
   <g fill="#ffffff">
     <path d="M18 18h32v32H18zM26 26v16h16V26z" fill-rule="evenodd"/>
     <rect x="30" y="30" width="8" height="8"/>
@@ -8,7 +43,6 @@
     <rect x="90" y="30" width="8" height="8"/>
     <path d="M18 78h32v32H18zM26 86v16h16V86z" fill-rule="evenodd"/>
     <rect x="30" y="90" width="8" height="8"/>
-    <!-- scattered data modules -->
     <rect x="62" y="62" width="10" height="10"/>
     <rect x="80" y="62" width="10" height="10"/>
     <rect x="98" y="62" width="10" height="10"/>
