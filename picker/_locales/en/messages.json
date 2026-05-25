@@ -30,13 +30,18 @@
   "noEyedropper": {
     "message": "This browser has no screen eyedropper — use the colour box below instead."
   },
-  "copyHex": { "message": "Copy HEX" },
-  "copyRgb": { "message": "Copy RGB" },
-  "copyHsl": { "message": "Copy HSL" },
+  "copy": { "message": "Copy" },
+  "copySwatch": { "message": "Copy HEX" },
+  "copyTw": { "message": "Copy Tailwind colour name" },
+  "tailwindAria": { "message": "Nearest Tailwind colour" },
   "copied": { "message": "Copied!" },
   "pickCancelled": { "message": "Pick cancelled." },
   "errPick": {
     "message": "Couldn't pick a colour: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "errCopy": {
+    "message": "Couldn't copy: $error$",
     "placeholders": { "error": { "content": "$1" } }
   }
 }

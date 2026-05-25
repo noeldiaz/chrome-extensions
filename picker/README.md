@@ -7,9 +7,10 @@ one click.
 ## Features
 
 - **Screen eyedropper** — uses the native [`EyeDropper`](https://developer.mozilla.org/docs/Web/API/EyeDropper) API to sample any pixel on screen (Chromium 95+).
-- **Values** — the picked colour shows as a swatch plus HEX / RGB / HSL; click a row to copy.
+- **Values** — the picked colour shows as a swatch plus HEX / RGB / HSL / HSV; click a row (or the swatch) to copy, with an inline ✓ confirmation.
+- **Nearest Tailwind colour** — the closest colour in the installed Tailwind palette (e.g. `blue-600`), matched in OKLab; click to copy the name.
 - **Manual choice** — a native colour box as a fallback (and for browsers without the eyedropper, e.g. Safari/Firefox).
-- **Recent colours** — your last 12 picks are kept (local only); click one to reload it.
+- **Recent colours** — your last 12 picks are kept (local only); click one to reload it. The most recent is restored when you reopen the popup.
 - **Dark mode** — follows the OS, toggle to override; remembered per browser.
 - Keyboard shortcut **Alt+Shift+P** (rebindable at `chrome://extensions/shortcuts`).
 
@@ -36,7 +37,10 @@ load it.
 
 - `popup.html` / `popup.js` — the only UI surface. No background service worker.
 - `lib.js` — pure, DOM-free colour math (`normalizeHex`, `hexToRgb`, `rgbToHsl`,
-  formatters, `contrastText`); unit-tested headless with `node:test`.
+  `rgbToHsv`, `rgbToOklab`, `nearestTailwind`, formatters, `contrastText`);
+  unit-tested headless with `node:test`.
+- `palette.js` — generated Tailwind colour table (name + hex + OKLab) read by
+  `nearestTailwind`. Regenerate if Tailwind is upgraded (script noted in commit history).
 - `theme.js` / `i18n.js` — shared theme + localisation helpers (workspace convention).
 
 ## Safari

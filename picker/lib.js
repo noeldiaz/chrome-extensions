@@ -53,12 +53,74 @@ export function rgbToHsl({ r, g, b }) {
   return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 
+// {r,g,b} 0-255 -> {h,s,v} with h 0-360, s/v 0-100 (rounded ints).
+export function rgbToHsv({ r, g, b }) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h: Math.round(h), s: Math.round((max === 0 ? 0 : d / max) * 100), v: Math.round(max * 100) };
+}
+
 export const formatHex = (input) => {
   const s = normalizeHex(input);
   return s ? s.toUpperCase() : null;
 };
 export const formatRgb = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 export const formatHsl = ({ h, s, l }) => `hsl(${h}, ${s}%, ${l}%)`;
+export const formatHsv = ({ h, s, v }) => `hsv(${h}, ${s}%, ${v}%)`;
+
+// sRGB {r,g,b} 0-255 -> OKLab {L,a,b}. Perceptually uniform, so Euclidean
+// distance here is a good "closest colour" metric (Björn Ottosson's OKLab).
+export function rgbToOklab({ r, g, b }) {
+  const lin = (c) => {
+    c /= 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const R = lin(r);
+  const G = lin(g);
+  const B = lin(b);
+  const l = 0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B;
+  const m = 0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B;
+  const s = 0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B;
+  const l_ = Math.cbrt(l);
+  const m_ = Math.cbrt(m);
+  const s_ = Math.cbrt(s);
+  return {
+    L: 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_,
+    a: 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_,
+    b: 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_,
+  };
+}
+
+// Closest Tailwind colour to {r,g,b}, by OKLab distance.
+// `palette` = [{ name, hex, L, a, b }] (see palette.js). Returns { name, hex, dist }.
+export function nearestTailwind(rgb, palette) {
+  const q = rgbToOklab(rgb);
+  let best = null;
+  let bd = Infinity;
+  for (const c of palette) {
+    const dl = q.L - c.L;
+    const da = q.a - c.a;
+    const db = q.b - c.b;
+    const d = dl * dl + da * da + db * db;
+    if (d < bd) {
+      bd = d;
+      best = c;
+    }
+  }
+  return best && { name: best.name, hex: best.hex, dist: Math.sqrt(bd) };
+}
 
 // Pick black or white text for legibility on a colour, via WCAG relative
 // luminance. Returns "#000000" or "#ffffff".

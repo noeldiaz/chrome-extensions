@@ -8,7 +8,8 @@
     "build:css": "tailwindcss -i src/styles.css -o popup.css --minify",
     "watch:css": "tailwindcss -i src/styles.css -o popup.css --watch",
     "lint": "eslint .",
-    "test": "node --test"
+    "test": "node --test",
+    "gen:palette": "node scripts/gen-palette.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

@@ -1,17 +1,22 @@
 // Picker popup: pick a colour from anywhere on screen with the native EyeDropper
-// API, show it as a swatch + HEX/RGB/HSL, and copy any value in one click. A
-// native <input type="color"> is the fallback where EyeDropper is unsupported
-// (Firefox, Safari). Recent picks persist in chrome.storage.local.
+// API, show it as a swatch + HEX/RGB/HSL/HSV + the nearest Tailwind colour, and
+// copy any value in one click. A native <input type="color"> is the fallback
+// where EyeDropper is unsupported (Firefox, Safari). Recent picks persist in
+// chrome.storage.local and the last pick is restored when the popup reopens.
 import { initTheme } from "./theme.js";
 import { localize, t } from "./i18n.js";
 import {
   normalizeHex,
   hexToRgb,
   rgbToHsl,
+  rgbToHsv,
   formatRgb,
   formatHsl,
+  formatHsv,
   contrastText,
+  nearestTailwind,
 } from "./lib.js";
+import { TAILWIND_COLORS } from "./palette.js";
 
 const MAX_RECENT = 12;
 
@@ -25,9 +30,7 @@ const els = {
   noEd: document.getElementById("noEd"),
   result: document.getElementById("result"),
   swatch: document.getElementById("swatch"),
-  hex: document.getElementById("hex"),
-  rgb: document.getElementById("rgb"),
-  hsl: document.getElementById("hsl"),
+  values: document.getElementById("values"),
   hint: document.getElementById("hint"),
   native: document.getElementById("native"),
   recentWrap: document.getElementById("recentWrap"),
@@ -36,10 +39,27 @@ const els = {
   status: document.getElementById("status"),
 };
 
-// The three copy rows -> which formatted string they yield from the current pick.
-const FORMATS = { copyHex: "hex", copyRgb: "rgb", copyHsl: "hsl" };
-let current = null; // { hex, rgb:"…", hsl:"…" }
+// Value rows, in display order. `key` indexes into `current`; `chip` rows show a
+// small colour swatch (used for the nearest-Tailwind row).
+const ROWS = [
+  { key: "hex", label: "HEX" },
+  { key: "rgb", label: "RGB" },
+  { key: "hsl", label: "HSL" },
+  { key: "hsv", label: "HSV" },
+  { key: "tw", label: "TW", chip: true },
+];
+const rowEls = {};
+let current = null; // { hex, rgb, hsl, hsv, tw } — all formatted strings
 let statusTimer = null;
+
+const COPY_ICO = `<svg class="copy-ico h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m0 0H6.75m0 0v3.75" /></svg>`;
+const CHECK_ICO = `<svg class="check-ico hidden h-4 w-4 shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
+
+const svgEl = (markup) => {
+  const tpl = document.createElement("template");
+  tpl.innerHTML = markup.trim();
+  return tpl.content.firstElementChild;
+};
 
 function flash(msg) {
   els.status.textContent = msg;
@@ -48,20 +68,90 @@ function flash(msg) {
   statusTimer = setTimeout(() => els.status.classList.add("hidden"), 1600);
 }
 
+async function copy(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    flash(t("copied"));
+  } catch (e) {
+    flash(t("errCopy", String(e?.message || e)));
+  }
+}
+
+// Briefly swap a row's copy icon for a green check, at the point of action.
+function markCopied(copyIco, checkIco) {
+  copyIco.classList.add("hidden");
+  checkIco.classList.remove("hidden");
+  clearTimeout(checkIco._t);
+  checkIco._t = setTimeout(() => {
+    copyIco.classList.remove("hidden");
+    checkIco.classList.add("hidden");
+  }, 1200);
+}
+
+function buildRows() {
+  for (const { key, label, chip } of ROWS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "val-row";
+
+    const lab = document.createElement("span");
+    lab.className = "val-label";
+    lab.textContent = label;
+
+    const val = document.createElement("span");
+    val.className = "val-text";
+    let chipEl = null;
+    let nameEl = val;
+    if (chip) {
+      val.classList.add("flex", "items-center", "gap-2");
+      chipEl = document.createElement("span");
+      chipEl.className = "h-3.5 w-3.5 shrink-0 rounded-sm border border-black/10 dark:border-white/20";
+      nameEl = document.createElement("span");
+      nameEl.className = "truncate";
+      val.append(chipEl, nameEl);
+    }
+
+    const copyIco = svgEl(COPY_ICO);
+    const checkIco = svgEl(CHECK_ICO);
+    btn.append(lab, val, copyIco, checkIco);
+
+    btn.title = key === "tw" ? t("copyTw") : `${t("copy")} ${label}`;
+    btn.setAttribute("aria-label", key === "tw" ? t("tailwindAria") : `${t("copy")} ${label}`);
+    btn.addEventListener("click", () => {
+      if (!current) return;
+      copy(current[key]);
+      markCopied(copyIco, checkIco);
+    });
+
+    els.values.appendChild(btn);
+    rowEls[key] = { nameEl, chipEl };
+  }
+}
+
 // Render a hex into the swatch + value rows. Returns false for invalid input.
 function show(hexInput) {
   const hex = normalizeHex(hexInput);
   if (!hex) return false;
   const rgb = hexToRgb(hex);
-  const hsl = rgbToHsl(rgb);
-  current = { hex: fmtHex(hex), rgb: formatRgb(rgb), hsl: formatHsl(hsl) };
+  const tw = nearestTailwind(rgb, TAILWIND_COLORS);
+  current = {
+    hex: fmtHex(hex),
+    rgb: formatRgb(rgb),
+    hsl: formatHsl(rgbToHsl(rgb)),
+    hsv: formatHsv(rgbToHsv(rgb)),
+    tw: tw.name,
+  };
 
   els.swatch.style.background = hex;
   els.swatch.style.color = contrastText(rgb);
   els.swatch.textContent = current.hex;
-  els.hex.textContent = current.hex;
-  els.rgb.textContent = current.rgb;
-  els.hsl.textContent = current.hsl;
+
+  rowEls.hex.nameEl.textContent = current.hex;
+  rowEls.rgb.nameEl.textContent = current.rgb;
+  rowEls.hsl.nameEl.textContent = current.hsl;
+  rowEls.hsv.nameEl.textContent = current.hsv;
+  rowEls.tw.nameEl.textContent = tw.name;
+  rowEls.tw.chipEl.style.background = tw.hex;
 
   els.result.classList.remove("hidden");
   els.hint.classList.add("hidden");
@@ -69,24 +159,16 @@ function show(hexInput) {
   return true;
 }
 
-async function copy(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    flash(t("copied"));
-  } catch (e) {
-    flash(t("errPick", String(e?.message || e)));
-  }
-}
-
 // --- recent picks (storage.local: { recent: ["#rrggbb", …] }) ---
 
-async function loadRecent() {
+async function loadState() {
   const { recent = [], hexUpper: hu = true } = await chrome.storage.local.get({
     recent: [],
     hexUpper: true,
   });
   hexUpper = hu;
   renderRecent(recent);
+  if (recent.length) show(recent[0]); // restore the last pick on open
 }
 
 function renderRecent(list) {
@@ -142,6 +224,7 @@ function init() {
     moon: document.getElementById("moon-icon"),
     sun: document.getElementById("sun-icon"),
   });
+  buildRows();
 
   if ("EyeDropper" in window) {
     els.pick.addEventListener("click", pick);
@@ -150,6 +233,7 @@ function init() {
     els.noEd.classList.remove("hidden");
   }
 
+  els.swatch.addEventListener("click", () => current && copy(current.hex));
   els.native.addEventListener("input", () => show(els.native.value)); // live preview
   els.native.addEventListener("change", () => record(els.native.value)); // commit to recent
 
@@ -157,18 +241,12 @@ function init() {
     .getElementById("settings")
     .addEventListener("click", () => chrome.runtime.openOptionsPage());
 
-  for (const [id, key] of Object.entries(FORMATS)) {
-    document.getElementById(id).addEventListener("click", () => {
-      if (current) copy(current[key]);
-    });
-  }
-
   els.clearRecent.addEventListener("click", async () => {
     await chrome.storage.local.set({ recent: [] });
     renderRecent([]);
   });
 
-  loadRecent();
+  loadState();
 }
 
 init();

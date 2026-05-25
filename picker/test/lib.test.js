@@ -6,11 +6,15 @@ import {
   hexToRgb,
   rgbToHex,
   rgbToHsl,
+  rgbToHsv,
   formatHex,
   formatRgb,
   formatHsl,
+  formatHsv,
   contrastText,
+  nearestTailwind,
 } from "../lib.js";
+import { TAILWIND_COLORS } from "../palette.js";
 
 test("clamp bounds a value", () => {
   assert.equal(clamp(5, 0, 10), 5);
@@ -60,6 +64,29 @@ test("formatters render the standard strings", () => {
   assert.equal(formatHex("nope"), null);
   assert.equal(formatRgb({ r: 30, g: 136, b: 229 }), "rgb(30, 136, 229)");
   assert.equal(formatHsl({ h: 207, s: 79, l: 51 }), "hsl(207, 79%, 51%)");
+});
+
+test("rgbToHsv matches known colours", () => {
+  assert.deepEqual(rgbToHsv({ r: 0, g: 0, b: 0 }), { h: 0, s: 0, v: 0 });
+  assert.deepEqual(rgbToHsv({ r: 255, g: 255, b: 255 }), { h: 0, s: 0, v: 100 });
+  assert.deepEqual(rgbToHsv({ r: 255, g: 0, b: 0 }), { h: 0, s: 100, v: 100 });
+  assert.deepEqual(rgbToHsv({ r: 0, g: 128, b: 0 }), { h: 120, s: 100, v: 50 });
+});
+
+test("formatHsv renders the standard string", () => {
+  assert.equal(formatHsv({ h: 210, s: 50, v: 80 }), "hsv(210, 50%, 80%)");
+});
+
+test("nearestTailwind matches exact palette hexes to their name", () => {
+  // every palette colour should resolve to itself (dist 0)
+  for (const c of TAILWIND_COLORS.slice(0, 40)) {
+    const got = nearestTailwind(hexToRgb(c.hex), TAILWIND_COLORS);
+    assert.ok(got.dist < 1e-3, `${c.name} -> ${got.name} (dist ${got.dist})`);
+  }
+  // pure colours land on a sensible Tailwind name
+  assert.equal(nearestTailwind({ r: 255, g: 255, b: 255 }, TAILWIND_COLORS).name, "white");
+  assert.equal(nearestTailwind({ r: 0, g: 0, b: 0 }, TAILWIND_COLORS).name, "black");
+  assert.match(nearestTailwind({ r: 21, g: 93, b: 252 }, TAILWIND_COLORS).name, /^blue-/);
 });
 
 test("contrastText picks legible foreground", () => {
