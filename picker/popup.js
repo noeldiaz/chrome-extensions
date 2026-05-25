@@ -404,7 +404,7 @@ function recentSwatch(hex) {
   return wrap;
 }
 
-const RECENT_SHOWN = 7;
+const RECENT_SHOWN = 6;
 function renderRecent(list) {
   els.recentWrap.classList.toggle("hidden", !list.length);
   const overflow = list.length > RECENT_SHOWN;
@@ -413,11 +413,15 @@ function renderRecent(list) {
     // "More" → open Settings on the Recent Colors tab (flag read by options.js)
     const more = document.createElement("button");
     more.type = "button";
-    more.textContent = t("recentMore");
     more.title = t("recentMoreTitle");
     more.setAttribute("aria-label", t("recentMoreTitle"));
     more.className =
-      "ml-auto inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-slate-300 px-2 text-[10px] font-semibold text-slate-500 transition hover:border-blue-400 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600 dark:text-slate-400 dark:hover:text-slate-200";
+      "ml-auto inline-flex h-7 shrink-0 items-center justify-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 text-[10px] font-semibold text-blue-600 transition hover:border-blue-300 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900";
+    more.innerHTML =
+      '<svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>';
+    const moreLabel = document.createElement("span");
+    moreLabel.textContent = t("recentMore");
+    more.appendChild(moreLabel);
     more.addEventListener("click", async () => {
       await chrome.storage.local.set({ optionsTab: "recent" });
       chrome.runtime.openOptionsPage();

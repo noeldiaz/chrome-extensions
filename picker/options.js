@@ -47,7 +47,7 @@ function recentChip(hex) {
   del.type = "button";
   del.title = t("recentRemove");
   del.setAttribute("aria-label", `${t("recentRemove")} ${label}`);
-  del.className = "ml-1 rounded p-0.5 text-slate-400 transition hover:text-red-500 focus:outline-none";
+  del.className = "ml-auto rounded p-0.5 text-slate-400 transition hover:text-red-500 focus:outline-none";
   del.innerHTML =
     '<svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
   del.addEventListener("click", () => removeRecentColor(hex));
