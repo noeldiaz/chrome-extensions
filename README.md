@@ -55,13 +55,14 @@ differences automatically:
 
 ```bash
 node build.mjs                 # chrome (default), all extensions
+node build.mjs edge            # Edge (Chromium — identical to Chrome)
 node build.mjs safari          # Safari (no offscreen/downloads)
 node build.mjs firefox         # Firefox (event-page background + gecko id)
-node build.mjs all             # every target
+node build.mjs all             # every target (chrome + edge + safari + firefox)
 node build.mjs firefox screener  # one target, one extension
 ```
 
-`dist/` is git-ignored. See [SAFARI.md](SAFARI.md) for Safari/Firefox details.
+`dist/` is git-ignored. See [SAFARI.md](SAFARI.md) for Safari, Firefox, and Edge details.
 
 ## Conventions
 
@@ -74,5 +75,6 @@ node build.mjs firefox screener  # one target, one extension
 
 Node 18+ (for the built-in `node:test` runner) and a Chromium browser. Minimum
 Chrome version is per-extension (Refresher 110+, Screener 116+, QRmaker 110+,
-Picker 95+). Safari and Firefox 121+ are supported via `build.mjs` targets
-(see [SAFARI.md](SAFARI.md)).
+Picker 95+, Blocker 110+). Microsoft Edge (Chromium) runs the same build as
+Chrome. Safari and Firefox 121+ are supported via `build.mjs` targets (see
+[SAFARI.md](SAFARI.md)).

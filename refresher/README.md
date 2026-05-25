@@ -61,16 +61,18 @@ Excludes source/tooling (`src/`, `node_modules/`, `eslint.config.js`, `test/`, `
 
 Built with vanilla JS (ES modules) and Tailwind v4. No runtime dependencies.
 
-## Safari & Firefox
+## Edge, Safari & Firefox
 
 A shared `build.mjs` at the repo root emits per-target builds under `dist/<target>/`:
 
 ```bash
+node ../build.mjs edge refresher      # → dist/edge/refresher
 node ../build.mjs safari refresher    # → dist/safari/refresher
 node ../build.mjs firefox refresher   # → dist/firefox/refresher
 ```
 
 See [`../SAFARI.md`](../SAFARI.md) for the full packaging/signing flow. Refresher-specific notes:
 
+- **Edge** — Chromium-based, so it runs the Chrome build unchanged (same MV3 service worker, same APIs); `node ../build.mjs edge refresher` just emits a clean copy for the Edge Add-ons store.
 - **Safari** — the countdown badge **text** shows, but the badge **colors** (blue background / white text) may be ignored; Safari styles badges its own way. The color setters are guarded so the text still appears. No build-time change.
 - **Firefox** — the background becomes an event page (the build converts `service_worker` → `background.scripts`, keeping `type: module`), so all background listeners must be registered at the top level. They are: `runtime.onMessage`, `alarms.onAlarm`, `tabs.onRemoved`, `tabs.onUpdated`, and `runtime.onStartup`/`onInstalled` are all top-level in `background.js`.

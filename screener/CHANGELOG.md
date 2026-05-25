@@ -4,6 +4,13 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] — 2026-05-25
+
+### Fixed
+- Options → Tickets "What gets sent": restored the inline `code` styling on the
+  field/format names (`multipart/form-data`, `title`, `screenshot`, etc.) that
+  was lost when the paragraph was localized, while keeping the prose translatable.
+
 ## [0.4.0] — 2026-05-25
 
 ### Added

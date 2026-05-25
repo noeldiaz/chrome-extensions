@@ -92,12 +92,13 @@ Excludes source/tooling/docs (`src/`, `node_modules/`, `test/`,
 `eslint.config.js`, `icon.svg`, `icons/icon512.png`, `*.md`, `package*.json`).
 `vendor/konva.min.js` **is** required at runtime — include it.
 
-## Safari & Firefox
+## Edge, Safari & Firefox
 
 A shared `build.mjs` at the repo root emits per-target builds under
 `dist/<target>/`:
 
 ```bash
+node ../build.mjs edge screener      # → dist/edge/screener
 node ../build.mjs firefox screener   # → dist/firefox/screener
 node ../build.mjs safari screener    # → dist/safari/screener
 ```
@@ -105,6 +106,10 @@ node ../build.mjs safari screener    # → dist/safari/screener
 See [`../SAFARI.md`](../SAFARI.md) for the full cross-browser build, packaging,
 and signing flow. Screener-specific notes:
 
+- **Edge** is Chromium, so it ships the identical manifest and full feature set
+  as Chrome — `offscreen` full-screen capture and `chrome.downloads` both work.
+  The separate target only produces a clearly-labelled package for the Edge
+  Add-ons store.
 - On **both** Safari and Firefox the **Full screen** (offscreen `getDisplayMedia`)
   capture is turned off (`build.mjs` clears `fullscreenCapture`), so the popup
   hides that mode. Visible-area, selection, and full-page (scroll-and-stitch)

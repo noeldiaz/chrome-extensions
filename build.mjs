@@ -27,6 +27,14 @@ const TARGETS = {
     dropPermissions: [],
     dropFiles: [],
   },
+  edge: {
+    // Edge is Chromium — identical manifest, permissions, and features to Chrome
+    // (offscreen, downloads, EyeDropper all supported). Separate target only so
+    // there's a clearly-labelled package to submit to the Edge Add-ons store.
+    features: { fullscreenCapture: true, nativeDownloads: true },
+    dropPermissions: [],
+    dropFiles: [],
+  },
   safari: {
     // No offscreen document and no getDisplayMedia in the extension context, so
     // screen capture is off; chrome.downloads is unsupported, fall back to <a>.

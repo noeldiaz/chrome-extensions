@@ -1,21 +1,22 @@
-# Safari & Firefox builds
+# Safari, Firefox & Edge builds
 
 The extensions share one source tree. Per-target differences (manifest
 permissions, runtime feature flags, dropped files) are applied by `build.mjs`,
 which emits ready-to-package folders under `dist/<target>/<ext>/`.
 
 ```bash
+node build.mjs edge              # all extensions for Edge → dist/edge/* (Chromium)
 node build.mjs safari            # all extensions for Safari → dist/safari/*
 node build.mjs firefox           # all extensions for Firefox → dist/firefox/*
 node build.mjs safari screener   # just one
-node build.mjs all               # every target (chrome + safari + firefox)
+node build.mjs all               # every target (chrome + edge + safari + firefox)
 ```
 
 `dist/` is git-ignored — it's rebuildable output. Attach packaged builds to
 releases, don't commit them.
 
-Safari packaging/signing is the bulk of this doc; the [Firefox](#firefox) section
-at the end covers that target.
+Safari packaging/signing is the bulk of this doc; the [Firefox](#firefox) and
+[Edge](#edge) sections at the end cover those targets.
 
 ## Requirements
 
@@ -216,3 +217,33 @@ cd dist/firefox/<ext> && zip -r -FS ../<ext>-firefox.zip . -x '*.DS_Store'
 > loading each temporary add-on. If any `chrome.*` async call doesn't resolve, add
 > [`webextension-polyfill`](https://github.com/mozilla/webextension-polyfill) and
 > switch to `browser.*`.
+
+## Edge
+
+Microsoft Edge is Chromium, so the Chrome build runs unchanged — same manifest,
+permissions, and APIs (`offscreen`, `downloads`, `EyeDropper`, service-worker
+background all supported). The `edge` target exists only to emit a separate,
+clearly-labelled package for the Edge Add-ons store; it applies no manifest or
+feature differences.
+
+```bash
+node build.mjs edge              # all extensions → dist/edge/*
+node build.mjs edge picker       # just one
+```
+
+### Load unpacked / package
+
+- **Load unpacked:** `edge://extensions` → enable **Developer mode** → **Load
+  unpacked** → pick `dist/edge/<ext>/` (or just load the extension's source dir —
+  it's identical).
+- **Package:** zip the contents of `dist/edge/<ext>/` and submit at the
+  [Microsoft Partner Center](https://partner.microsoft.com/dashboard/microsoftedge)
+  (Edge Add-ons). One-time $0 registration; no per-listing fee.
+
+### Notes (validate on real Edge)
+
+- Edge enforces the same MV3 rules as Chrome; nothing is gated off.
+- Edge syncs `chrome.storage.sync` through the user's Microsoft account, so the
+  opt-in **Sync** toggle works the same way.
+- `minimum_chrome_version` is honored (Edge reports a Chromium version); no Edge
+  -specific key is needed.

@@ -63,12 +63,17 @@ load it.
 
 ## Other browsers
 
-Picker also builds for Safari and Firefox from the repo root:
+Picker also builds for Edge, Safari, and Firefox from the repo root:
 
 ```bash
+node build.mjs edge picker       # → dist/edge/picker
 node build.mjs safari picker     # → dist/safari/picker
 node build.mjs firefox picker    # → dist/firefox/picker
 ```
+
+**Edge** is Chromium, so it runs the Chrome build unchanged — same manifest and
+permissions, and `EyeDropper` is fully supported. The `edge` target exists only
+to produce a clearly-labelled package for the Edge Add-ons store.
 
 On **both** Safari and Firefox the `EyeDropper` API is unavailable, so the
 screen-pick button is disabled and the native color box takes over. Everything

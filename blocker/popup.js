@@ -28,6 +28,9 @@ const TOGGLE_OFF = ["bg-blue-600", "text-white", "hover:bg-blue-700", "focus:rin
 const TOGGLE_ON = ["bg-red-600", "text-white", "hover:bg-red-700", "focus:ring-red-400"];
 
 let currentBase = null; // base domain of the active tab, or null (non-http page)
+let blockingNow = false; // last-rendered blocking state; lets the toggle branch
+//                          synchronously so permissions.request stays the first
+//                          await inside the click gesture (Chrome requires it).
 
 // --- theme (Blocker has no shared theme module, so it's inlined like the popup) ---
 
@@ -76,6 +79,7 @@ async function getAllowed() {
 // --- render ---
 
 function renderControl(blocking, allowed) {
+  blockingNow = blocking;
   statusBannerEl.className =
     "mt-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium " + (blocking ? ON_BANNER : OFF_BANNER);
   statusDotEl.className = "h-2.5 w-2.5 shrink-0 rounded-full " + (blocking ? "bg-red-500" : "bg-slate-400");
@@ -147,9 +151,10 @@ async function stopBlocking() {
   await render();
 }
 
-async function toggleBlocking() {
-  if (await getBlocking()) await stopBlocking();
-  else await startBlocking();
+function toggleBlocking() {
+  // Branch on the last-rendered state (no await first) so that, when starting,
+  // chrome.permissions.request is the first await under the user gesture.
+  return blockingNow ? stopBlocking() : startBlocking();
 }
 
 async function allowThisSite() {

@@ -86,14 +86,19 @@ Built with vanilla JS (ES modules) and Tailwind v4. No runtime dependencies.
 > A few uncommon registrar suffixes may reduce to a two-label domain; add the
 > exact host manually if needed.
 
-## Safari & Firefox
+## Edge, Safari & Firefox
 
 A shared `build.mjs` at the repo root emits per-target builds under `dist/<target>/`:
 
 ```bash
+node ../build.mjs edge blocker      # → dist/edge/blocker
 node ../build.mjs safari blocker    # → dist/safari/blocker
 node ../build.mjs firefox blocker   # → dist/firefox/blocker
 ```
+
+- **Edge** — Edge is Chromium, so it runs the Chrome build unchanged; the `edge`
+  target is just a labelled copy of the Chrome output (`node ../build.mjs edge blocker`).
+  Load it from `edge://extensions` the same way.
 
 See [`../SAFARI.md`](../SAFARI.md) for the full packaging/signing flow. Blocker-specific notes:
 

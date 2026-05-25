@@ -34,6 +34,9 @@ test("hostFromUrl returns lowercased host for http(s) only", () => {
   assert.equal(hostFromUrl("http://sub.Example.com:8080/x"), "sub.example.com");
   assert.equal(hostFromUrl("chrome://extensions"), null);
   assert.equal(hostFromUrl("not a url"), null);
+  // parseable URL but a non-web scheme is rejected (protocol guard)
+  assert.equal(hostFromUrl("ftp://files.example.com/x"), null);
+  assert.equal(hostFromUrl(""), null);
 });
 
 test("baseDomain reduces to the registrable domain", () => {
@@ -54,6 +57,13 @@ test("baseDomain passes through IPs and localhost", () => {
   assert.equal(baseDomain("127.0.0.1"), "127.0.0.1");
   assert.equal(baseDomain("localhost"), "localhost");
   assert.equal(baseDomain("::1"), "::1");
+});
+
+test("baseDomain returns null for empty/falsy input", () => {
+  assert.equal(baseDomain(""), null);
+  assert.equal(baseDomain(null), null);
+  assert.equal(baseDomain(undefined), null);
+  assert.equal(baseDomain("."), null); // trailing-dot strip leaves nothing
 });
 
 test("normalizeDomain accepts URLs, hosts, and bare domains", () => {

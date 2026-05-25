@@ -4,6 +4,19 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.1] — 2026-05-25
+
+### Changed
+- Broadened the extension description (manifest + About card) to reflect the full
+  toolkit — format conversion, nearest-Tailwind match, shades, harmonies,
+  contrast, and gradients — rather than just HEX/RGB/HSL.
+
+### Added
+- `STORE.md` — Chrome Web Store listing copy, single-purpose statement, and
+  permission justifications (`storage`, `activeTab`, `scripting`).
+- README note that the Chromium `edge` build target runs the Chrome build
+  unchanged, with `EyeDropper` supported (`node build.mjs edge picker`).
+
 ## [0.8.0] — 2026-05-25
 
 ### Added

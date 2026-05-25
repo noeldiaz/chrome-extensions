@@ -6,17 +6,12 @@ const from = new URLSearchParams(location.search).get("from") || "";
 const host = hostFromUrl(from);
 const base = host ? baseDomain(host) : null;
 
-const moonIconEl = document.getElementById("moon-icon");
-const sunIconEl = document.getElementById("sun-icon");
-
 // --- theme (no toggle on this page; just honor the saved/OS preference) ---
 const osThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
 async function loadTheme() {
   const { theme } = await chrome.storage.local.get({ theme: null });
   const isDark = theme === "dark" || (theme == null && osThemeMedia.matches);
   document.documentElement.classList.toggle("dark", isDark);
-  moonIconEl?.classList.toggle("hidden", isDark);
-  sunIconEl?.classList.toggle("hidden", !isDark);
   document.body.classList.remove("invisible");
 }
 

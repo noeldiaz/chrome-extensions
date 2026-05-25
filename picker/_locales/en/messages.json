@@ -1,7 +1,7 @@
 {
   "appName": { "message": "Picker" },
   "appDesc": {
-    "message": "Pick any color on screen with the eyedropper and copy its HEX, RGB, or HSL value in one click."
+    "message": "Eyedropper color picker: copy HEX/RGB/HSL/OKLCH and the nearest Tailwind color, with shades, harmonies, contrast, and gradients."
   },
 
   "themeToggle": { "message": "Toggle dark mode" },

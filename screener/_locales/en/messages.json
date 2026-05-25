@@ -88,7 +88,12 @@
   "tokenPlaceholder": { "message": "Sent as Authorization: Bearer …" },
   "save": { "message": "Save" },
   "whatGetsSentTitle": { "message": "What gets sent" },
-  "whatGetsSentBody": { "message": "A multipart/form-data POST with: title, description, screenshot (PNG file), page_url, and meta (JSON). The bearer token, if set, goes in the Authorization header. The token is stored locally in this browser and never sent anywhere except your endpoint." },
+  "whatGetsSentIntro": { "message": "A" },
+  "whatGetsSentFields": { "message": "POST with:" },
+  "whatGetsSentPng": { "message": "(PNG file)," },
+  "whatGetsSentAnd": { "message": "and" },
+  "whatGetsSentMeta": { "message": "(JSON). The bearer token, if set, goes in the" },
+  "whatGetsSentToken": { "message": "header. The token is stored locally in this browser and never sent anywhere except your endpoint." },
   "optSync": { "message": "Sync across devices" },
   "optSyncHint": {
     "message": "Keep your ticket endpoint and token in sync across the devices where you’re signed in to this browser. Off by default."

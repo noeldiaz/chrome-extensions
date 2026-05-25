@@ -84,8 +84,9 @@ scan a cross-origin image (to fetch that one image), after you grant access. See
 
 ```bash
 npm install
-npm run vendor:qr   # copy qr-code-styling's UMD dist into vendor/ (after updating it)
-npm run watch:css   # recompile popup.css on change
+npm run vendor:qr     # copy qr-code-styling's UMD dist into vendor/ (after updating it)
+npm run vendor:jsqr   # copy jsQR's dist into vendor/ (after updating it)
+npm run watch:css     # recompile popup.css on change
 npm run lint
 npm test
 ```
@@ -161,9 +162,13 @@ include them.
 Vanilla JS (ES module). qr-code-styling is the only runtime dependency,
 vendored locally.
 
-## Safari / Firefox
+## Edge / Safari / Firefox
 
-Build the non-Chrome targets from the repo root:
+**Edge** is Chromium-based and runs the Chrome build unchanged — load this
+directory directly, or produce an explicit Edge copy with
+`node build.mjs edge qrmaker`.
+
+Build the other non-Chrome targets from the repo root:
 
 ```bash
 node build.mjs firefox qrmaker
