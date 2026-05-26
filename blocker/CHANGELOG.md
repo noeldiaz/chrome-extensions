@@ -4,6 +4,21 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] — 2026-05-25
+
+### Changed
+- **Full Public Suffix List.** Base-domain (eTLD+1) reduction now uses the
+  complete PSL (ICANN section, vendored in `psl-data.js`) with the proper
+  algorithm — longest match, wildcard (`*.ck`) and exception (`!www.ck`) rules —
+  replacing the small hand-kept multi-part-TLD set. Fixes incorrect reduction for
+  uncommon suffixes. Refresh with `node scripts/gen-psl.mjs`.
+- **Confirm-dialog accessibility** (shared `dialog.js`): labelled dialog, focus
+  moved in on open and restored on close, and a Tab focus trap.
+
+### Hardened
+- **Backup import** rejects a file whose `schema` is newer than this build
+  understands, instead of silently mis-restoring it.
+
 ## [0.11.0] — 2026-05-25
 
 ### Added

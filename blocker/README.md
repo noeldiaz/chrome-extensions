@@ -76,7 +76,7 @@ Build CSS, then zip only the runtime files:
 ```bash
 npm run build:css && zip -r blocker.zip \
   manifest.json popup.html popup.css popup.js options.html options.js \
-  blocked.html blocked.js background.js lib.js i18n.js sync.js dialog.js backup.js pinpad.js pin.js audit.js \
+  blocked.html blocked.js background.js lib.js psl-data.js i18n.js sync.js dialog.js backup.js pinpad.js pin.js audit.js \
   _locales \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -104,10 +104,11 @@ Excludes source/tooling (`src/`, `node_modules/`, `eslint.config.js`, `test/`, `
 
 Built with vanilla JS (ES modules) and Tailwind v4. No runtime dependencies.
 
-> **Base-domain note:** the eTLD+1 reduction uses a built-in list of the common
-> multi-part TLDs (`co.uk`, `com.au`, …) rather than the full Public Suffix List.
-> A few uncommon registrar suffixes may reduce to a two-label domain; add the
-> exact host manually if needed.
+> **Base-domain note:** the eTLD+1 reduction uses the full **Public Suffix List**
+> (ICANN section), vendored in `psl-data.js` with wildcard (`*.ck`) and exception
+> (`!www.ck`) rules handled per the PSL algorithm in `lib.js`. Refresh it with
+> `node scripts/gen-psl.mjs` (fetches the upstream list; the generated file is
+> committed so the build needs no network).
 
 ## Exam kiosk / managed deployment
 

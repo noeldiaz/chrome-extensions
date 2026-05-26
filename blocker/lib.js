@@ -1,22 +1,33 @@
-// Pure, dependency-free helpers shared by popup.js, background.js, blocked.js,
-// and options.js. No DOM, no chrome APIs — unit-testable headless with node:test.
+// Pure helpers shared by popup.js, background.js, blocked.js, and options.js. No
+// DOM, no chrome APIs — unit-testable headless with node:test. The only import is
+// the vendored Public Suffix List data (pure data, no platform APIs).
+import { PSL_RULES, PSL_EXCEPTIONS } from "./psl-data.js";
 
 // Top-level navigations to these schemes are never blocked (the New Tab page,
 // settings, extension pages, local files, etc.). Only http/https is gated.
 export const PROTECTED_URL =
   /^(chrome|edge|about|chrome-extension|moz-extension|chrome-search|chrome-untrusted|view-source|devtools|file|data):/i;
 
-// Registrar suffixes where the registrable ("base") domain needs three labels,
-// e.g. bbc.co.uk → bbc.co.uk, not co.uk. Not the full Public Suffix List (too
-// large to vendor for v0.1) — just the common multi-part TLDs people hit.
-const MULTI_PART_TLDS = new Set([
-  "co.uk", "org.uk", "gov.uk", "ac.uk", "me.uk", "ltd.uk", "plc.uk", "net.uk", "sch.uk",
-  "com.au", "net.au", "org.au", "edu.au", "gov.au", "id.au",
-  "co.nz", "net.nz", "org.nz", "govt.nz", "ac.nz",
-  "co.jp", "or.jp", "ne.jp", "ac.jp", "go.jp",
-  "com.br", "com.cn", "com.mx", "com.tr", "com.sg", "com.hk", "com.tw", "com.ar", "com.co",
-  "co.in", "co.za", "co.kr", "co.il", "com.sa", "com.ua", "com.pl", "co.id", "co.th",
-]);
+// The public suffix of a hostname, per the Public Suffix List algorithm: the
+// longest matching rule wins, wildcard rules ("*.ck") match any single label,
+// and exception rules ("!city.kawasaki.jp") override. Falls back to the rightmost
+// label (the implicit "*" rule) when nothing matches. Data is the vendored ICANN
+// section (see psl-data.js / scripts/gen-psl.mjs).
+export function publicSuffix(host) {
+  const labels = host.split(".");
+  // Exception rules win regardless of length: the suffix is the rule minus its
+  // leftmost label.
+  for (let i = 0; i < labels.length; i++) {
+    if (PSL_EXCEPTIONS.has(labels.slice(i).join("."))) return labels.slice(i + 1).join(".");
+  }
+  // Otherwise the longest matching normal or wildcard rule.
+  for (let i = 0; i < labels.length; i++) {
+    const candidate = labels.slice(i).join(".");
+    if (PSL_RULES.has(candidate)) return candidate;
+    if (PSL_RULES.has(["*", ...labels.slice(i + 1)].join("."))) return candidate;
+  }
+  return labels[labels.length - 1];
+}
 
 export function isHttpUrl(url) {
   return /^https?:\/\//i.test(url || "");
@@ -45,10 +56,11 @@ export function baseDomain(hostname) {
   if (h === "localhost") return h;
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h) || h.includes(":")) return h; // IPv4 / IPv6
   const labels = h.split(".");
-  if (labels.length <= 2) return h;
-  const lastTwo = labels.slice(-2).join(".");
-  if (MULTI_PART_TLDS.has(lastTwo)) return labels.slice(-3).join(".");
-  return lastTwo;
+  if (labels.length <= 1) return h;
+  const suffixLen = publicSuffix(h).split(".").length;
+  // The host is itself a public suffix (e.g. "co.uk") — nothing left to reduce.
+  if (labels.length <= suffixLen) return h;
+  return labels.slice(labels.length - suffixLen - 1).join(".");
 }
 
 // Normalize free-form user input (a URL, host, or bare domain) to a base domain

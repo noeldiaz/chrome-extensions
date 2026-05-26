@@ -33,4 +33,17 @@ export default [
       "prefer-const": "error",
     },
   },
+  {
+    // Dev-only build scripts (not shipped — scripts/ is excluded from the package).
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: 2023,
+      sourceType: "module",
+      globals: { ...globals.node, fetch: "readonly" },
+    },
+    rules: {
+      eqeqeq: ["error", "smart"],
+      "prefer-const": "error",
+    },
+  },
 ];

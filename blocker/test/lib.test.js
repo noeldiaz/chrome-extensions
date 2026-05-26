@@ -6,6 +6,7 @@ import {
   isHttpUrl,
   hostFromUrl,
   baseDomain,
+  publicSuffix,
   normalizeDomain,
   domainAllowed,
   shouldBlock,
@@ -59,6 +60,19 @@ test("baseDomain handles common multi-part TLDs", () => {
   assert.equal(baseDomain("www.bbc.co.uk"), "bbc.co.uk");
   assert.equal(baseDomain("shop.example.com.au"), "example.com.au");
   assert.equal(baseDomain("foo.bar.co.jp"), "bar.co.jp");
+});
+
+test("publicSuffix follows the PSL algorithm (plain, multi-part, wildcard, exception)", () => {
+  assert.equal(publicSuffix("example.com"), "com");
+  assert.equal(publicSuffix("www.bbc.co.uk"), "co.uk");
+  assert.equal(publicSuffix("foo.bar.ck"), "bar.ck"); // *.ck wildcard matches any label
+  assert.equal(publicSuffix("www.ck"), "ck"); // !www.ck exception carves it back out
+});
+
+test("baseDomain uses the full PSL, incl. wildcard + exception rules", () => {
+  assert.equal(baseDomain("foo.bar.ck"), "foo.bar.ck"); // bar.ck is a public suffix → +1 label
+  assert.equal(baseDomain("shop.www.ck"), "www.ck"); // exception makes www.ck registrable
+  assert.equal(baseDomain("a.b.c.example.co.uk"), "example.co.uk");
 });
 
 test("baseDomain passes through IPs and localhost", () => {
