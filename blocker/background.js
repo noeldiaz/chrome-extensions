@@ -1,4 +1,4 @@
-import { shouldBlock, isHttpUrl, hostFromUrl, effectiveAllowed } from "./lib.js";
+import { shouldBlock, isHttpUrl, hostFromUrl, effectiveAllowed, buildDnrRules } from "./lib.js";
 import { syncGet } from "./sync.js";
 
 const BLOCKED_PAGE = "blocked.html";
@@ -45,6 +45,40 @@ function redirect(tabId) {
   chrome.tabs.update(tabId, { url: blockedUrl() }).catch(() => {});
 }
 
+// Primary enforcement: push (or clear) the declarativeNetRequest dynamic rules
+// that block disallowed navigations at the network layer, *before* a page loads
+// — no service-worker race, and iframes are covered too. The webNavigation
+// listener below stays on as a backstop (and is the only thing that catches
+// data: URLs and already-open tabs, which DNR doesn't). Dynamic rules persist
+// across restarts, so the lockdown holds even before the worker wakes. No-op on
+// engines without DNR (older Safari/Firefox), where the backstop carries it.
+async function applyDnr() {
+  if (!chrome.declarativeNetRequest?.updateDynamicRules) return;
+  const { blocking, allowed } = await state();
+  let existing = [];
+  try {
+    existing = await chrome.declarativeNetRequest.getDynamicRules();
+  } catch {
+    return;
+  }
+  const removeRuleIds = existing.map((r) => r.id);
+  const addRules = blocking ? buildDnrRules(allowed) : [];
+  try {
+    await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds, addRules });
+  } catch {
+    // Host access not yet granted, or a rule the engine rejected. Don't leave a
+    // half-applied set (a stale catch-all with no allow rules would block even
+    // approved sites) — clear all dynamic rules and let the webNavigation
+    // backstop enforce the correct allow/block. Rules retry on the next change.
+    try {
+      const stale = await chrome.declarativeNetRequest.getDynamicRules();
+      if (stale.length) await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: stale.map((r) => r.id) });
+    } catch {
+      /* nothing more we can do here; backstop carries enforcement */
+    }
+  }
+}
+
 // Append a blocked attempt to a capped, newest-first local log (for a proctor to
 // review). Collapses immediate repeats of the same host so one stubborn page
 // doesn't flood the list. Local only — never synced.
@@ -59,16 +93,24 @@ async function logBlocked(url) {
   await chrome.storage.local.set({ blockedLog });
 }
 
-// Gate top-frame navigations. We read fresh state each time (cheap storage get)
-// so a just-woken service worker never lets a navigation slip through with a
-// stale in-memory cache. iframes/sub-resources are left alone.
+// Backstop to the DNR layer: gate top-frame navigations from the service worker
+// too. We read fresh state each time (cheap storage get) so a just-woken worker
+// never lets a navigation slip through with a stale cache. This is also the only
+// gate for data: URLs — a bypass that lets arbitrary HTML/JS render with no prior
+// page load, and which DNR's http(s) rules don't match. (blob: is left alone: a
+// blob can only be created by a page that already loaded, i.e. an allowed one.)
+const BYPASS_SCHEME = /^data:/i;
+
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0) return;
-  if (!isHttpUrl(details.url)) return;
+  const url = details.url || "";
+  const http = isHttpUrl(url);
+  if (!http && !BYPASS_SCHEME.test(url)) return; // leave chrome://, file:, extension pages, about:
   const { blocking, allowed } = await state();
-  if (shouldBlock(details.url, allowed, blocking)) {
+  if (!blocking) return;
+  if (http ? shouldBlock(url, allowed, true) : true) {
     redirect(details.tabId);
-    await logBlocked(details.url);
+    await logBlocked(url);
   }
 });
 
@@ -124,6 +166,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
   if (!relevant) return;
   const { blocking } = await state();
   await setBadge(blocking);
+  await applyDnr(); // re-derive the network rules whenever blocking/allowlist/policy changes
   if (blocking) await sweepOpenTabs();
 });
 
@@ -139,6 +182,7 @@ chrome.windows.onCreated.addListener(async (win) => {
 
 async function syncBadge() {
   await syncExpiryAlarm(); // restore the alarm, or end an already-expired session
+  await applyDnr(); // reconcile the network rules with persisted state on (re)start
   const { blocking } = await state();
   await setBadge(blocking);
 }

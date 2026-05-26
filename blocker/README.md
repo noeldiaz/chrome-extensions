@@ -22,12 +22,24 @@ Manifest V3.
 
 ## How it works
 
-Blocking is enforced in the background service worker via
-`chrome.webNavigation.onBeforeNavigate`: each top-level navigation is checked
-against the allowlist, and disallowed http/https destinations are redirected to
-the bundled `blocked.html`. Non-web pages (the New Tab page, `chrome://`,
-extension pages, local files) are never touched. Sub-resources and iframes are
-left alone — only the top frame is gated.
+Blocking is enforced in **two layers**:
+
+1. **Network layer (`declarativeNetRequest`)** — the primary gate. While
+   blocking, dynamic DNR rules redirect every disallowed top-frame http/https
+   request to `blocked.html` *before the page loads*, and hard-block disallowed
+   iframes. Each allowed site/path is a higher-priority `allow` rule that lets it
+   through. This runs in the browser's network stack — no service-worker wake
+   race — and the rules persist across restarts, so the lockdown holds even
+   before the worker spins up.
+2. **Service-worker backstop (`chrome.webNavigation.onBeforeNavigate`)** — a
+   second check that redirects anything the first layer missed, sweeps
+   already-open tabs when blocking turns on (DNR only affects new requests), and
+   is the gate for `data:` URLs (arbitrary HTML/JS with no prior page load —
+   DNR's http(s) rules don't see them).
+
+Non-web pages (the New Tab page, `chrome://`, extension pages, local files) are
+never touched. The block page is reached by redirect, so it's declared in
+`web_accessible_resources`.
 
 ## Permissions
 
@@ -35,8 +47,9 @@ left alone — only the top frame is gated.
 |------------|-----|
 | `storage` | Persist the allowlist, the blocking on/off switch, and theme; sync the allowlist across devices when the Sync toggle is on. |
 | `tabs` | Read the active tab's URL/title (to allow it) and redirect disallowed tabs to the block page. |
-| `webNavigation` | Observe top-level navigations so disallowed ones can be intercepted. |
-| `optional_host_permissions` (`http`/`https`) | Requested **only** when you first start blocking — `webNavigation` only delivers events for hosts you've granted. |
+| `webNavigation` | Observe top-level navigations so disallowed ones can be intercepted (the backstop layer). |
+| `declarativeNetRequest` | Block/redirect disallowed navigations at the network layer, before the page loads (the primary layer). |
+| `optional_host_permissions` (`http`/`https`) | Requested **only** when you first start blocking — `webNavigation` only delivers events, and DNR `redirect` only acts, for hosts you've granted. |
 
 No network requests of its own. State is stored locally via
 `chrome.storage.local`; with the **Sync across devices** toggle on, the allowlist
@@ -75,13 +88,13 @@ Excludes source/tooling (`src/`, `node_modules/`, `eslint.config.js`, `test/`, `
 
 ## Architecture
 
-- `background.js` — service worker (`type: module`): watches `webNavigation`, decides via `lib.js`, redirects disallowed tabs to `blocked.html`, manages the badge, and sweeps open tabs when blocking turns on.
+- `background.js` — service worker (`type: module`): pushes the `declarativeNetRequest` dynamic rules that enforce the allowlist at the network layer (built in `lib.js`), watches `webNavigation` as a backstop, decides via `lib.js`, redirects disallowed tabs to `blocked.html`, manages the badge, and sweeps open tabs when blocking turns on.
 - `popup.js` / `popup.html` — *Control* tab (start/stop, allow this tab, status) and *Allowed* tab (add/remove/clear the allowlist), plus theme.
 - `blocked.js` / `blocked.html` — the block page: a plain warning with a single Go back action (no way to disable blocking from here).
 - `pinpad.js` — promise-based numeric PIN-pad modal used in the popup to set the unlock PIN when blocking starts and to require it before stopping.
 - `options.js` / `options.html` — options page: the **Sync across devices** toggle, a "How blocking works" note, About panel, theme.
 - `sync.js` — opt-in cross-device sync. A `syncEnabled` flag in `chrome.storage.local` selects the active area (`sync` when on, else `local`) for the `allowed` list; toggling migrates it between areas. The blocking switch always uses `chrome.storage.local`.
-- `lib.js` — pure helpers (URL/host parsing, base-domain reduction, allow matching, the block decision), shared by popup/background/blocked and unit-tested.
+- `lib.js` — pure helpers (URL/host parsing, base-domain reduction, allow matching, the block decision, and the `declarativeNetRequest` rule builder), shared by popup/background/blocked and unit-tested.
 - `dialog.js` — minimal promise-based confirm modal used before removing or clearing allowlist entries, and before restoring a backup.
 - `backup.js` — settings/data export & import: bundles every `chrome.storage` key into a tagged JSON file and restores it (used by the Options → Backup & restore controls).
 - `i18n.js` / `_locales/` — localization. `_locales/en/messages.json` is the catalog; `localize()` applies it via `data-i18n` / `data-i18n-attr`, and `t()` wraps `chrome.i18n.getMessage`. Add a locale by dropping in `_locales/<lang>/messages.json`.
@@ -134,5 +147,6 @@ node ../build.mjs firefox blocker   # → dist/firefox/blocker
 See [`../SAFARI.md`](../SAFARI.md) for the full packaging/signing flow. Blocker-specific notes:
 
 - **No offscreen/downloads** — Blocker uses neither, so nothing is feature-gated; the same source ships to every target. The red **ON** badge text shows everywhere; the badge color may be ignored on Safari (it styles badges its own way).
-- **Firefox** — the background becomes an event page (the build converts `service_worker` → `background.scripts`, keeping `type: module`), so all background listeners are registered at the top level. They are: `webNavigation.onBeforeNavigate`, `storage.onChanged`, and `runtime.onStartup`/`onInstalled`. Host access must be granted in Firefox's add-on permissions for navigation events to arrive.
+- **declarativeNetRequest** — the primary blocking layer. `applyDnr()` guards on `chrome.declarativeNetRequest?.updateDynamicRules`, so on any engine where DNR dynamic rules are missing or differ (older Safari/Firefox), it no-ops and the `webNavigation` backstop carries enforcement on its own. Verify the DNR path actually fires on Safari/Firefox before relying on the pre-load guarantees there.
+- **Firefox** — the background becomes an event page (the build converts `service_worker` → `background.scripts`, keeping `type: module`), so all background listeners are registered at the top level. They are: `webNavigation.onBeforeNavigate`, `storage.onChanged`, and `runtime.onStartup`/`onInstalled`. Host access must be granted in Firefox's add-on permissions for navigation events to arrive (and for DNR `redirect` rules to act).
 - **Not yet load-tested** on Safari/Firefox — verify in `about:debugging` (Firefox) / the Safari Web Extension converter before relying on it.

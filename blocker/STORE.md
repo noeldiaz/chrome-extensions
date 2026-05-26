@@ -83,8 +83,9 @@ Blocker blocks navigation to any website that is not on a user-defined allowlist
 |------------|---------------|
 | `storage` | Saves the user's allowlist, the blocking on/off state, and theme preference locally so they persist between sessions. Also covers the optional account-synced storage used when the user enables "Sync across devices," which roams only the allowlist via `chrome.storage.sync`. |
 | `tabs` | Reads the active tab's URL/title so the user can allow it with one click, and redirects already-open disallowed tabs to the block page when blocking is turned on. |
-| `webNavigation` | Observes top-level navigations so a destination that isn't on the allowlist can be intercepted and replaced with the block page. |
-| Host permissions (`http://*/*`, `https://*/*`, optional) | The `webNavigation` API only delivers navigation events for hosts the extension can access. Declared as an optional permission, requested at runtime only when the user first starts blocking. Not requested at install. |
+| `webNavigation` | Observes top-level navigations so a destination that isn't on the allowlist can be intercepted and replaced with the block page (the backstop enforcement layer, and the gate for `data:` URLs). |
+| `declarativeNetRequest` | Enforces the allowlist at the network layer: dynamic rules redirect disallowed navigations to the block page before the page loads and block disallowed iframes. This is the primary enforcement layer; no request data is read or sent — the rules are evaluated entirely in-browser. |
+| Host permissions (`http://*/*`, `https://*/*`, optional) | The `webNavigation` API only delivers navigation events, and `declarativeNetRequest` `redirect` rules only act, for hosts the extension can access. Declared as an optional permission, requested at runtime only when the user first starts blocking. Not requested at install. |
 
 **Are you using remote code?** No — all code is bundled in the package.
 

@@ -1,15 +1,21 @@
 {
   "manifest_version": 3,
   "name": "__MSG_appName__",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "__MSG_appDesc__",
   "default_locale": "en",
   "minimum_chrome_version": "110",
-  "permissions": ["storage", "tabs", "webNavigation", "alarms"],
+  "permissions": ["storage", "tabs", "webNavigation", "alarms", "declarativeNetRequest"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
   "storage": {
     "managed_schema": "schema.json"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"

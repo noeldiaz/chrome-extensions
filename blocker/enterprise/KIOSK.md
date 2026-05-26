@@ -13,7 +13,10 @@ Think of it as three layers, strongest first:
    the browser level. `enterprise/chrome-kiosk.reg`.
 2. **Locked extension config** — pushes a read-only allowlist + force-on blocking
    into Blocker via `chrome.storage.managed`. `enterprise/blocker-managed.reg`.
-3. **The extension** — the live allowlist UI and the block page.
+3. **The extension** — the live allowlist UI and the block page. It enforces in
+   two layers: `declarativeNetRequest` rules that block disallowed navigations
+   (incl. iframes) at the network layer *before they load*, plus a
+   `webNavigation` backstop that also gates `data:` URLs and sweeps open tabs.
 
 ## What each policy does
 

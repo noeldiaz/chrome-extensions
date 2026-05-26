@@ -4,6 +4,35 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-05-25
+
+### Added
+- **Network-layer enforcement (`declarativeNetRequest`).** Blocking now blocks
+  disallowed navigations *before the page loads*, via dynamic DNR rules in the
+  browser's network stack — no service-worker wake race, and the rules persist
+  across restarts so the lockdown holds even before the worker spins up. Each
+  allowed site/path becomes a higher-priority `allow` rule.
+- **iframes are gated too.** Disallowed sub-frames are hard-blocked; previously
+  only the top frame was checked.
+- **`data:` URL bypass closed.** Top-frame `data:` navigations (arbitrary
+  HTML/JS with no prior page load) are now blocked by the webNavigation layer.
+
+### Changed
+- `chrome.webNavigation` is now the **backstop** layer behind DNR: it catches
+  anything the network rules miss, sweeps already-open tabs, and gates `data:`.
+- The custom block page is unchanged — DNR `redirect` points top frames at it,
+  so disallowed sites still land on the friendly warning, not a browser error.
+- New `declarativeNetRequest` permission; `blocked.html` is now a
+  `web_accessible_resource` (required as a redirect target). No new host access.
+
+### Hardened
+- Per-rule validation: each allow entry yields a condition DNR accepts (plain
+  hosts use `requestDomains`; IPs/IPv6/odd hosts and path rules use a
+  `regexFilter`), so one unusual entry can't make the rule update throw. If an
+  update fails anyway, all dynamic rules are cleared rather than left half-applied
+  (which would block approved sites too) — the webNavigation backstop then
+  enforces the correct allow/block.
+
 ## [0.8.1] — 2026-05-25
 
 ### Changed

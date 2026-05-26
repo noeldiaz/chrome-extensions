@@ -15,6 +15,8 @@ import {
   parseRule,
   normalizeRule,
   ruleMatches,
+  ruleRegexFilter,
+  buildDnrRules,
 } from "../lib.js";
 
 test("isHttpUrl matches only http/https", () => {
@@ -157,6 +159,67 @@ test("effectiveAllowed ignores the user list when the allowlist is locked", () =
 test("effectiveAllowed tolerates null/undefined inputs", () => {
   assert.deepEqual(effectiveAllowed(null, null), []);
   assert.deepEqual(effectiveAllowed(undefined, ["a.com"]), ["a.com"]);
+});
+
+test("ruleRegexFilter mirrors ruleMatches path semantics", () => {
+  const re = new RegExp(ruleRegexFilter({ base: "example.com", path: "/exam" }), "i");
+  assert.equal(re.test("https://example.com/exam"), true);
+  assert.equal(re.test("https://example.com/exam/q1"), true);
+  assert.equal(re.test("https://sub.example.com/exam?x=1"), true);
+  assert.equal(re.test("http://example.com:8080/exam#a"), true);
+  assert.equal(re.test("https://example.com/examine"), false); // boundary
+  assert.equal(re.test("https://notexample.com/exam"), false); // sibling host
+  assert.equal(re.test("https://example.com/other"), false);
+});
+
+test("ruleRegexFilter escapes regex metacharacters in base/path", () => {
+  // a dot in the base must be literal, not "any char" (so a.b.com ≠ axb.com)
+  const re = new RegExp(ruleRegexFilter({ base: "a.b.com", path: "" }), "i");
+  assert.equal(re.test("https://a.b.com/"), true);
+  assert.equal(re.test("https://axbxcom/"), false);
+});
+
+test("buildDnrRules emits a catch-all redirect + iframe block, then allows", () => {
+  const rules = buildDnrRules(["example.com", "school.edu/exam"]);
+  const redirect = rules.find((r) => r.action.type === "redirect");
+  const block = rules.find((r) => r.action.type === "block");
+  const allows = rules.filter((r) => r.action.type === "allow");
+
+  // catch-all redirects top frames to the block page, hard-blocks iframes
+  assert.equal(redirect.condition.resourceTypes[0], "main_frame");
+  assert.equal(redirect.action.redirect.extensionPath, "/blocked.html");
+  assert.deepEqual(block.condition.resourceTypes, ["sub_frame"]);
+  // allow rules outrank the catch-all so approved sites pass through
+  assert.ok(allows.every((r) => r.priority > redirect.priority));
+
+  // base-domain rule uses requestDomains (matches subdomains); path rule a regex
+  const base = allows.find((r) => r.condition.requestDomains);
+  assert.deepEqual(base.condition.requestDomains, ["example.com"]);
+  const path = allows.find((r) => r.condition.regexFilter);
+  assert.ok(path.condition.regexFilter.includes("school\\.edu")); // dot escaped
+
+  // ids are unique and stable across the set
+  const ids = rules.map((r) => r.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("buildDnrRules routes IP/odd hosts to a regexFilter (requestDomains-safe)", () => {
+  // an IPv4 base must not be handed to requestDomains (DNR may reject it) —
+  // it goes through a regexFilter that still matches the literal host
+  const rules = buildDnrRules(["127.0.0.1", "localhost"]);
+  const ip = rules.find((r) => r.condition.regexFilter && r.condition.regexFilter.includes("127"));
+  assert.ok(ip, "IPv4 entry should use regexFilter");
+  assert.ok(new RegExp(ip.condition.regexFilter, "i").test("http://127.0.0.1/page"));
+  // a plain single-label host (localhost) is still fine for requestDomains
+  const local = rules.find((r) => r.condition.requestDomains?.includes("localhost"));
+  assert.ok(local, "localhost should use requestDomains");
+});
+
+test("buildDnrRules skips junk allow entries but keeps the catch-all", () => {
+  const rules = buildDnrRules(["", null, "notadomain"]);
+  // parseRule keeps "notadomain" (a bare host is a valid base), drops "" / null
+  assert.equal(rules.filter((r) => r.action.type === "allow").length, 1);
+  assert.ok(rules.some((r) => r.action.type === "redirect"));
 });
 
 test("addDomain dedups and sorts; removeDomain filters", () => {

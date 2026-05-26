@@ -165,3 +165,83 @@ export function effectiveAllowed(managedSites, userSites, lockAllowlist = false)
   const user = lockAllowlist ? [] : userSites || [];
   return [...new Set([...managed, ...user])].sort();
 }
+
+// --- declarativeNetRequest enforcement ---------------------------------------
+// The network-layer engine that enforces the allowlist *before* a page loads:
+// no service-worker race, and it covers iframes too. buildDnrRules() turns the
+// effective allowlist into a dynamic rule set with two parts:
+//   • a catch-all (priority 1) that redirects every disallowed top frame to the
+//     block page and hard-blocks disallowed iframes;
+//   • one higher-priority `allow` rule (priority 2) per allowed site/path, so
+//     approved destinations pass straight through.
+// Only http/https is matched — the "|http" anchor also keeps the extension's own
+// pages (incl. the block page itself) from matching, so the redirect can't loop.
+// data: bypasses and already-open tabs are handled by the webNavigation backstop
+// in background.js. Reserved rule ids 1–2; allow rules start at 100.
+const DNR_REDIRECT_ID = 1;
+const DNR_BLOCK_IFRAME_ID = 2;
+const DNR_ALLOW_BASE_ID = 100;
+
+// Escape a string for safe literal use inside an RE2 regexFilter. (Forward slash
+// isn't an RE2 metacharacter, so it's left alone — escaping it errors in RE2.)
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// RE2 regexFilter for a path-scoped rule: the base domain or any subdomain, an
+// optional port, the exact path prefix, then a boundary (/ ? # or end-of-URL) —
+// so "example.com/exam" matches /exam and /exam/q1 but not /examine. Mirrors
+// ruleMatches() so the DNR layer and the JS backstop agree.
+export function ruleRegexFilter({ base, path }) {
+  const host = `(?:[a-z0-9-]+\\.)*${escapeRegExp(base)}`;
+  return `^https?://${host}(?::\\d+)?${escapeRegExp(path)}(?:[/?#]|$)`;
+}
+
+// A hostname safe to hand to DNR's `requestDomains` (lowercase DNS labels). An IP
+// literal, IPv6 (colons), or anything else unusual is matched with a regexFilter
+// instead — so a single odd allow entry can never produce a condition DNR would
+// reject and throw on (which would drop the whole rule set).
+const DNS_HOST = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/;
+const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
+
+// The DNR condition for one parsed allow rule. requestDomains (matches the base
+// and its subdomains) for a plain hostname; a regexFilter for path-scoped rules
+// and for hosts requestDomains might reject. Always a valid, accepted condition.
+export function dnrCondition(p) {
+  if (!p.path && DNS_HOST.test(p.base) && !IPV4.test(p.base)) {
+    return { requestDomains: [p.base], resourceTypes: ["main_frame", "sub_frame"] };
+  }
+  return {
+    regexFilter: ruleRegexFilter(p),
+    isUrlFilterCaseSensitive: false,
+    resourceTypes: ["main_frame", "sub_frame"],
+  };
+}
+
+// Build the declarativeNetRequest dynamic rule set enforcing `allowed`. Pass an
+// empty allowlist to still get the catch-all (everything blocked); the caller
+// passes [] rules entirely when blocking is off. Junk entries (parseRule → null)
+// are skipped; every other entry yields a valid condition (see dnrCondition).
+export function buildDnrRules(allowed, { blockPath = "/blocked.html" } = {}) {
+  const rules = [
+    {
+      id: DNR_REDIRECT_ID,
+      priority: 1,
+      action: { type: "redirect", redirect: { extensionPath: blockPath } },
+      condition: { urlFilter: "|http", resourceTypes: ["main_frame"] },
+    },
+    {
+      id: DNR_BLOCK_IFRAME_ID,
+      priority: 1,
+      action: { type: "block" },
+      condition: { urlFilter: "|http", resourceTypes: ["sub_frame"] },
+    },
+  ];
+  let id = DNR_ALLOW_BASE_ID;
+  for (const rule of allowed || []) {
+    const p = parseRule(rule);
+    if (!p) continue;
+    rules.push({ id: id++, priority: 2, action: { type: "allow" }, condition: dnrCondition(p) });
+  }
+  return rules;
+}
