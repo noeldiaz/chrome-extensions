@@ -4,6 +4,16 @@ All notable changes to QRmaker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-05-25
+
+### Changed
+- Destructive actions now confirm first via the shared dialog: deleting an
+  individual history item, clearing all history, and removing a saved center
+  logo. (Clearing history previously used a native prompt.)
+- Fire-and-forget navigation calls (open editor/history/options, scan window,
+  context-menu and result-row links) no longer risk an unhandled promise
+  rejection.
+
 ## [0.8.0] — 2026-05-25
 
 ### Added

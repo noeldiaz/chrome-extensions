@@ -3,6 +3,7 @@ import { getHistory, deleteHistoryItem, clearHistory } from "./idb.js";
 import { initTheme } from "./theme.js";
 import { iconEdit, iconTrash } from "./icons.js";
 import { localize, t } from "./i18n.js";
+import { confirmDialog } from "./dialog.js";
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -93,7 +94,9 @@ function row(item) {
   open.className = "qr-btn-primary";
   open.innerHTML = iconEdit + "<span>" + t("historyOpen") + "</span>";
   open.addEventListener("click", () =>
-    chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + "?history=" + item.id }),
+    chrome.tabs
+      .create({ url: chrome.runtime.getURL("editor.html") + "?history=" + item.id })
+      .catch(() => {}),
   );
   actions.appendChild(open);
 
@@ -104,6 +107,13 @@ function row(item) {
   del.className = "qr-btn-del";
   del.innerHTML = iconTrash;
   del.addEventListener("click", async () => {
+    const ok = await confirmDialog({
+      title: t("delete"),
+      body: t("deleteHistoryItemConfirm"),
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
+    });
+    if (!ok) return;
     await deleteHistoryItem(item.id);
     el.remove();
     const left = els.list.children.length;
@@ -143,7 +153,13 @@ async function render() {
 }
 
 els.clearAll.addEventListener("click", async () => {
-  if (!window.confirm(t("clearHistoryConfirm"))) return;
+  const ok = await confirmDialog({
+    title: t("clearAll"),
+    body: t("clearHistoryConfirm"),
+    confirmLabel: t("clearAll"),
+    cancelLabel: t("cancel"),
+  });
+  if (!ok) return;
   await clearHistory();
   els.list.replaceChildren();
   showEmpty();

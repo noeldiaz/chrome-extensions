@@ -318,7 +318,7 @@ window.addEventListener("pagehide", stopCamera); // release the camera on close
 // --- result actions ---
 
 els.goto.addEventListener("click", () => {
-  if (decodedText) chrome.tabs.create({ url: decodedText });
+  if (decodedText) chrome.tabs.create({ url: decodedText }).catch(() => {});
 });
 els.copy.addEventListener("click", async () => {
   if (!decodedText) return;
@@ -330,7 +330,7 @@ els.copy.addEventListener("click", async () => {
   }
 });
 els.edit.addEventListener("click", () => {
-  if (decodedText) chrome.tabs.create({ url: editUrl(decodedText) });
+  if (decodedText) chrome.tabs.create({ url: editUrl(decodedText) }).catch(() => {});
 });
 els.winClose.addEventListener("click", () => window.close());
 
@@ -390,7 +390,9 @@ function pageRow(text) {
 
   if (isShareableUrl(text)) {
     actions.appendChild(
-      rowButton(t("goTo"), iconOpenExternal, "qr-btn-primary", () => chrome.tabs.create({ url: text })),
+      rowButton(t("goTo"), iconOpenExternal, "qr-btn-primary", () =>
+        chrome.tabs.create({ url: text }).catch(() => {}),
+      ),
     );
   }
 
@@ -409,7 +411,7 @@ function pageRow(text) {
   // (structured payloads reopen in their own form via editUrl's ?type=).
   actions.appendChild(
     rowButton(t("edit"), iconEdit, "qr-btn-neutral", () =>
-      chrome.tabs.create({ url: editUrl(text) }),
+      chrome.tabs.create({ url: editUrl(text) }).catch(() => {}),
     ),
   );
 

@@ -315,23 +315,25 @@ copyEl.addEventListener("click", copyImage);
 advancedEl.addEventListener("click", () => {
   const data = dataFor();
   const suffix = data ? "?data=" + encodeURIComponent(data) : "";
-  chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + suffix });
+  chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + suffix }).catch(() => {});
   window.close();
 });
 scanEl.addEventListener("click", () => {
-  chrome.windows.create({
-    url: chrome.runtime.getURL("result.html"),
-    type: "popup",
-    width: 460,
-    height: 300, // result.js grows/shrinks the window to fit its content
-  });
+  chrome.windows
+    .create({
+      url: chrome.runtime.getURL("result.html"),
+      type: "popup",
+      width: 460,
+      height: 300, // result.js grows/shrinks the window to fit its content
+    })
+    .catch(() => {});
   window.close();
 });
 historyEl.addEventListener("click", () => {
-  chrome.tabs.create({ url: chrome.runtime.getURL("history.html") });
+  chrome.tabs.create({ url: chrome.runtime.getURL("history.html") }).catch(() => {});
   window.close();
 });
-settingsEl.addEventListener("click", () => chrome.runtime.openOptionsPage());
+settingsEl.addEventListener("click", () => chrome.runtime.openOptionsPage().catch(() => {}));
 
 contentEl.addEventListener("input", () => {
   autoGrow();
@@ -347,7 +349,7 @@ moreTypesEl.addEventListener("change", () => {
   const kind = moreTypesEl.value;
   if (!kind) return;
   moreTypesEl.value = "";
-  chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + "?type=" + kind });
+  chrome.tabs.create({ url: chrome.runtime.getURL("editor.html") + "?type=" + kind }).catch(() => {});
   window.close();
 });
 

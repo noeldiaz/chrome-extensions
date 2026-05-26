@@ -182,6 +182,7 @@
   "logoUse": { "message": "Use this logo" },
   "logoRemoveTitle": { "message": "Remove from library" },
   "logoRemoveAria": { "message": "Remove logo from library" },
+  "logoRemoveConfirm": { "message": "Remove this logo from your library? This can't be undone." },
   "capLogoSize": { "message": "Logo size" },
 
   "presetModalTitle": { "message": "New preset" },
@@ -228,6 +229,7 @@
   "presetSetDefault": { "message": "Set as default." },
   "presetDefaultCleared": { "message": "Default cleared." },
   "clearHistoryConfirm": { "message": "Clear all created-code history? This can't be undone." },
+  "deleteHistoryItemConfirm": { "message": "Delete this code from your history? This can't be undone." },
 
   "errLoadLogos": {
     "message": "Couldn't load saved logos: $error$",

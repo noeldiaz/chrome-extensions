@@ -23,6 +23,7 @@ import {
 } from "./idb.js";
 import { syncGet, syncSet } from "./sync.js";
 import { initTheme } from "./theme.js";
+import { confirmDialog } from "./dialog.js";
 
 const PREVIEW_SIZE = 256;
 const EC_LEVEL = "H"; // always high — codes (almost) always carry a center logo
@@ -433,6 +434,13 @@ async function renderLibrary() {
     del.setAttribute("aria-label", t("logoRemoveAria"));
     del.addEventListener("click", async (e) => {
       e.stopPropagation();
+      const ok = await confirmDialog({
+        title: t("logoRemoveTitle"),
+        body: t("logoRemoveConfirm"),
+        confirmLabel: t("delete"),
+        cancelLabel: t("cancel"),
+      });
+      if (!ok) return;
       await deleteLogo(id);
       if (activeLogoId === id) selectLogo(null, null);
       await renderLibrary();
@@ -1059,9 +1067,9 @@ els.copy.addEventListener("click", copyImage);
 els.save.addEventListener("click", save);
 els.reset.addEventListener("click", reset);
 els.history.addEventListener("click", () =>
-  chrome.tabs.create({ url: chrome.runtime.getURL("history.html") }),
+  chrome.tabs.create({ url: chrome.runtime.getURL("history.html") }).catch(() => {}),
 );
-els.settings.addEventListener("click", () => chrome.runtime.openOptionsPage());
+els.settings.addEventListener("click", () => chrome.runtime.openOptionsPage().catch(() => {}));
 
 // Footer Close: shut the editor tab (window.close() is unreliable for a tab
 // opened via chrome.tabs.create, so remove it by id, falling back if needed).

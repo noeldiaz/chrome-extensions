@@ -69,7 +69,7 @@ async function scanPageAndShow(tabId) {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "qr-history") {
-    chrome.tabs.create({ url: chrome.runtime.getURL("history.html") });
+    chrome.tabs.create({ url: chrome.runtime.getURL("history.html") }).catch(() => {});
     return;
   }
   if (info.menuItemId === "qr-scan-page") {
@@ -82,7 +82,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
   const data = dataFromInfo(info);
   if (!data) return;
-  chrome.tabs.create({
-    url: chrome.runtime.getURL("editor.html") + "?data=" + encodeURIComponent(data),
-  });
+  chrome.tabs
+    .create({
+      url: chrome.runtime.getURL("editor.html") + "?data=" + encodeURIComponent(data),
+    })
+    .catch(() => {});
 });
