@@ -75,6 +75,13 @@ test("baseDomain uses the full PSL, incl. wildcard + exception rules", () => {
   assert.equal(baseDomain("a.b.c.example.co.uk"), "example.co.uk");
 });
 
+test("baseDomain handles punycode (IDN) hosts — PSL is stored in ASCII", () => {
+  // みんな is an ICANN TLD; the browser gives its hostname as punycode (xn--q9jyb4c),
+  // and the vendored PSL is punycode too, so they match.
+  assert.equal(publicSuffix("shop.xn--q9jyb4c"), "xn--q9jyb4c");
+  assert.equal(baseDomain("a.shop.xn--q9jyb4c"), "shop.xn--q9jyb4c");
+});
+
 test("baseDomain passes through IPs and localhost", () => {
   assert.equal(baseDomain("127.0.0.1"), "127.0.0.1");
   assert.equal(baseDomain("localhost"), "localhost");
