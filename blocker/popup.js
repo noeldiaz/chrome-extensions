@@ -4,6 +4,7 @@ import { syncGet, syncSet, isSyncOn } from "./sync.js";
 import { confirmDialog } from "./dialog.js";
 import { pinPad } from "./pinpad.js";
 import { hashPin } from "./pin.js";
+import { logEvent } from "./audit.js";
 
 const HOST_PERMS = { origins: ["http://*/*", "https://*/*"] };
 
@@ -252,6 +253,7 @@ async function startBlocking() {
   // → clear any leftover end time from a previous session.
   if (minutes > 0) await chrome.storage.local.set({ blockUntil: Date.now() + minutes * 60000 });
   else await chrome.storage.local.remove("blockUntil");
+  await logEvent("start", minutes > 0 ? String(minutes) : ""); // audit trail
   await render();
 }
 
@@ -266,6 +268,7 @@ async function stopBlocking() {
     masterPinHash = null,
     masterPinDigits = 4,
   } = await chrome.storage.local.get({ pinHash: null, pinDigits: 4, masterPinHash: null, masterPinDigits: 4 });
+  let usedMaster = false; // for the audit trail: which PIN unlocked the session
   if (pinHash) {
     const lengths = [pinDigits, ...(masterPinHash ? [masterPinDigits] : [])];
     const pin = await pinPad({
@@ -279,13 +282,19 @@ async function stopBlocking() {
       backspaceLabel: t("pinBackspace"),
       verify: async (entered) => {
         const h = await hashPin(entered);
-        return h === pinHash || (masterPinHash && h === masterPinHash);
+        if (h === pinHash) return true;
+        if (masterPinHash && h === masterPinHash) {
+          usedMaster = true;
+          return true;
+        }
+        return false;
       },
     });
     if (!pin) return; // cancelled or never verified — stay blocked
   }
   await chrome.storage.local.set({ blocking: false });
   await chrome.storage.local.remove(["pinHash", "pinDigits", "blockUntil"]);
+  await logEvent("stop", usedMaster ? "master" : ""); // audit trail
   statusEl.textContent = "";
   await render();
 }

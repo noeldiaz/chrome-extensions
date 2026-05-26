@@ -18,6 +18,14 @@ Think of it as three layers, strongest first:
    (incl. iframes) at the network layer *before they load*, plus a
    `webNavigation` backstop that also gates `data:` URLs and sweeps open tabs.
 
+> **Tip — generate the policy from the allowlist.** Build your allowlist in the
+> extension (Allowed tab, Bulk add accepts a pasted list), then click
+> **Generate admin policy** there to download a `.reg` containing the native
+> `URLAllowlist` *and* Blocker's managed `forceBlocking`/`lockAllowlist`/
+> `allowedSites` for this install's extension id — no hand-editing. Set a custom
+> block-page message under Settings → Block page message, or lock one for all
+> machines with the managed `blockMessage` policy.
+
 ## What each policy does
 
 | Policy | Value | Effect |

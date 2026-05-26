@@ -16,6 +16,11 @@
       "title": "Lock the allowlist",
       "description": "When true, only the administrator's allowedSites apply; the student cannot add, remove, or clear sites.",
       "type": "boolean"
+    },
+    "blockMessage": {
+      "title": "Block page message",
+      "description": "Custom text shown to the student on the block page (e.g. \"Raise your hand for the proctor\"). Overrides the user's own message and the default. Leave unset to use the default.",
+      "type": "string"
     }
   }
 }

@@ -6,7 +6,7 @@ import { localize, t } from "./i18n.js";
 import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
 import { downloadBackup, parseBackup, restoreBackup } from "./backup.js";
 import { confirmDialog } from "./dialog.js";
-import { normalizeRule, addDomain, removeDomain, effectiveAllowed } from "./lib.js";
+import { normalizeRule, addDomain, removeDomain, effectiveAllowed, buildPolicyReg } from "./lib.js";
 import { pinPad } from "./pinpad.js";
 import { hashPin } from "./pin.js";
 
@@ -139,6 +139,24 @@ removeMasterEl.addEventListener("click", async () => {
   await renderMaster();
 });
 
+// Block page message (optional). Autosaved as the user types; empty clears it so
+// the block page falls back to the default. An admin's managed message overrides
+// this on the block page.
+const blockMsgEl = document.getElementById("blockMessage");
+const blockMsgDetailsEl = document.getElementById("blockMsgDetails");
+const blockMsgStatusEl = document.getElementById("blockMsgStatus");
+let blockMsgTimer = null;
+blockMsgEl.addEventListener("input", () => {
+  clearTimeout(blockMsgTimer);
+  blockMsgTimer = setTimeout(async () => {
+    const v = blockMsgEl.value.trim();
+    if (v) await chrome.storage.local.set({ blockMessage: v });
+    else await chrome.storage.local.remove("blockMessage");
+    blockMsgStatusEl.textContent = t("blockMsgSaved");
+    setTimeout(() => (blockMsgStatusEl.textContent = ""), 1500);
+  }, 400);
+});
+
 // Sync across devices (opt-in). Toggling migrates the synced allowlist, then we
 // reload so the page reflects the now-active storage area.
 const syncToggleEl = document.getElementById("syncToggle");
@@ -199,39 +217,98 @@ importFileEl.addEventListener("change", async () => {
   }
 });
 
-// --- Blocked-attempt log (read-only history; clearable) ---
+// --- Activity log: session events (audit trail) + blocked attempts, merged into
+// one newest-first timeline. Read-only; clearable; exportable to CSV. ---
 const logListEl = document.getElementById("logList");
 const logEmptyEl = document.getElementById("logEmpty");
 const logCountEl = document.getElementById("logCount");
 const clearLogEl = document.getElementById("clearLog");
+const exportLogEl = document.getElementById("exportLog");
 
-function buildLogRow(entry) {
-  const row = document.createElement("div");
-  row.className =
+// A human label for an audit event (its `detail` carries minutes / "master").
+function eventLabel(e) {
+  switch (e.type) {
+    case "start":
+      return e.detail ? t("evtStartTimed", [e.detail]) : t("evtStart");
+    case "stop":
+      return e.detail === "master" ? t("evtStopMaster") : t("evtStop");
+    case "expire":
+      return t("evtExpire");
+    default:
+      return e.type;
+  }
+}
+
+// Merge both logs into one newest-first list of { kind, ts, text }.
+async function getActivity() {
+  const { blockedLog = [], auditLog = [] } = await chrome.storage.local.get({ blockedLog: [], auditLog: [] });
+  return [
+    ...blockedLog.map((e) => ({ kind: "block", ts: e.ts, text: e.host })),
+    ...auditLog.map((e) => ({ kind: "event", ts: e.ts, text: eventLabel(e) })),
+  ].sort((a, b) => b.ts - a.ts);
+}
+
+function buildLogRow(row) {
+  const el = document.createElement("div");
+  el.className =
     "flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-800";
-  const host = document.createElement("span");
-  host.className = "truncate text-sm text-slate-800 dark:text-slate-100";
-  host.textContent = entry.host;
-  host.title = entry.host;
+  const left = document.createElement("span");
+  left.className = "flex min-w-0 items-center gap-2";
+  const dot = document.createElement("span");
+  // red = a blocked attempt; slate = a session event
+  dot.className = `h-1.5 w-1.5 shrink-0 rounded-full ${row.kind === "block" ? "bg-red-500" : "bg-slate-400 dark:bg-slate-500"}`;
+  const text = document.createElement("span");
+  text.className = "truncate text-sm text-slate-800 dark:text-slate-100";
+  text.textContent = row.text;
+  text.title = row.text;
+  left.append(dot, text);
   const time = document.createElement("span");
   time.className = "shrink-0 text-xs tabular-nums text-slate-400 dark:text-slate-500";
-  time.textContent = new Date(entry.ts).toLocaleString();
-  row.append(host, time);
-  return row;
+  time.textContent = new Date(row.ts).toLocaleString();
+  el.append(left, time);
+  return el;
 }
 
 async function renderLog() {
-  const { blockedLog = [] } = await chrome.storage.local.get({ blockedLog: [] });
-  logCountEl.textContent = String(blockedLog.length);
-  logCountEl.classList.toggle("hidden", blockedLog.length === 0);
-  logEmptyEl.hidden = blockedLog.length > 0;
-  clearLogEl.disabled = blockedLog.length === 0;
-  logListEl.replaceChildren(...blockedLog.map(buildLogRow));
+  const rows = await getActivity();
+  logCountEl.textContent = String(rows.length);
+  logCountEl.classList.toggle("hidden", rows.length === 0);
+  logEmptyEl.hidden = rows.length > 0;
+  clearLogEl.disabled = rows.length === 0;
+  exportLogEl.disabled = rows.length === 0;
+  logListEl.replaceChildren(...rows.map(buildLogRow));
 }
 
+// CSV for proctor records: Time (ISO), Kind, Detail.
+function logCsv(rows) {
+  const esc = (s) => `"${String(s).replace(/"/g, '""')}"`;
+  const lines = [["Time", "Kind", "Detail"].map(esc).join(",")];
+  for (const r of rows)
+    lines.push(
+      [new Date(r.ts).toISOString(), r.kind === "block" ? t("logKindBlocked") : t("logKindSession"), r.text]
+        .map(esc)
+        .join(","),
+    );
+  return lines.join("\r\n");
+}
+
+exportLogEl.addEventListener("click", async () => {
+  const rows = await getActivity();
+  if (!rows.length) return;
+  const blob = new Blob([logCsv(rows)], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${APP}-log-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
 clearLogEl.addEventListener("click", async () => {
-  const { blockedLog = [] } = await chrome.storage.local.get({ blockedLog: [] });
-  if (!blockedLog.length) return;
+  const rows = await getActivity();
+  if (!rows.length) return;
   const ok = await confirmDialog({
     title: t("clearLogTitle"),
     body: t("clearLogBody"),
@@ -239,13 +316,13 @@ clearLogEl.addEventListener("click", async () => {
     cancelLabel: t("cancel"),
   });
   if (!ok) return;
-  await chrome.storage.local.set({ blockedLog: [] });
+  await chrome.storage.local.set({ blockedLog: [], auditLog: [] });
   await renderLog();
 });
 
-// Keep the log fresh if attempts are recorded while this page is open.
+// Keep the log fresh if events/attempts are recorded while this page is open.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.blockedLog) renderLog();
+  if (area === "local" && (changes.blockedLog || changes.auditLog)) renderLog();
 });
 
 // --- Allowed list (add / remove; mirrors the popup, honors admin-locked sites) ---
@@ -256,6 +333,11 @@ const allowListEl = document.getElementById("list");
 const allowEmptyEl = document.getElementById("empty");
 const allowCountEl = document.getElementById("allowedCount");
 const clearAllEl = document.getElementById("clearAll");
+const bulkInputEl = document.getElementById("bulkInput");
+const bulkBtnEl = document.getElementById("bulkBtn");
+const bulkStatusEl = document.getElementById("bulkStatus");
+const genPolicyBtnEl = document.getElementById("genPolicyBtn");
+const genPolicyStatusEl = document.getElementById("genPolicyStatus");
 
 let managedAllow = { allowedSites: [], lockAllowlist: false };
 async function loadManagedAllow() {
@@ -312,6 +394,8 @@ async function renderAllowed() {
 
   addInputEl.disabled = locked;
   addBtnEl.disabled = locked;
+  bulkInputEl.disabled = locked;
+  bulkBtnEl.disabled = locked;
   allowEmptyEl.hidden = allowed.length > 0;
   const userRemovable = allowed.filter((d) => !managedSet.has(d)).length;
   clearAllEl.disabled = locked || userRemovable === 0;
@@ -364,8 +448,61 @@ async function clearAllAllowed() {
   await renderAllowed();
 }
 
+// Bulk add: split on whitespace/commas, normalize each, add the valid ones.
+async function bulkAdd() {
+  if (managedAllow.lockAllowlist) return;
+  const tokens = bulkInputEl.value
+    .split(/[\s,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!tokens.length) return;
+  let { allowed = [] } = await syncGet({ allowed: [] });
+  let added = 0;
+  let invalid = 0;
+  for (const tok of tokens) {
+    const d = normalizeRule(tok);
+    if (!d) {
+      invalid++;
+      continue;
+    }
+    const next = addDomain(allowed, d);
+    if (next.length !== allowed.length) added++; // not a duplicate
+    allowed = next;
+  }
+  await syncSet({ allowed });
+  bulkInputEl.value = "";
+  bulkStatusEl.textContent = t("bulkAddResult", [String(added), String(invalid)]);
+  await renderAllowed();
+}
+
+// Generate a Windows .reg locking managed machines to the current allowlist
+// (native URLAllowlist + Blocker's managed config for this extension id).
+function downloadGeneratedPolicy(sites) {
+  const today = new Date().toISOString().slice(0, 10);
+  const reg = buildPolicyReg(sites, chrome.runtime.id, today);
+  const blob = new Blob([reg], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${APP}-policy-${today}.reg`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+genPolicyBtnEl.addEventListener("click", async () => {
+  const { allowed: userAllowed = [] } = await syncGet({ allowed: [] });
+  const managedSites = (managedAllow.allowedSites || []).map((d) => String(d).toLowerCase());
+  const sites = effectiveAllowed(managedSites, userAllowed, managedAllow.lockAllowlist);
+  downloadGeneratedPolicy(sites);
+  genPolicyStatusEl.textContent = t("policyGenerated");
+  setTimeout(() => (genPolicyStatusEl.textContent = ""), 2000);
+});
+
 addFormEl.addEventListener("submit", addAllow);
 clearAllEl.addEventListener("click", clearAllAllowed);
+bulkBtnEl.addEventListener("click", bulkAdd);
 
 // Refresh when the allowlist changes here, from the popup, another device, or policy.
 chrome.storage.onChanged.addListener(async (changes, area) => {
@@ -397,8 +534,10 @@ async function init() {
   await loadTheme(); // removes `invisible` last, so locked content never flashes
   if (!blocking) {
     syncToggleEl.checked = await isSyncOn();
-    const { pinLength = 4 } = await chrome.storage.local.get({ pinLength: 4 });
+    const { pinLength = 4, blockMessage = "" } = await chrome.storage.local.get({ pinLength: 4, blockMessage: "" });
     pinLengthEl.value = String(pinLength);
+    blockMsgEl.value = blockMessage;
+    if (blockMessage) blockMsgDetailsEl.open = true; // expand when a message is already set
     await renderMaster();
     await loadManagedAllow();
     await renderAllowed();

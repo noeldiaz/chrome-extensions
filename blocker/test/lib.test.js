@@ -17,6 +17,7 @@ import {
   ruleMatches,
   ruleRegexFilter,
   buildDnrRules,
+  buildPolicyReg,
 } from "../lib.js";
 
 test("isHttpUrl matches only http/https", () => {
@@ -220,6 +221,31 @@ test("buildDnrRules skips junk allow entries but keeps the catch-all", () => {
   // parseRule keeps "notadomain" (a bare host is a valid base), drops "" / null
   assert.equal(rules.filter((r) => r.action.type === "allow").length, 1);
   assert.ok(rules.some((r) => r.action.type === "redirect"));
+});
+
+test("buildPolicyReg emits URLAllowlist + managed config for the extension id", () => {
+  const reg = buildPolicyReg(["example.com", "school.edu/exam"], "abcdefghijklmnop", "2026-05-25");
+  assert.match(reg, /^Windows Registry Editor Version 5\.00/);
+  // native allowlist, newtab first, then the sites
+  assert.match(reg, /\\Google\\Chrome\\URLAllowlist]/);
+  assert.match(reg, /"1"="chrome:\/\/newtab"/);
+  assert.match(reg, /"2"="example\.com"/);
+  assert.match(reg, /"3"="school\.edu\/exam"/);
+  // managed config keyed by the running extension id
+  assert.match(reg, /3rdparty\\extensions\\abcdefghijklmnop\\policy]/);
+  assert.match(reg, /"forceBlocking"=dword:00000001/);
+  assert.match(reg, /"lockAllowlist"=dword:00000001/);
+  assert.match(reg, /\\policy\\allowedSites]/);
+  // CRLF line endings (what regedit expects)
+  assert.ok(reg.includes("\r\n"));
+});
+
+test("buildPolicyReg escapes quotes/backslashes and tolerates empty input", () => {
+  const reg = buildPolicyReg([], "id", "");
+  assert.match(reg, /URLAllowlist]/);
+  assert.match(reg, /"1"="chrome:\/\/newtab"/); // still seeds newtab with no sites
+  const odd = buildPolicyReg(['a"b\\c'], "id", "");
+  assert.ok(odd.includes('a\\"b\\\\c'));
 });
 
 test("addDomain dedups and sorts; removeDomain filters", () => {

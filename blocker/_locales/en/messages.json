@@ -100,12 +100,42 @@
   "emptyAllowed": { "message": "No sites allowed yet." },
   "invalidDomain": { "message": "Enter a valid domain, like example.com." },
 
-  "blockedAttempts": { "message": "Blocked attempts" },
-  "logHint": { "message": "The most recent off-limits sites that were blocked (host and time). Kept locally on this device." },
+  "logTitle": { "message": "Activity log" },
+  "logHint": { "message": "Session activity (started/stopped/expired) and the most recent off-limits sites that were blocked, with times. Kept locally on this device." },
+  "exportLog": { "message": "Export" },
   "clearLog": { "message": "Clear log" },
-  "emptyLog": { "message": "No blocked attempts yet." },
+  "emptyLog": { "message": "No activity yet." },
   "clearLogTitle": { "message": "Clear the log?" },
-  "clearLogBody": { "message": "Remove all recorded blocked attempts? This can’t be undone." },
+  "clearLogBody": { "message": "Remove all recorded activity? This can’t be undone." },
+  "logKindBlocked": { "message": "Blocked" },
+  "logKindSession": { "message": "Session" },
+  "evtStart": { "message": "Blocking started" },
+  "evtStartTimed": {
+    "message": "Blocking started ($mins$ min)",
+    "placeholders": { "mins": { "content": "$1" } }
+  },
+  "evtStop": { "message": "Blocking stopped" },
+  "evtStopMaster": { "message": "Blocking stopped (master PIN)" },
+  "evtExpire": { "message": "Timed session ended" },
+
+  "optBlockMessage": { "message": "Block page message" },
+  "optBlockMessageHint": { "message": "Shown to students on the block page. Leave empty to use the default message." },
+  "optBlockMessagePlaceholder": { "message": "e.g. Raise your hand for the proctor." },
+  "blockMsgSaved": { "message": "Saved." },
+
+  "bulkAdd": { "message": "Bulk add" },
+  "bulkAddHint": { "message": "Paste many sites — one per line, or comma-separated." },
+  "bulkAddPlaceholder": { "message": "example.com\nschool.edu/exam\nwikipedia.org" },
+  "bulkAddBtn": { "message": "Add list" },
+  "bulkAddResult": {
+    "message": "Added $added$ ($invalid$ skipped).",
+    "placeholders": { "added": { "content": "$1" }, "invalid": { "content": "$2" } }
+  },
+
+  "genPolicy": { "message": "Generate admin policy" },
+  "genPolicyHint": { "message": "Download a Windows .reg that locks managed machines to this allowlist (native URLAllowlist + Blocker’s managed config). For exam-kiosk setup — see enterprise/KIOSK.md." },
+  "genPolicyBtn": { "message": "Download .reg" },
+  "policyGenerated": { "message": "Policy file downloaded." },
   "removeSite": {
     "message": "Remove $domain$",
     "placeholders": { "domain": { "content": "$1" } }

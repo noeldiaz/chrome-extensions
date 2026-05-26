@@ -16,5 +16,24 @@ document.getElementById("back").addEventListener("click", () => {
   else window.close();
 });
 
+// Show a custom message if one is set — the admin's managed policy wins (locked
+// kiosk text), else the user's own from Options; empty falls back to the default
+// already rendered by localize().
+async function loadMessage() {
+  let custom = "";
+  try {
+    const { blockMessage = "" } = await chrome.storage.managed.get({ blockMessage: "" });
+    custom = blockMessage;
+  } catch {
+    /* unmanaged */
+  }
+  if (!custom) {
+    const { blockMessage = "" } = await chrome.storage.local.get({ blockMessage: "" });
+    custom = blockMessage;
+  }
+  if (custom && custom.trim()) document.getElementById("blockedBody").textContent = custom;
+}
+
 localize();
 loadTheme();
+loadMessage();

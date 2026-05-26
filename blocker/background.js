@@ -1,5 +1,6 @@
 import { shouldBlock, isHttpUrl, hostFromUrl, effectiveAllowed, buildDnrRules } from "./lib.js";
 import { syncGet } from "./sync.js";
+import { logEvent } from "./audit.js";
 
 const BLOCKED_PAGE = "blocked.html";
 const BADGE_COLOR = "#dc2626"; // red-600 — blocking is active
@@ -132,8 +133,10 @@ async function sweepOpenTabs() {
   }
 }
 
-// End a timed session: turn blocking off and clear its PIN + expiry.
+// End a timed session: turn blocking off and clear its PIN + expiry. Record it
+// in the audit trail (a timed expiry, no PIN entered).
 async function endSession() {
+  await logEvent("expire");
   await chrome.storage.local.set({ blocking: false });
   await chrome.storage.local.remove(["pinHash", "pinDigits", "blockUntil"]);
 }

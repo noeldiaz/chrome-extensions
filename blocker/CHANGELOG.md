@@ -4,6 +4,26 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] — 2026-05-25
+
+### Added
+- **Audit trail.** The Log tab is now an **Activity log**: alongside blocked
+  attempts it records session events — blocking started (with the timed length),
+  stopped (and whether the session or the **master** PIN unlocked it), and timed
+  sessions ending. Merged into one newest-first timeline (red dot = blocked
+  attempt, grey = session event).
+- **Log export.** Download the activity log as CSV (time, kind, detail) for
+  proctor records.
+- **Bulk add.** Paste many sites at once in the Allowed tab — one per line or
+  comma-separated; invalid entries are reported and skipped.
+- **Generate admin policy.** One button emits a Windows `.reg` built from the
+  current allowlist — the native `URLAllowlist` plus Blocker's managed
+  `forceBlocking`/`lockAllowlist`/`allowedSites` for the running extension id —
+  so admins don't hand-maintain the kiosk policy. (Allowed tab.)
+- **Custom block-page message.** A text field in Settings (collapsed by default)
+  sets the message shown on the block page; empty falls back to the default. An
+  admin's managed `blockMessage` policy overrides it for locked kiosks.
+
 ## [0.9.0] — 2026-05-25
 
 ### Added

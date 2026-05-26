@@ -45,8 +45,11 @@ FEATURES
 • Timed sessions — block for a set length (15–120 min) that ends on its own, or
   block until you stop. A live countdown shows the time left.
 • Path-scoped sites — allow a whole domain, or just part of it (example.com/exam).
-• Blocked-attempt log — Options keeps a read-only list of blocked sites (host and
-  time) for review.
+• Bulk add — paste many sites at once (one per line or comma-separated).
+• Activity log + export — Options keeps a read-only timeline of session events
+  (started/stopped/expired) and blocked sites (host and time), exportable to CSV.
+• Custom block-page message — set your own message in Options, or lock one by
+  policy on managed machines.
 • Sweeps open tabs — turning blocking on also handles tabs you already had open.
 • Sync across devices (optional) — roam your allowlist through your own browser
   account. Off by default; whether blocking is on stays per-device.
@@ -54,7 +57,8 @@ FEATURES
   it on another machine. Importing replaces what's on the device.
 • Exam-kiosk / managed mode — on machines you manage, an administrator can push a
   locked allowlist and force blocking on via Chrome policy; the student then can't
-  edit the list, stop blocking, or open Options.
+  edit the list, stop blocking, or open Options. Options can generate the Windows
+  policy file straight from your allowlist.
 • Asks for access only when you start — not at install.
 • Dark and light themes that follow your system preference.
 

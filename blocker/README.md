@@ -11,8 +11,10 @@ Manifest V3.
 - **Exam-kiosk / managed mode** — on machines you manage, an administrator can push a locked allowlist and force blocking on via Chrome policy (`chrome.storage.managed`); the student then can't add/remove sites, stop blocking, or open Options. See [`enterprise/KIOSK.md`](enterprise/KIOSK.md).
 - **Allowlist by base domain — or a path** — allowing `example.com` allows every subdomain (`www.`, `app.`, …). You can also scope to a path: `example.com/exam` permits only `/exam` and below. Add the current tab with one button, or type any domain/pattern manually.
 - **Timed sessions** — pick a duration (15–120 min) when you start; blocking ends automatically at expiry (no PIN needed at the end). A live countdown shows the time left. "Until I stop" disables the timer.
-- **Blocked-attempt log** — a read-only **Log** tab in Options records the off-limits sites that were blocked (host + time), capped to the most recent 200, for a proctor to review. Local only; clearable.
-- **Custom block page** — disallowed navigations land on a plain warning page (not a raw browser error) with a single **Go back** action; there's no shortcut to disable blocking from it.
+- **Activity log + export** — a read-only **Log** tab in Options merges a session audit trail (blocking started/stopped — and whether the session or master PIN unlocked it — and timed-session expiry) with the off-limits sites that were blocked (host + time), newest first, for a proctor to review. Export it to CSV; local only; clearable.
+- **Bulk add** — paste many sites at once in the Allowed tab (one per line or comma-separated); invalid entries are reported and skipped.
+- **Generate admin policy** — one button in the Allowed tab emits a Windows `.reg` built from the current allowlist (native `URLAllowlist` + Blocker's managed config for the running extension id), so admins don't hand-maintain the kiosk policy.
+- **Custom block page** — disallowed navigations land on a plain warning page (not a raw browser error) with a single **Go back** action; there's no shortcut to disable blocking from it. The message is editable in Options (Settings → Block page message), and an administrator can lock a `blockMessage` via managed policy.
 - **Sweeps open tabs** — turning blocking on sends already-open disallowed tabs to the block page, not just future navigations.
 - **Two-tab popup** — *Control* (start/stop + allow this tab + session timer) and *Allowed* (manage the list). Options has its own tabs: *Settings*, *Allowed* (full add/remove), *Log*, and *About*.
 - **Sync across devices** *(opt-in)* — a toggle in Options syncs your allowlist across the devices you're signed in to. Whether blocking is on stays local to each device. Off by default.
@@ -74,7 +76,7 @@ Build CSS, then zip only the runtime files:
 ```bash
 npm run build:css && zip -r blocker.zip \
   manifest.json popup.html popup.css popup.js options.html options.js \
-  blocked.html blocked.js background.js lib.js i18n.js sync.js dialog.js backup.js pinpad.js pin.js \
+  blocked.html blocked.js background.js lib.js i18n.js sync.js dialog.js backup.js pinpad.js pin.js audit.js \
   _locales \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
