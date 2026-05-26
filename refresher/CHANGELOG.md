@@ -4,6 +4,18 @@ All notable changes to Refresher are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-05-25
+
+### Fixed
+- Scroll preservation now correctly checks the granted host permission before a
+  reload (an unawaited Promise was treated as always-on).
+- The popup no longer hangs if the service worker is asleep: arm/stop messages
+  fail gracefully, and the background message handler always responds.
+- Hardened a transient reload retry and the scroll-permission cleanup against
+  unhandled promise rejections.
+- The per-tab countdown falls back to "--:--" instead of "NaN:NaN" on a
+  malformed alarm time.
+
 ## [0.8.0] — 2026-05-25
 
 ### Added

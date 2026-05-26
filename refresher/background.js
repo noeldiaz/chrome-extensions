@@ -111,11 +111,15 @@ async function removeTarget(tabId) {
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
-    if (msg?.type === "arm") await arm(msg);
-    else if (msg?.type === "disarm") await removeTarget(msg.tabId);
-    sendResponse({ ok: true });
+    try {
+      if (msg?.type === "arm") await arm(msg);
+      else if (msg?.type === "disarm") await removeTarget(msg.tabId);
+      sendResponse({ ok: true });
+    } catch {
+      sendResponse({ ok: false }); // always respond so the popup never hangs
+    }
   })();
-  return true;
+  return true; // keep the channel open for the async sendResponse
 });
 
 // Scroll preservation is opt-in: enabled in the popup AND backed by a granted
@@ -123,7 +127,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 async function scrollPreserveOn() {
   const { preserveScroll } = await syncGet({ preserveScroll: false });
   if (!preserveScroll) return false;
-  return chrome.permissions.contains({ origins: SCROLL_ORIGINS });
+  return await chrome.permissions.contains({ origins: SCROLL_ORIGINS });
 }
 
 async function captureScroll(tabId) {
@@ -199,10 +203,12 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (result === "ok") await bumpStats(tabId);
   if (result === "fail") {
     // transient — retry once after 5s (best-effort; SW may sleep first)
-    setTimeout(async () => {
-      const retry = await tryReload(tabId);
-      if (retry === "gone") await removeTarget(tabId);
-      else if (retry === "ok") await bumpStats(tabId);
+    setTimeout(() => {
+      (async () => {
+        const retry = await tryReload(tabId);
+        if (retry === "gone") await removeTarget(tabId);
+        else if (retry === "ok") await bumpStats(tabId);
+      })().catch(() => {});
     }, 5000);
   }
   await updateBadge(); // resume single-tab countdown ticker after an SW wake

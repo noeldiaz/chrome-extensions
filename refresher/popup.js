@@ -72,7 +72,8 @@ async function activeTab() {
 async function tickCountdown() {
   for (const span of listEl.querySelectorAll("[data-countdown]")) {
     const alarm = await chrome.alarms.get(alarmName(span.dataset.countdown));
-    span.textContent = alarm ? formatMMSS(secondsUntil(alarm.scheduledTime)) : "--:--";
+    const remaining = alarm ? secondsUntil(alarm.scheduledTime) : NaN;
+    span.textContent = Number.isFinite(remaining) ? formatMMSS(remaining) : "--:--";
   }
   for (const el of listEl.querySelectorAll("[data-stats]")) {
     const count = Number(el.dataset.count) || 0;
@@ -203,20 +204,28 @@ async function addOrUpdate() {
     return;
   }
   statusEl.textContent = "";
-  await chrome.runtime.sendMessage({
-    type: "arm",
-    tabId: tab.id,
-    totalSeconds: total,
-    tabTitle: tab.title || "",
-    windowId: tab.windowId,
-    minutes,
-    seconds,
-  });
+  try {
+    await chrome.runtime.sendMessage({
+      type: "arm",
+      tabId: tab.id,
+      totalSeconds: total,
+      tabTitle: tab.title || "",
+      windowId: tab.windowId,
+      minutes,
+      seconds,
+    });
+  } catch {
+    return; // service worker unreachable — leave state as-is
+  }
   await renderList();
 }
 
 async function stopTarget(tabId) {
-  await chrome.runtime.sendMessage({ type: "disarm", tabId });
+  try {
+    await chrome.runtime.sendMessage({ type: "disarm", tabId });
+  } catch {
+    return; // service worker unreachable — leave state as-is
+  }
   await renderList();
 }
 
@@ -262,7 +271,7 @@ preserveScrollEl.addEventListener("change", async () => {
     await syncSet({ preserveScroll: true });
   } else {
     await syncSet({ preserveScroll: false });
-    await chrome.permissions.remove({ origins: SCROLL_ORIGINS }); // tidy up the grant
+    await chrome.permissions.remove({ origins: SCROLL_ORIGINS }).catch(() => {}); // tidy up the grant
   }
 });
 
