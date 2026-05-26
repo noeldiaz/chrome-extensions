@@ -79,6 +79,10 @@
   "pinEnterSubtitle": { "message": "Enter your unlock PIN to stop blocking." },
   "pinWrong": { "message": "Wrong PIN. Try again." },
   "pinBackspace": { "message": "Delete" },
+  "pinProgress": {
+    "message": "$entered$ of $total$ digits entered",
+    "placeholders": { "entered": { "content": "$1" }, "total": { "content": "$2" } }
+  },
   "optPinLength": { "message": "Unlock PIN length" },
   "optPinLengthHint": { "message": "How many digits the unlock PIN has. Applies the next time you start blocking." },
   "optMasterPin": { "message": "Master PIN" },
@@ -135,6 +139,7 @@
   "genPolicy": { "message": "Generate admin policy" },
   "genPolicyHint": { "message": "Download a Windows .reg that locks managed machines to this allowlist (native URLAllowlist + Blocker’s managed config). For exam-kiosk setup — see enterprise/KIOSK.md." },
   "genPolicyBtn": { "message": "Download .reg" },
+  "genPolicyJsonBtn": { "message": "Download JSON" },
   "policyGenerated": { "message": "Policy file downloaded." },
   "removeSite": {
     "message": "Remove $domain$",

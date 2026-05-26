@@ -18,6 +18,7 @@ import {
   ruleRegexFilter,
   buildDnrRules,
   buildPolicyReg,
+  buildPolicyJson,
 } from "../lib.js";
 
 test("isHttpUrl matches only http/https", () => {
@@ -246,6 +247,26 @@ test("buildPolicyReg escapes quotes/backslashes and tolerates empty input", () =
   assert.match(reg, /"1"="chrome:\/\/newtab"/); // still seeds newtab with no sites
   const odd = buildPolicyReg(['a"b\\c'], "id", "");
   assert.ok(odd.includes('a\\"b\\\\c'));
+});
+
+test("buildPolicyJson mirrors the .reg policy as a JSON object", () => {
+  const j = buildPolicyJson(["example.com", "school.edu/exam"], "extid123", "2026-05-25");
+  assert.deepEqual(j.chromePolicies.URLAllowlist, ["chrome://newtab", "example.com", "school.edu/exam"]);
+  assert.deepEqual(j.chromePolicies.URLBlocklist, ["*"]);
+  assert.equal(j.extensionManagedPolicy.extensionId, "extid123");
+  assert.deepEqual(j.extensionManagedPolicy.policy, {
+    forceBlocking: true,
+    lockAllowlist: true,
+    allowedSites: ["example.com", "school.edu/exam"],
+  });
+  // round-trips through JSON
+  assert.deepEqual(JSON.parse(JSON.stringify(j)).chromePolicies.URLBlocklist, ["*"]);
+});
+
+test("buildPolicyJson tolerates empty/falsy entries", () => {
+  const j = buildPolicyJson(["", null, "a.com"], "id", "");
+  assert.deepEqual(j.chromePolicies.URLAllowlist, ["chrome://newtab", "a.com"]);
+  assert.deepEqual(j.extensionManagedPolicy.policy.allowedSites, ["a.com"]);
 });
 
 test("addDomain dedups and sorts; removeDomain filters", () => {

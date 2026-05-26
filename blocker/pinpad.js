@@ -22,6 +22,7 @@ export function pinPad({
   wrong = "",
   cancelLabel = "Cancel",
   backspaceLabel = "Delete",
+  statusLabel = (n, total) => `${n} of ${total} digits entered`,
   verify,
 } = {}) {
   return new Promise((resolve) => {
@@ -30,6 +31,7 @@ export function pinPad({
     const maxLen = length; // dots shown / hard cap
     const minLen = minLength || length; // enter mode verifies once this many digits are in
     let done = false; // guard against double-resolve while a verify is in flight
+    const prevFocus = document.activeElement; // restored when the modal closes
 
     const overlay = document.createElement("div");
     overlay.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm";
@@ -39,16 +41,29 @@ export function pinPad({
       "w-full max-w-[15rem] rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-800";
     card.setAttribute("role", "dialog");
     card.setAttribute("aria-modal", "true");
+    card.setAttribute("aria-labelledby", "pinpad-title");
+    card.setAttribute("aria-describedby", "pinpad-sub");
+    card.tabIndex = -1; // focusable so we can move focus into the dialog on open
 
     const h = document.createElement("div");
+    h.id = "pinpad-title";
     h.className = "text-center text-sm font-semibold text-slate-800 dark:text-slate-100";
     const sub = document.createElement("p");
+    sub.id = "pinpad-sub";
     sub.className = "mt-1 text-center text-xs text-slate-500 dark:text-slate-400";
 
     const dots = document.createElement("div");
     dots.className = "mt-3 flex justify-center gap-2";
+    dots.setAttribute("aria-hidden", "true"); // decorative; progress is announced via `live`
     const err = document.createElement("p");
+    err.setAttribute("role", "alert"); // wrong/mismatch is announced assertively
     err.className = "mt-2 h-4 text-center text-xs font-medium text-red-600 dark:text-red-400";
+    // Visually-hidden live region announcing entry progress to screen readers.
+    const live = document.createElement("p");
+    live.className = "sr-only";
+    live.setAttribute("role", "status");
+    live.setAttribute("aria-live", "polite");
+    live.setAttribute("aria-atomic", "true");
 
     const pad = document.createElement("div");
     pad.className = "mt-3 grid grid-cols-3 gap-2";
@@ -69,6 +84,7 @@ export function pinPad({
           return d;
         }),
       );
+      live.textContent = statusLabel(pin.length, maxLen);
     }
     // A toolbar popup sizes itself to its content, and a position:fixed overlay
     // doesn't add height — so without this the pad gets clipped. Grow the body
@@ -83,6 +99,7 @@ export function pinPad({
       document.removeEventListener("keydown", onKey);
       document.body.style.minHeight = prevMinHeight;
       overlay.remove();
+      if (prevFocus && typeof prevFocus.focus === "function") prevFocus.focus(); // restore focus
       resolve(result);
     }
 
@@ -137,8 +154,23 @@ export function pinPad({
       pin = pin.slice(0, -1);
       renderDots();
     }
+    // Keep Tab focus inside the modal (simple focus trap over its buttons).
+    function trapTab(e) {
+      const f = overlay.querySelectorAll("button");
+      if (!f.length) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
     function onKey(e) {
       if (e.key === "Escape") return close(null);
+      if (e.key === "Tab") return trapTab(e);
       if (e.key === "Backspace") return backspace();
       if (/^[0-9]$/.test(e.key)) press(e.key);
     }
@@ -182,8 +214,9 @@ export function pinPad({
 
     setStage(title, subtitle);
     renderDots();
-    card.append(h, sub, dots, err, pad);
+    card.append(h, sub, dots, err, live, pad);
     overlay.append(card);
     document.body.append(overlay);
+    card.focus(); // move focus into the dialog so the title is announced
   });
 }

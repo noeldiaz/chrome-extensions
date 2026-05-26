@@ -6,7 +6,7 @@ import { localize, t } from "./i18n.js";
 import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
 import { downloadBackup, parseBackup, restoreBackup } from "./backup.js";
 import { confirmDialog } from "./dialog.js";
-import { normalizeRule, addDomain, removeDomain, effectiveAllowed, buildPolicyReg } from "./lib.js";
+import { normalizeRule, addDomain, removeDomain, effectiveAllowed, buildPolicyReg, buildPolicyJson } from "./lib.js";
 import { pinPad } from "./pinpad.js";
 import { hashPin } from "./pin.js";
 
@@ -109,6 +109,7 @@ async function verifyMaster() {
     wrong: t("pinWrong"),
     cancelLabel: t("cancel"),
     backspaceLabel: t("pinBackspace"),
+    statusLabel: (n, total) => t("pinProgress", [String(n), String(total)]),
     verify: async (entered) => (await hashPin(entered)) === masterPinHash,
   });
   return !!pin;
@@ -127,6 +128,7 @@ setMasterEl.addEventListener("click", async () => {
     mismatch: t("pinMismatch"),
     cancelLabel: t("cancel"),
     backspaceLabel: t("pinBackspace"),
+    statusLabel: (n, total) => t("pinProgress", [String(n), String(total)]),
   });
   if (!pin) return;
   await chrome.storage.local.set({ masterPinHash: await hashPin(pin), masterPinDigits: pin.length });
@@ -337,6 +339,7 @@ const bulkInputEl = document.getElementById("bulkInput");
 const bulkBtnEl = document.getElementById("bulkBtn");
 const bulkStatusEl = document.getElementById("bulkStatus");
 const genPolicyBtnEl = document.getElementById("genPolicyBtn");
+const genPolicyJsonBtnEl = document.getElementById("genPolicyJsonBtn");
 const genPolicyStatusEl = document.getElementById("genPolicyStatus");
 
 let managedAllow = { allowedSites: [], lockAllowlist: false };
@@ -475,29 +478,44 @@ async function bulkAdd() {
   await renderAllowed();
 }
 
-// Generate a Windows .reg locking managed machines to the current allowlist
-// (native URLAllowlist + Blocker's managed config for this extension id).
-function downloadGeneratedPolicy(sites) {
-  const today = new Date().toISOString().slice(0, 10);
-  const reg = buildPolicyReg(sites, chrome.runtime.id, today);
-  const blob = new Blob([reg], { type: "text/plain" });
+// Generate an admin policy locking managed machines to the current allowlist —
+// the native URLAllowlist plus Blocker's managed config for this extension id.
+// .reg for Windows, JSON for other MDM (macOS/Linux/cloud).
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${APP}-policy-${today}.reg`;
+  a.download = name;
   document.body.append(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-genPolicyBtnEl.addEventListener("click", async () => {
+// Effective allowlist for export (admin-pushed + user, deduped/sorted).
+async function policySites() {
   const { allowed: userAllowed = [] } = await syncGet({ allowed: [] });
   const managedSites = (managedAllow.allowedSites || []).map((d) => String(d).toLowerCase());
-  const sites = effectiveAllowed(managedSites, userAllowed, managedAllow.lockAllowlist);
-  downloadGeneratedPolicy(sites);
+  return effectiveAllowed(managedSites, userAllowed, managedAllow.lockAllowlist);
+}
+
+function flashPolicy() {
   genPolicyStatusEl.textContent = t("policyGenerated");
   setTimeout(() => (genPolicyStatusEl.textContent = ""), 2000);
+}
+
+genPolicyBtnEl.addEventListener("click", async () => {
+  const today = new Date().toISOString().slice(0, 10);
+  downloadFile(`${APP}-policy-${today}.reg`, buildPolicyReg(await policySites(), chrome.runtime.id, today), "text/plain");
+  flashPolicy();
+});
+
+genPolicyJsonBtnEl.addEventListener("click", async () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const json = JSON.stringify(buildPolicyJson(await policySites(), chrome.runtime.id, today), null, 2);
+  downloadFile(`${APP}-policy-${today}.json`, json, "application/json");
+  flashPolicy();
 });
 
 addFormEl.addEventListener("submit", addAllow);

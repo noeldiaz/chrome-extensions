@@ -241,6 +241,7 @@ async function startBlocking() {
     mismatch: t("pinMismatch"),
     cancelLabel: t("cancel"),
     backspaceLabel: t("pinBackspace"),
+    statusLabel: (n, total) => t("pinProgress", [String(n), String(total)]),
   });
   if (!pin) return; // cancelled — leave blocking off
   const allowed = await getAllowed();
@@ -280,6 +281,7 @@ async function stopBlocking() {
       wrong: t("pinWrong"),
       cancelLabel: t("cancel"),
       backspaceLabel: t("pinBackspace"),
+      statusLabel: (n, total) => t("pinProgress", [String(n), String(total)]),
       verify: async (entered) => {
         const h = await hashPin(entered);
         if (h === pinHash) return true;

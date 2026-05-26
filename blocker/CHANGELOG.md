@@ -4,6 +4,19 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.0] — 2026-05-25
+
+### Added
+- **Admin policy as JSON too.** Alongside the Windows `.reg`, the Allowed tab can
+  download the same kiosk policy as JSON (native `URLAllowlist`/`URLBlocklist` +
+  the extension's managed config) for macOS/Linux/cloud MDM.
+
+### Changed
+- **Keypad accessibility.** The PIN pad is now a labelled dialog (`aria-labelledby`/
+  `aria-describedby`), announces entry progress through a polite live region and
+  wrong/mismatch via an alert role, moves focus into the dialog on open and
+  restores it on close, and traps Tab focus within the pad.
+
 ## [0.10.0] — 2026-05-25
 
 ### Added
