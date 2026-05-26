@@ -86,6 +86,31 @@
           </select>
         </section>
 
+        <!-- Master PIN -->
+        <section class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200" data-i18n="optMasterPin">Master PIN</h2>
+          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400" data-i18n="optMasterPinHint">An override PIN that can always stop blocking — even if someone locked it with a different PIN. Set it ahead of time.</p>
+          <div class="mt-3 flex items-center justify-between gap-2">
+            <span id="masterStatus" class="text-xs font-medium text-slate-500 dark:text-slate-400"></span>
+            <div class="flex gap-2">
+              <button id="setMaster" type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 active:scale-[0.98]">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+                </svg>
+                <span id="setMasterLabel" data-i18n="masterSetBtn">Set master PIN</span>
+              </button>
+              <button id="removeMaster" type="button"
+                class="hidden inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-red-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-red-500 dark:hover:bg-red-950 dark:hover:text-red-300">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.35 9m-4.78 0L9.26 9M9.97 4.5h4.06M19.5 5.25l-.84 12.6a2.25 2.25 0 0 1-2.24 2.1H7.58a2.25 2.25 0 0 1-2.24-2.1L4.5 5.25M3.75 5.25h16.5" />
+                </svg>
+                <span data-i18n="masterRemove">Remove</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
         <!-- Sync across devices -->
         <section class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <label class="flex items-start gap-3">

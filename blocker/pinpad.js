@@ -13,6 +13,7 @@ const BTN =
 export function pinPad({
   mode = "enter",
   length = 4,
+  minLength = 0,
   title = "",
   subtitle = "",
   confirmTitle = "",
@@ -26,6 +27,9 @@ export function pinPad({
   return new Promise((resolve) => {
     let pin = "";
     let firstPass = null; // "set" mode: the first entry, awaiting confirmation
+    const maxLen = length; // dots shown / hard cap
+    const minLen = minLength || length; // enter mode verifies once this many digits are in
+    let done = false; // guard against double-resolve while a verify is in flight
 
     const overlay = document.createElement("div");
     overlay.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm";
@@ -74,49 +78,60 @@ export function pinPad({
     document.body.style.minHeight = "27rem";
 
     function close(result) {
+      if (done) return;
+      done = true;
       document.removeEventListener("keydown", onKey);
       document.body.style.minHeight = prevMinHeight;
       overlay.remove();
       resolve(result);
     }
 
-    async function submit() {
+    // "set" mode: first entry then a matching confirmation.
+    function submitSet() {
       const entered = pin;
-      if (mode === "set") {
-        if (firstPass === null) {
-          firstPass = entered;
-          pin = "";
-          err.textContent = "";
-          setStage(confirmTitle || title, confirmSubtitle);
-          renderDots();
-          return;
-        }
-        if (entered !== firstPass) {
-          firstPass = null;
-          pin = "";
-          err.textContent = mismatch;
-          setStage(title, subtitle);
-          renderDots();
-          return;
-        }
-        return close(entered);
-      }
-      const ok = verify ? await verify(entered) : true;
-      if (!ok) {
+      if (firstPass === null) {
+        firstPass = entered;
         pin = "";
-        err.textContent = wrong;
+        err.textContent = "";
+        setStage(confirmTitle || title, confirmSubtitle);
+        renderDots();
+        return;
+      }
+      if (entered !== firstPass) {
+        firstPass = null;
+        pin = "";
+        err.textContent = mismatch;
+        setStage(title, subtitle);
         renderDots();
         return;
       }
       close(entered);
     }
 
+    // "enter" mode: verify as soon as the entry could be valid (>= minLen), so a
+    // PIN of any accepted length resolves; only clear once the cap is reached.
+    async function tryVerify() {
+      const attempt = pin;
+      const ok = verify ? await verify(attempt) : true;
+      if (done) return;
+      if (ok) return close(attempt);
+      if (pin.length >= maxLen) {
+        pin = "";
+        err.textContent = wrong;
+        renderDots();
+      }
+    }
+
     function press(d) {
-      if (pin.length >= length) return;
+      if (done || pin.length >= maxLen) return;
       pin += d;
       err.textContent = "";
       renderDots();
-      if (pin.length === length) submit();
+      if (mode === "set") {
+        if (pin.length === maxLen) submitSet();
+      } else if (pin.length >= minLen) {
+        tryVerify();
+      }
     }
     function backspace() {
       pin = pin.slice(0, -1);

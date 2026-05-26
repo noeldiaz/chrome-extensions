@@ -3,6 +3,7 @@ import { localize, t } from "./i18n.js";
 import { syncGet, syncSet, isSyncOn } from "./sync.js";
 import { confirmDialog } from "./dialog.js";
 import { pinPad } from "./pinpad.js";
+import { hashPin } from "./pin.js";
 
 const HOST_PERMS = { origins: ["http://*/*", "https://*/*"] };
 
@@ -218,13 +219,6 @@ async function render() {
 
 // --- actions ---
 
-// SHA-256 hex of the PIN (with a fixed salt) so it isn't stored in the clear.
-// crypto.subtle is available on extension pages (secure context).
-async function hashPin(pin) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("blocker-pin:" + pin));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 async function startBlocking() {
   // chrome.permissions.request must be the first await inside the user gesture.
   const granted = await chrome.permissions.request(HOST_PERMS);
@@ -262,19 +256,31 @@ async function startBlocking() {
 }
 
 async function stopBlocking() {
-  // Require the unlock PIN (when one was set) before turning blocking off.
-  // Use the length the PIN was set with (default 4 for PINs from older versions).
-  const { pinHash = null, pinDigits = 4 } = await chrome.storage.local.get({ pinHash: null, pinDigits: 4 });
+  // Require the unlock PIN (when one was set) before turning blocking off. The
+  // master PIN (set ahead of time in Options) always works too, in case someone
+  // locked the extension with a PIN you don't know. The keypad accepts either
+  // length — verify runs as soon as enough digits are in.
+  const {
+    pinHash = null,
+    pinDigits = 4,
+    masterPinHash = null,
+    masterPinDigits = 4,
+  } = await chrome.storage.local.get({ pinHash: null, pinDigits: 4, masterPinHash: null, masterPinDigits: 4 });
   if (pinHash) {
+    const lengths = [pinDigits, ...(masterPinHash ? [masterPinDigits] : [])];
     const pin = await pinPad({
       mode: "enter",
-      length: pinDigits,
+      minLength: Math.min(...lengths),
+      length: Math.max(...lengths),
       title: t("pinEnterTitle"),
       subtitle: t("pinEnterSubtitle"),
       wrong: t("pinWrong"),
       cancelLabel: t("cancel"),
       backspaceLabel: t("pinBackspace"),
-      verify: async (entered) => (await hashPin(entered)) === pinHash,
+      verify: async (entered) => {
+        const h = await hashPin(entered);
+        return h === pinHash || (masterPinHash && h === masterPinHash);
+      },
     });
     if (!pin) return; // cancelled or never verified — stay blocked
   }

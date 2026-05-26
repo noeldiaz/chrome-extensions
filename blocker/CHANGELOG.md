@@ -4,6 +4,19 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-05-25
+
+### Added
+- **Master PIN.** Options → Settings can store an override PIN ahead of time that
+  always stops blocking — for when someone locks the extension with a session PIN
+  you do not know. The stop keypad accepts either the session PIN or the master
+  PIN (any configured length). Stored hashed (SHA-256), local only.
+
+### Changed
+- The unlock keypad now verifies as soon as enough digits are entered, so PINs of
+  different lengths (session vs master) both work at the same prompt.
+- PIN hashing moved to a shared `pin.js` so the popup and Options hash identically.
+
 ## [0.7.0] — 2026-05-25
 
 ### Added

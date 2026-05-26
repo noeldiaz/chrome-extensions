@@ -7,6 +7,8 @@ import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
 import { downloadBackup, parseBackup, restoreBackup } from "./backup.js";
 import { confirmDialog } from "./dialog.js";
 import { normalizeRule, addDomain, removeDomain, effectiveAllowed } from "./lib.js";
+import { pinPad } from "./pinpad.js";
+import { hashPin } from "./pin.js";
 
 const APP = "blocker";
 
@@ -72,6 +74,52 @@ for (const b of tabBtns)
 const pinLengthEl = document.getElementById("pinLength");
 pinLengthEl.addEventListener("change", async () => {
   await chrome.storage.local.set({ pinLength: parseInt(pinLengthEl.value, 10) || 4 });
+});
+
+// Master PIN: an override that always stops blocking, set ahead of time, in case
+// someone locks the extension with a PIN you don't know. Stored hashed, local
+// only. Uses the current PIN-length preference; its own length rides along.
+const masterStatusEl = document.getElementById("masterStatus");
+const setMasterEl = document.getElementById("setMaster");
+const setMasterLabelEl = document.getElementById("setMasterLabel");
+const removeMasterEl = document.getElementById("removeMaster");
+
+async function renderMaster() {
+  const { masterPinHash = null } = await chrome.storage.local.get({ masterPinHash: null });
+  const isSet = !!masterPinHash;
+  masterStatusEl.textContent = isSet ? t("masterSet") : t("masterNotSet");
+  setMasterLabelEl.textContent = isSet ? t("masterChangeBtn") : t("masterSetBtn");
+  removeMasterEl.classList.toggle("hidden", !isSet);
+}
+
+setMasterEl.addEventListener("click", async () => {
+  const { pinLength = 4 } = await chrome.storage.local.get({ pinLength: 4 });
+  const pin = await pinPad({
+    mode: "set",
+    length: pinLength,
+    title: t("masterSetTitle"),
+    subtitle: t("masterSetSubtitle"),
+    confirmTitle: t("pinConfirmTitle"),
+    confirmSubtitle: t("pinConfirmSubtitle"),
+    mismatch: t("pinMismatch"),
+    cancelLabel: t("cancel"),
+    backspaceLabel: t("pinBackspace"),
+  });
+  if (!pin) return;
+  await chrome.storage.local.set({ masterPinHash: await hashPin(pin), masterPinDigits: pin.length });
+  await renderMaster();
+});
+
+removeMasterEl.addEventListener("click", async () => {
+  const ok = await confirmDialog({
+    title: t("masterRemoveTitle"),
+    body: t("masterRemoveBody"),
+    confirmLabel: t("masterRemove"),
+    cancelLabel: t("cancel"),
+  });
+  if (!ok) return;
+  await chrome.storage.local.remove(["masterPinHash", "masterPinDigits"]);
+  await renderMaster();
 });
 
 // Sync across devices (opt-in). Toggling migrates the synced allowlist, then we
@@ -334,6 +382,7 @@ async function init() {
     syncToggleEl.checked = await isSyncOn();
     const { pinLength = 4 } = await chrome.storage.local.get({ pinLength: 4 });
     pinLengthEl.value = String(pinLength);
+    await renderMaster();
     await loadManagedAllow();
     await renderAllowed();
   }
