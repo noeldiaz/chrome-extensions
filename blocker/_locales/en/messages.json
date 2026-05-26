@@ -55,6 +55,8 @@
 
   "startBlocking": { "message": "Start blocking" },
   "stopBlocking": { "message": "Stop blocking" },
+  "lockedByAdmin": { "message": "Locked by administrator" },
+  "managedSite": { "message": "Set by your administrator" },
 
   "allowThisSite": { "message": "Allow this site" },
   "alreadyAllowed": { "message": "Already allowed" },

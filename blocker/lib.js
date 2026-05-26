@@ -98,3 +98,12 @@ export function addDomain(allowed, domain) {
 export function removeDomain(allowed, domain) {
   return allowed.filter((d) => d !== domain);
 }
+
+// The effective allowlist: the admin-pushed (policy / managed-storage) sites
+// always apply; the user's own list is unioned on top unless the admin has
+// locked it. Deduped + sorted. Used by both the enforcer and the popup.
+export function effectiveAllowed(managedSites, userSites, lockAllowlist = false) {
+  const managed = (managedSites || []).map((d) => String(d).toLowerCase());
+  const user = lockAllowlist ? [] : userSites || [];
+  return [...new Set([...managed, ...user])].sort();
+}

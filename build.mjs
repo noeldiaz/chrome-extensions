@@ -59,6 +59,7 @@ const EXCLUDE = new Set([
   "src",
   "test",
   "scripts",
+  "enterprise",
   "eslint.config.js",
   "package.json",
   "package-lock.json",

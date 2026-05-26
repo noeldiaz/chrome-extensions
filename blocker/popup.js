@@ -1,4 +1,4 @@
-import { baseDomain, hostFromUrl, normalizeDomain, domainAllowed, addDomain, removeDomain } from "./lib.js";
+import { baseDomain, hostFromUrl, normalizeDomain, domainAllowed, addDomain, removeDomain, effectiveAllowed } from "./lib.js";
 import { localize, t } from "./i18n.js";
 import { syncGet, syncSet, isSyncOn } from "./sync.js";
 import { confirmDialog } from "./dialog.js";
@@ -31,6 +31,17 @@ let currentBase = null; // base domain of the active tab, or null (non-http page
 let blockingNow = false; // last-rendered blocking state; lets the toggle branch
 //                          synchronously so permissions.request stays the first
 //                          await inside the click gesture (Chrome requires it).
+
+// Admin policy from chrome.storage.managed (Windows registry / GPO). Empty on an
+// unmanaged machine. forceBlocking → can't stop; lockAllowlist → can't edit.
+let managed = { allowedSites: [], forceBlocking: false, lockAllowlist: false };
+async function loadManaged() {
+  try {
+    managed = await chrome.storage.managed.get({ allowedSites: [], forceBlocking: false, lockAllowlist: false });
+  } catch {
+    /* unmanaged — keep defaults */
+  }
+}
 
 // --- theme (Blocker has no shared theme module, so it's inlined like the popup) ---
 
@@ -80,9 +91,12 @@ async function getAllowed() {
 
 function renderControl(blocking, allowed) {
   blockingNow = blocking;
+  const forced = !!managed.forceBlocking;
   toggleEl.classList.remove(...TOGGLE_OFF, ...TOGGLE_ON);
   toggleEl.classList.add(...(blocking ? TOGGLE_ON : TOGGLE_OFF));
-  toggleLabelEl.textContent = blocking ? t("stopBlocking") : t("startBlocking");
+  // Admin force-blocking: blocking can't be turned off at all.
+  toggleEl.disabled = forced;
+  toggleLabelEl.textContent = forced ? t("lockedByAdmin") : blocking ? t("stopBlocking") : t("startBlocking");
 
   // While blocking, hide the "allow this tab" card — you set the allowlist
   // before starting, and the Allowed tab still manages it.
@@ -99,7 +113,7 @@ function renderControl(blocking, allowed) {
   allowThisEl.setAttribute("aria-label", allowLabel);
 }
 
-function buildRow(domain, blocking) {
+function buildRow(domain, { removable = true, managed: isManaged = false } = {}) {
   const row = document.createElement("div");
   row.className =
     "flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-800";
@@ -109,9 +123,21 @@ function buildRow(domain, blocking) {
   name.textContent = domain;
   name.title = domain;
 
+  // Admin-pushed sites can't be removed — show a lock badge instead of the ×.
+  if (isManaged) {
+    const lock = document.createElement("span");
+    lock.className = "inline-flex shrink-0 items-center text-slate-400 dark:text-slate-500";
+    lock.title = t("managedSite");
+    lock.setAttribute("aria-label", t("managedSite"));
+    lock.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>';
+    row.append(name, lock);
+    return row;
+  }
+
   const del = document.createElement("button");
   del.type = "button";
-  del.disabled = blocking; // read-only while blocking
+  del.disabled = !removable; // read-only while blocking or locked
   del.className =
     "shrink-0 rounded p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400 dark:hover:bg-red-950";
   del.title = t("removeSite", [domain]);
@@ -125,20 +151,29 @@ function buildRow(domain, blocking) {
 }
 
 async function render() {
-  const [blocking, allowed] = await Promise.all([getBlocking(), getAllowed()]);
+  const [blockingLocal, userAllowed] = await Promise.all([getBlocking(), getAllowed()]);
+  const blocking = blockingLocal || !!managed.forceBlocking;
+  const managedSites = (managed.allowedSites || []).map((d) => String(d).toLowerCase());
+  const managedSet = new Set(managedSites);
+  const allowed = effectiveAllowed(managedSites, userAllowed, managed.lockAllowlist);
+
   renderControl(blocking, allowed);
 
   allowedCountEl.textContent = String(allowed.length);
   allowedCountEl.classList.toggle("hidden", allowed.length === 0);
 
-  // While blocking, the allowlist is read-only: no Add, Remove, or Clear all.
-  addInputEl.disabled = blocking;
-  addBtnEl.disabled = blocking;
+  // Read-only while blocking, or when the admin has locked the allowlist.
+  const readOnly = blocking || !!managed.lockAllowlist;
+  addInputEl.disabled = readOnly;
+  addBtnEl.disabled = readOnly;
 
   listEl.replaceChildren();
   emptyEl.hidden = allowed.length > 0;
-  clearAllEl.disabled = blocking || allowed.length === 0;
-  for (const d of allowed) listEl.appendChild(buildRow(d, blocking));
+  // Clear all only affects the user's own entries (admin sites can't be removed).
+  const userRemovable = allowed.filter((d) => !managedSet.has(d)).length;
+  clearAllEl.disabled = readOnly || userRemovable === 0;
+  for (const d of allowed)
+    listEl.appendChild(buildRow(d, { removable: !readOnly && !managedSet.has(d), managed: managedSet.has(d) }));
 }
 
 // --- actions ---
@@ -199,6 +234,7 @@ async function stopBlocking() {
 }
 
 function toggleBlocking() {
+  if (managed.forceBlocking) return; // locked on by the administrator
   // Branch on the last-rendered state (no await first) so that, when starting,
   // chrome.permissions.request is the first await under the user gesture.
   return blockingNow ? stopBlocking() : startBlocking();
@@ -213,7 +249,7 @@ async function allowThisSite() {
 
 async function addManual(e) {
   e.preventDefault();
-  if (blockingNow) return; // read-only while blocking
+  if (blockingNow || managed.lockAllowlist) return; // read-only while blocking or locked
   const domain = normalizeDomain(addInputEl.value);
   if (!domain) {
     statusEl.textContent = t("invalidDomain");
@@ -227,7 +263,7 @@ async function addManual(e) {
 }
 
 async function removeOne(domain) {
-  if (blockingNow) return; // read-only while blocking
+  if (blockingNow || managed.lockAllowlist) return; // read-only while blocking or locked
   const ok = await confirmDialog({
     title: t("removeTitle"),
     body: t("removeBody", [domain]),
@@ -241,7 +277,7 @@ async function removeOne(domain) {
 }
 
 async function clearAll() {
-  if (blockingNow) return; // read-only while blocking
+  if (blockingNow || managed.lockAllowlist) return; // read-only while blocking or locked
   const allowed = await getAllowed();
   if (!allowed.length) return;
   const ok = await confirmDialog({
@@ -275,9 +311,14 @@ allowThisEl.addEventListener("click", allowThisSite);
 addFormEl.addEventListener("submit", addManual);
 clearAllEl.addEventListener("click", clearAll);
 
-// Live-refresh when blocking flips or the allowlist changes (incl. from another
-// signed-in device while sync is the active area).
+// Live-refresh when blocking flips, the allowlist changes (incl. from another
+// signed-in device while sync is the active area), or the admin policy changes.
 chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area === "managed") {
+    await loadManaged();
+    await render();
+    return;
+  }
   if ((area === "local" && (changes.blocking || changes.allowed)) || (area === "sync" && changes.allowed && (await isSyncOn()))) {
     await render();
   }
@@ -287,6 +328,7 @@ async function load() {
   const tab = await activeTab();
   const host = hostFromUrl(tab?.url || "");
   currentBase = host ? baseDomain(host) : null;
+  await loadManaged();
   await render();
 }
 

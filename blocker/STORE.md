@@ -36,13 +36,18 @@ FEATURES
   automatically, so you never lock yourself out. A red ON badge shows when active.
 • Allow by base domain — allowing example.com allows every subdomain (www, app, …).
   Add the current tab with a button, or type any domain by hand.
-• Friendly block page — disallowed sites land on a clear page with Allow this site,
-  Go back, and Stop blocking — not a cryptic browser error.
+• Friendly block page — disallowed sites land on a plain warning with a single
+  Go back action — not a cryptic browser error, and no shortcut to disable.
+• Unlock PIN — set a PIN when you start blocking; stopping requires it, so it
+  can't be turned off on impulse. While blocking, the allowlist and Options lock.
 • Sweeps open tabs — turning blocking on also handles tabs you already had open.
 • Sync across devices (optional) — roam your allowlist through your own browser
   account. Off by default; whether blocking is on stays per-device.
 • Backup & restore — export all your settings and data to a JSON file and import
   it on another machine. Importing replaces what's on the device.
+• Exam-kiosk / managed mode — on machines you manage, an administrator can push a
+  locked allowlist and force blocking on via Chrome policy; the student then can't
+  edit the list, stop blocking, or open Options.
 • Asks for access only when you start — not at install.
 • Dark and light themes that follow your system preference.
 

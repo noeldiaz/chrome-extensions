@@ -11,6 +11,7 @@ import {
   shouldBlock,
   addDomain,
   removeDomain,
+  effectiveAllowed,
 } from "../lib.js";
 
 test("isHttpUrl matches only http/https", () => {
@@ -103,6 +104,23 @@ test("shouldBlock gates only disallowed http(s) top navigations", () => {
   assert.equal(shouldBlock("chrome://extensions", allowed, true), false);
   assert.equal(shouldBlock("about:blank", allowed, true), false);
   assert.equal(shouldBlock("", allowed, true), false);
+});
+
+test("effectiveAllowed unions managed + user, deduped, sorted, lowercased", () => {
+  assert.deepEqual(effectiveAllowed(["B.com"], ["a.com"]), ["a.com", "b.com"]);
+  assert.deepEqual(effectiveAllowed(["a.com"], ["a.com", "c.com"]), ["a.com", "c.com"]);
+  assert.deepEqual(effectiveAllowed([], ["x.com"]), ["x.com"]);
+  assert.deepEqual(effectiveAllowed(["x.com"], []), ["x.com"]);
+});
+
+test("effectiveAllowed ignores the user list when the allowlist is locked", () => {
+  assert.deepEqual(effectiveAllowed(["school.edu"], ["games.com"], true), ["school.edu"]);
+  assert.deepEqual(effectiveAllowed([], ["games.com"], true), []);
+});
+
+test("effectiveAllowed tolerates null/undefined inputs", () => {
+  assert.deepEqual(effectiveAllowed(null, null), []);
+  assert.deepEqual(effectiveAllowed(undefined, ["a.com"]), ["a.com"]);
 });
 
 test("addDomain dedups and sorts; removeDomain filters", () => {

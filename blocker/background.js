@@ -1,15 +1,28 @@
-import { shouldBlock, isHttpUrl } from "./lib.js";
+import { shouldBlock, isHttpUrl, effectiveAllowed } from "./lib.js";
 import { syncGet } from "./sync.js";
 
 const BLOCKED_PAGE = "blocked.html";
 const BADGE_COLOR = "#dc2626"; // red-600 — blocking is active
 
-// Current settings. `blocking` is per-device (local); `allowed` follows the
-// active sync area (local, or sync when the user opts in).
+// Admin policy pushed via chrome.storage.managed (Windows registry / GPO). Empty
+// when the machine is unmanaged. See schema.json + KIOSK.md.
+async function managedPolicy() {
+  try {
+    return await chrome.storage.managed.get({ allowedSites: [], forceBlocking: false, lockAllowlist: false });
+  } catch {
+    return { allowedSites: [], forceBlocking: false, lockAllowlist: false };
+  }
+}
+
+// Current effective settings. `blocking` is per-device (local) unless the admin
+// forces it on; `allowed` merges the admin's locked list with the user's (the
+// user's is dropped when the admin locks the allowlist).
 async function state() {
+  const policy = await managedPolicy();
   const { blocking = false } = await chrome.storage.local.get({ blocking: false });
-  const { allowed = [] } = await syncGet({ allowed: [] });
-  return { blocking, allowed };
+  const { allowed: userAllowed = [] } = await syncGet({ allowed: [] });
+  const allowed = effectiveAllowed(policy.allowedSites, userAllowed, policy.lockAllowlist);
+  return { blocking: blocking || !!policy.forceBlocking, allowed };
 }
 
 function blockedUrl() {
@@ -55,12 +68,28 @@ async function sweepOpenTabs() {
   }
 }
 
+// Re-badge and re-sweep whenever blocking flips, the allowlist changes, or the
+// admin policy changes — so a removed site immediately kicks its open tabs and
+// a forced/locked policy takes effect without a restart.
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
-  if (areaName === "local" && changes.blocking) {
-    const on = changes.blocking.newValue;
-    await setBadge(on);
-    if (on) await sweepOpenTabs();
-  }
+  const relevant =
+    (areaName === "local" && (changes.blocking || changes.allowed)) ||
+    (areaName === "sync" && changes.allowed) ||
+    (areaName === "managed" && (changes.allowedSites || changes.forceBlocking || changes.lockAllowlist));
+  if (!relevant) return;
+  const { blocking } = await state();
+  await setBadge(blocking);
+  if (blocking) await sweepOpenTabs();
+});
+
+// Defense in depth for kiosk use: while blocking, immediately close any
+// incognito window. The extension can't run in incognito unless allowed there,
+// so this only fires when it has been — the recommended deployment also turns
+// incognito off entirely by policy (IncognitoModeAvailability=1). See KIOSK.md.
+chrome.windows.onCreated.addListener(async (win) => {
+  if (!win.incognito) return;
+  const { blocking } = await state();
+  if (blocking && win.id != null) chrome.windows.remove(win.id).catch(() => {});
 });
 
 async function syncBadge() {

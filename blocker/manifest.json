@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
   "name": "__MSG_appName__",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "__MSG_appDesc__",
   "default_locale": "en",
   "minimum_chrome_version": "110",
   "permissions": ["storage", "tabs", "webNavigation"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "storage": {
+    "managed_schema": "schema.json"
+  },
   "background": {
     "service_worker": "background.js",
     "type": "module"

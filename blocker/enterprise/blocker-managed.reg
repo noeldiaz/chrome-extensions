@@ -1,0 +1,24 @@
+Windows Registry Editor Version 5.00
+
+; ============================================================================
+;  Blocker — extension configuration (chrome.storage.managed)
+; ============================================================================
+;  Pushes a locked allowlist + settings into the Blocker extension itself, so the
+;  student cannot change them. This complements chrome-kiosk.reg (which removes
+;  the escape hatches). Apply both.
+;
+;  Replace EXTENSION_ID_HERE with Blocker's ID, then edit the approved sites.
+;  Arrays in the registry are a subkey whose values are named "1", "2", "3", …
+; ============================================================================
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\3rdparty\extensions\EXTENSION_ID_HERE\policy]
+; Always block; the student cannot stop blocking (no toggle, no PIN prompt).
+"forceBlocking"=dword:00000001
+; Only the admin list below applies; the student cannot add, remove, or clear.
+"lockAllowlist"=dword:00000001
+
+; Approved sites (base domains). Each entry allows that domain and all of its
+; subdomains. These show in the popup as locked (no remove button).
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\3rdparty\extensions\EXTENSION_ID_HERE\policy\allowedSites]
+"1"="exams.school.edu"
+"2"="school.edu"

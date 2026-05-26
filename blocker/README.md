@@ -7,6 +7,7 @@ Manifest V3.
 
 - **One-click blocking** — start blocking from the popup; the tab you're on is auto-allowed so you don't lock yourself out. A red **ON** badge shows when it's active.
 - **Unlock PIN** — when you start blocking, a numeric keypad has you set a 4-digit PIN. Stopping blocking later requires that PIN, so it's harder to give in on impulse. The PIN is stored hashed and only on this device.
+- **Exam-kiosk / managed mode** — on machines you manage, an administrator can push a locked allowlist and force blocking on via Chrome policy (`chrome.storage.managed`); the student then can't add/remove sites, stop blocking, or open Options. See [`enterprise/KIOSK.md`](enterprise/KIOSK.md).
 - **Allowlist by base domain** — allowing `example.com` allows every subdomain (`www.`, `app.`, …). Add the current tab with one button, or type any domain manually.
 - **Custom block page** — disallowed navigations land on a plain warning page (not a raw browser error) with a single **Go back** action; there's no shortcut to disable blocking from it.
 - **Sweeps open tabs** — turning blocking on sends already-open disallowed tabs to the block page, not just future navigations.
@@ -89,6 +90,29 @@ Built with vanilla JS (ES modules) and Tailwind v4. No runtime dependencies.
 > multi-part TLDs (`co.uk`, `com.au`, …) rather than the full Public Suffix List.
 > A few uncommon registrar suffixes may reduce to a two-label domain; add the
 > exact host manually if needed.
+
+## Exam kiosk / managed deployment
+
+On machines you control (e.g. school exam laptops), Blocker can run as a locked
+kiosk. **An extension alone is not exam-proof** — a student owns the browser and
+can use incognito, disable the extension, switch profiles, or edit storage via
+DevTools. The lockdown is only hard to escape when paired with **Chrome enterprise
+policy**, which on Windows comes from the registry and needs **no Google
+subscription**.
+
+Two registry templates and a full guide live in [`enterprise/`](enterprise/):
+
+- `chrome-kiosk.reg` — force-installs Blocker (can't be removed), disables
+  incognito + DevTools + guest/extra profiles, and sets a native
+  `URLAllowlist`/`URLBlocklist`.
+- `blocker-managed.reg` — pushes the extension's `chrome.storage.managed` config:
+  `allowedSites` (locked list), `forceBlocking` (always on, no stopping),
+  `lockAllowlist` (student can't edit). Schema: [`schema.json`](schema.json).
+- `KIOSK.md` — step-by-step deployment and an honest list of residual risks.
+
+When `forceBlocking` is set, the popup shows **Locked by administrator**, the
+allowlist is read-only with admin sites shown as locked rows, and Options is
+inaccessible.
 
 ## Edge, Safari & Firefox
 

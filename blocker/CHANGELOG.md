@@ -4,6 +4,24 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-05-25
+
+### Added
+- **Exam-kiosk / managed deployment.** Blocker now reads admin policy from
+  `chrome.storage.managed` (Windows registry / GPO): `allowedSites` (a locked
+  allowlist), `forceBlocking` (always on, no stopping), and `lockAllowlist` (the
+  student can't add/remove). Admin sites show as locked rows in the popup.
+- **Admin policy kit** under `enterprise/`: a Chrome registry template
+  (force-install, incognito off, DevTools off, guest/profile off, URL
+  allow/blocklist), an extension managed-config template, and `KIOSK.md` with a
+  step-by-step Windows deployment guide and an honest list of residual risks.
+- **Incognito-window guard:** while blocking, incognito windows are closed (the
+  recommended setup also disables incognito by policy).
+
+### Note
+- A standalone extension cannot be exam-proof; the bulletproof enforcement is the
+  enterprise policy layer. See `enterprise/KIOSK.md`.
+
 ## [0.3.0] — 2026-05-25
 
 ### Added

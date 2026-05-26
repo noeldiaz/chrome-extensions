@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "allowedSites": {
+      "title": "Approved sites",
+      "description": "Base domains students may visit while blocking is on, e.g. \"exams.school.edu\". Each entry allows the domain and all its subdomains. This list always applies and cannot be removed by the student.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "forceBlocking": {
+      "title": "Force blocking on",
+      "description": "When true, blocking is always on and the student cannot stop it (no PIN, no toggle). Use for exam machines.",
+      "type": "boolean"
+    },
+    "lockAllowlist": {
+      "title": "Lock the allowlist",
+      "description": "When true, only the administrator's allowedSites apply; the student cannot add, remove, or clear sites.",
+      "type": "boolean"
+    }
+  }
+}

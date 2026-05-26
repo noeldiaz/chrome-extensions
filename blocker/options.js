@@ -128,7 +128,13 @@ localize();
 // reset the blocking flag). Stopping blocking happens in the popup.
 async function init() {
   const { blocking = false } = await chrome.storage.local.get({ blocking: false });
-  if (blocking) {
+  let forceBlocking = false;
+  try {
+    ({ forceBlocking = false } = await chrome.storage.managed.get({ forceBlocking: false }));
+  } catch {
+    /* unmanaged */
+  }
+  if (blocking || forceBlocking) {
     document.getElementById("lockNotice").classList.remove("hidden");
     document.getElementById("otabs").classList.add("hidden");
     for (const p of document.querySelectorAll(".tabpanel")) p.classList.add("hidden");
@@ -141,5 +147,5 @@ init();
 // If blocking flips while this page is open (e.g. stopped from the popup),
 // reload so the page locks or unlocks to match.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.blocking) location.reload();
+  if ((area === "local" && changes.blocking) || (area === "managed" && changes.forceBlocking)) location.reload();
 });

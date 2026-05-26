@@ -1,0 +1,54 @@
+Windows Registry Editor Version 5.00
+
+; ============================================================================
+;  Blocker — exam-kiosk Chrome policy for managed Windows machines
+; ============================================================================
+;  These are Google Chrome enterprise policies. They do NOT require a Google
+;  Workspace / Chrome Enterprise subscription — Chrome reads them straight from
+;  the Windows registry. HKLM applies to every user on the device.
+;
+;  This is the layer that actually makes the lockdown hard to escape; the Blocker
+;  extension is the friendly allowlist UI on top. Read enterprise/KIOSK.md first.
+;
+;  Before importing: replace EXTENSION_ID_HERE (32 letters) with Blocker's ID and
+;  edit the approved sites under URLAllowlist. After importing, fully quit and
+;  reopen Chrome, then confirm everything at chrome://policy.
+; ============================================================================
+
+; --- Remove the escape hatches -------------------------------------------------
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome]
+; Incognito: 1 = disabled. No incognito windows can be opened at all.
+"IncognitoModeAvailability"=dword:00000001
+; DevTools: 2 = disabled everywhere. Stops editing extension storage to clear the
+; PIN or flip the blocking flag, and stops console-based work-arounds.
+"DeveloperToolsAvailability"=dword:00000002
+; No guest profile and no adding/removing browser profiles.
+"BrowserGuestModeEnabled"=dword:00000000
+"BrowserAddPersonEnabled"=dword:00000000
+; Keep the student on the managed profile.
+"ForceEphemeralProfiles"=dword:00000000
+
+; --- Force-install Blocker so it cannot be disabled or removed -----------------
+; The student will not see a Remove/Disable option in chrome://extensions.
+; Format: "<EXTENSION_ID>;<update_url>". The URL below is the Chrome Web Store's;
+; use your own update manifest URL if you self-host the .crx (see KIOSK.md).
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist]
+"1"="EXTENSION_ID_HERE;https://clients2.google.com/service/update2/crx"
+
+; --- Native URL allowlist (the strongest gate) ---------------------------------
+; Block everything, then permit only approved destinations. This is enforced by
+; Chrome itself, so it holds even if the extension is somehow not running.
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\URLBlocklist]
+"1"="*"
+; Block the pages a student would use to undo the lockdown.
+"2"="chrome://extensions"
+"3"="chrome://settings"
+"4"="chrome://policy"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\URLAllowlist]
+; Keep the new-tab page usable.
+"1"="chrome://newtab"
+; >>> Edit these to your exam sites (each entry permits the host; add subdomains
+; >>> explicitly or with a leading dot pattern as your policy requires). <<<
+"2"="exams.school.edu"
+"3"="school.edu"
