@@ -71,6 +71,12 @@ node build.mjs firefox screener  # one target, one extension
 - Pure logic lives in a `lib.js`, unit-tested with **`node:test`** (no test-runner dependency). Third-party runtime libs, if any, are vendored locally (e.g. Screener's `vendor/konva.min.js`) — never remote-loaded.
 - Per-extension versioning via each `manifest.json`; tag releases prefixed, e.g. `refresher-v0.4.1`, `screener-v0.1.0`.
 
+## Security
+
+Found a vulnerability? Please report it privately — see [SECURITY.md](SECURITY.md)
+for how, what's in scope, and the disclosure policy. Each extension's data
+handling is documented in its own `PRIVACY.md`.
+
 ## Requirements
 
 Node 18+ (for the built-in `node:test` runner) and a Chromium browser. Minimum
