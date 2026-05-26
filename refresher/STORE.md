@@ -102,7 +102,7 @@ grabs onto the brand canvas + builds the marquee). Source grabs live in
       and dark mode.
 - [x] **Store icon** — 128×128 (`icons/icon128.png`).
 - [x] **Marquee** — 1400×560 (`store/marquee.png`).
-- [ ] **Small promo tile** — 440×280 (optional, improves placement). Not yet made.
+- [x] **Small promo tile** — 440×280 (`store/promo-tile.png`, optional).
 
 ## Pre-submit checklist
 

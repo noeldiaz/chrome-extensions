@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // Build Chrome Web Store assets from raw popup/options grabs.
 //
-//   node tools/shoot-store.mjs <ext>            # screenshots + marquee
+//   node tools/shoot-store.mjs <ext>            # screenshots + marquee + tile
 //   node tools/shoot-store.mjs <ext> marquee    # marquee only
+//   node tools/shoot-store.mjs <ext> tile       # small promo tile only
 //
 // Screenshots: reads <ext>/screenshots/*.png (raw window grabs), composites
 // each onto a branded 1280x800 canvas with a headline (optional per-shot crop),
 // writes <ext>/store/screenshots/.
 // Marquee: 1400x560 promo banner from the icon + tagline -> <ext>/store/.
+// Tile: 440x280 small promo tile (icon + name + tagline) -> <ext>/store/.
 // Renders with headless Google Chrome — no extra npm deps.
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
@@ -143,7 +145,34 @@ function marqueePage() {
   </body></html>`;
 }
 
-if (mode !== "marquee") {
+function tilePage() {
+  const icon = readFileSync(join(ROOT, ext, "icons", "icon512.png")).toString("base64");
+  const { title, tagline } = cfg.marquee;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 440px; height: 280px; }
+  body {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    padding: 0 28px;
+    font-family: -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+    background:
+      radial-gradient(100% 110% at 50% -10%, ${g1}40 0%, transparent 55%),
+      linear-gradient(150deg, ${g0} 0%, ${g1} 55%, ${g2} 100%);
+    overflow: hidden; text-align: center;
+  }
+  .icon { width: 96px; height: 96px; filter: drop-shadow(0 12px 24px rgba(0,0,0,.4)); }
+  h1 {
+    color: #fff; font-size: 38px; font-weight: 800; letter-spacing: -0.02em; line-height: 1;
+    text-shadow: 0 2px 12px rgba(0,0,0,.3);
+  }
+  p { color: #dbe9ff; font-size: 16px; font-weight: 500; line-height: 1.3; }
+  </style></head><body>
+  <img class="icon" src="data:image/png;base64,${icon}">
+  <h1>${title}</h1><p>${tagline}</p>
+  </body></html>`;
+}
+
+if (mode !== "marquee" && mode !== "tile") {
   const srcDir = join(ROOT, ext, "screenshots");
   const shots = readdirSync(srcDir).filter((f) => /\.png$/i.test(f)).sort();
   if (!shots.length) {
@@ -161,8 +190,14 @@ if (mode !== "marquee") {
   }
 }
 
-if (cfg.marquee) {
+if (cfg.marquee && mode !== "tile") {
   mkdirSync(storeDir, { recursive: true });
   render(marqueePage(), join(storeDir, "marquee.png"), 1400, 560);
   console.log("marquee -> store/marquee.png (1400x560)");
+}
+
+if (cfg.marquee && mode !== "marquee") {
+  mkdirSync(storeDir, { recursive: true });
+  render(tilePage(), join(storeDir, "promo-tile.png"), 440, 280);
+  console.log("tile -> store/promo-tile.png (440x280)");
 }
