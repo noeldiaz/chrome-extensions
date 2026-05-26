@@ -4,6 +4,20 @@ All notable changes to Refresher are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] — 2026-05-26
+
+First stable release — initial Chrome Web Store submission.
+
+### Added
+- Chrome Web Store listing assets: four 1280×800 screenshots, a 1400×560
+  marquee, and a 440×280 promo tile (built by `tools/shoot-store.mjs`), plus the
+  paste-ready listing copy and permission justifications in `STORE.md`.
+
+### Fixed
+- Packaged builds no longer carry `.DS_Store` files or the unused 512px icon
+  source; the `icon.svg` source is excluded too. (Runtime uses the
+  16/32/48/128 PNGs.)
+
 ## [0.11.0] — 2026-05-25
 
 ### Changed

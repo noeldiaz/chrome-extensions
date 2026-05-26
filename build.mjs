@@ -78,6 +78,11 @@ const EXCLUDE = new Set([
 // Docs never belong in a shipped package (privacy policy goes in the store listing).
 const EXCLUDE_RE = /\.md$/i;
 
+// Cruft to drop anywhere in the tree (copied subdirs would otherwise carry it):
+// macOS metadata, and the 512px icon source (the manifest ships 16/32/48/128 only;
+// 512 is kept in source for the store-asset compositor).
+const SKIP_RE = /(^|\/)\.DS_Store$|(^|\/)icon512\.png$/;
+
 function buildCss(srcDir, ext) {
   try {
     execSync("npm run build:css", { cwd: srcDir, stdio: "ignore" });
@@ -90,7 +95,10 @@ function copyExt(srcDir, outDir) {
   mkdirSync(outDir, { recursive: true });
   for (const name of readdirSync(srcDir)) {
     if (EXCLUDE.has(name) || EXCLUDE_RE.test(name)) continue;
-    cpSync(join(srcDir, name), join(outDir, name), { recursive: true });
+    cpSync(join(srcDir, name), join(outDir, name), {
+      recursive: true,
+      filter: (src) => !SKIP_RE.test(src),
+    });
   }
 }
 
