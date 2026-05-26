@@ -13,7 +13,7 @@ Manifest V3.
 - **Blocked-attempt log** — a read-only **Log** tab in Options records the off-limits sites that were blocked (host + time), capped to the most recent 200, for a proctor to review. Local only; clearable.
 - **Custom block page** — disallowed navigations land on a plain warning page (not a raw browser error) with a single **Go back** action; there's no shortcut to disable blocking from it.
 - **Sweeps open tabs** — turning blocking on sends already-open disallowed tabs to the block page, not just future navigations.
-- **Two-tab popup** — *Control* (start/stop + allow this tab + session timer) and *Allowed* (manage the list); the **Log** lives in Options.
+- **Two-tab popup** — *Control* (start/stop + allow this tab + session timer) and *Allowed* (manage the list). Options has its own tabs: *Settings*, *Allowed* (full add/remove), *Log*, and *About*.
 - **Sync across devices** *(opt-in)* — a toggle in Options syncs your allowlist across the devices you're signed in to. Whether blocking is on stays local to each device. Off by default.
 - **Backup & restore** — export all your settings and data to a JSON file, or import one to restore them on another machine (Options → Backup & restore). Imports are confirmed first and replace what's on the device.
 - **Opt-in host access** — Blocker asks for permission to watch your navigations only the first time you start blocking, not at install.

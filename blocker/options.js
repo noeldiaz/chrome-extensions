@@ -3,9 +3,10 @@
 // so it's inlined here) and localization.
 
 import { localize, t } from "./i18n.js";
-import { isSyncOn, setSyncEnabled } from "./sync.js";
+import { syncGet, syncSet, isSyncOn, setSyncEnabled } from "./sync.js";
 import { downloadBackup, parseBackup, restoreBackup } from "./backup.js";
 import { confirmDialog } from "./dialog.js";
+import { normalizeRule, addDomain, removeDomain, effectiveAllowed } from "./lib.js";
 
 const APP = "blocker";
 
@@ -55,6 +56,7 @@ document.getElementById("winClose").addEventListener("click", async () => {
 document.getElementById("aboutVersion").textContent = `${t("version")} ${chrome.runtime.getManifest().version}`;
 const opanels = {
   settings: document.getElementById("opanel-settings"),
+  allowed: document.getElementById("opanel-allowed"),
   log: document.getElementById("opanel-log"),
   about: document.getElementById("opanel-about"),
 };
@@ -181,6 +183,134 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.blockedLog) renderLog();
 });
 
+// --- Allowed list (add / remove; mirrors the popup, honors admin-locked sites) ---
+const addFormEl = document.getElementById("addForm");
+const addInputEl = document.getElementById("addInput");
+const addBtnEl = document.getElementById("addBtn");
+const allowListEl = document.getElementById("list");
+const allowEmptyEl = document.getElementById("empty");
+const allowCountEl = document.getElementById("allowedCount");
+const clearAllEl = document.getElementById("clearAll");
+
+let managedAllow = { allowedSites: [], lockAllowlist: false };
+async function loadManagedAllow() {
+  try {
+    managedAllow = await chrome.storage.managed.get({ allowedSites: [], lockAllowlist: false });
+  } catch {
+    /* unmanaged */
+  }
+}
+
+function buildAllowRow(domain, { removable, managed: isManaged }) {
+  const row = document.createElement("div");
+  row.className =
+    "flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-800";
+  const name = document.createElement("span");
+  name.className = "truncate text-sm text-slate-800 dark:text-slate-100";
+  name.textContent = domain;
+  name.title = domain;
+
+  if (isManaged) {
+    const lock = document.createElement("span");
+    lock.className = "inline-flex shrink-0 items-center text-slate-400 dark:text-slate-500";
+    lock.title = t("managedSite");
+    lock.setAttribute("aria-label", t("managedSite"));
+    lock.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>';
+    row.append(name, lock);
+    return row;
+  }
+
+  const del = document.createElement("button");
+  del.type = "button";
+  del.disabled = !removable;
+  del.className =
+    "shrink-0 rounded p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400 dark:hover:bg-red-950";
+  del.title = t("removeSite", [domain]);
+  del.setAttribute("aria-label", t("removeSite", [domain]));
+  del.innerHTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
+  del.addEventListener("click", () => removeAllow(domain));
+  row.append(name, del);
+  return row;
+}
+
+async function renderAllowed() {
+  const { allowed: userAllowed = [] } = await syncGet({ allowed: [] });
+  const managedSites = (managedAllow.allowedSites || []).map((d) => String(d).toLowerCase());
+  const managedSet = new Set(managedSites);
+  const locked = !!managedAllow.lockAllowlist;
+  const allowed = effectiveAllowed(managedSites, userAllowed, locked);
+
+  allowCountEl.textContent = String(allowed.length);
+  allowCountEl.classList.toggle("hidden", allowed.length === 0);
+
+  addInputEl.disabled = locked;
+  addBtnEl.disabled = locked;
+  allowEmptyEl.hidden = allowed.length > 0;
+  const userRemovable = allowed.filter((d) => !managedSet.has(d)).length;
+  clearAllEl.disabled = locked || userRemovable === 0;
+
+  allowListEl.replaceChildren(
+    ...allowed.map((d) => buildAllowRow(d, { removable: !locked && !managedSet.has(d), managed: managedSet.has(d) })),
+  );
+}
+
+async function addAllow(e) {
+  e.preventDefault();
+  if (managedAllow.lockAllowlist) return;
+  const domain = normalizeRule(addInputEl.value);
+  if (!domain) {
+    addInputEl.focus();
+    return;
+  }
+  const { allowed = [] } = await syncGet({ allowed: [] });
+  await syncSet({ allowed: addDomain(allowed, domain) });
+  addInputEl.value = "";
+  await renderAllowed();
+}
+
+async function removeAllow(domain) {
+  if (managedAllow.lockAllowlist) return;
+  const ok = await confirmDialog({
+    title: t("removeTitle"),
+    body: t("removeBody", [domain]),
+    confirmLabel: t("remove"),
+    cancelLabel: t("cancel"),
+  });
+  if (!ok) return;
+  const { allowed = [] } = await syncGet({ allowed: [] });
+  await syncSet({ allowed: removeDomain(allowed, domain) });
+  await renderAllowed();
+}
+
+async function clearAllAllowed() {
+  if (managedAllow.lockAllowlist) return;
+  const { allowed = [] } = await syncGet({ allowed: [] });
+  if (!allowed.length) return;
+  const ok = await confirmDialog({
+    title: t("clearTitle"),
+    body: t("clearBody", [String(allowed.length)]),
+    confirmLabel: t("clearAll"),
+    cancelLabel: t("cancel"),
+  });
+  if (!ok) return;
+  await syncSet({ allowed: [] });
+  await renderAllowed();
+}
+
+addFormEl.addEventListener("submit", addAllow);
+clearAllEl.addEventListener("click", clearAllAllowed);
+
+// Refresh when the allowlist changes here, from the popup, another device, or policy.
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if ((area === "local" || area === "sync") && changes.allowed) await renderAllowed();
+  if (area === "managed" && (changes.allowedSites || changes.lockAllowlist)) {
+    await loadManagedAllow();
+    await renderAllowed();
+  }
+});
+
 localize();
 
 // While blocking is on, the whole Options page is locked behind the PIN: show a
@@ -204,6 +334,8 @@ async function init() {
     syncToggleEl.checked = await isSyncOn();
     const { pinLength = 4 } = await chrome.storage.local.get({ pinLength: 4 });
     pinLengthEl.value = String(pinLength);
+    await loadManagedAllow();
+    await renderAllowed();
   }
 }
 init();

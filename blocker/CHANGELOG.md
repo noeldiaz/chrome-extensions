@@ -4,6 +4,14 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-05-25
+
+### Added
+- **Allowed-sites management in Options.** A new **Allowed** tab (second slot:
+  Settings · Allowed · Log · About) lists the allowlist with add/remove/clear,
+  mirroring the popup. Admin-pushed sites show as locked rows, and the whole tab
+  is read-only when the allowlist is locked by policy.
+
 ## [0.6.0] — 2026-05-25
 
 ### Added
