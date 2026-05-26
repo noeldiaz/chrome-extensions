@@ -362,7 +362,10 @@ async function main() {
     currentUrl = "";
     flash(t("errReadTab", [e?.message || String(e)]), false);
   }
-  contentEl.value = currentUrl;
+  // Only prefill from the tab when it's a real web page — skip chrome://, the new
+  // tab page, about:blank, file://, etc. (a QR of those is useless); the user can
+  // still type anything.
+  contentEl.value = /^https?:\/\//i.test(currentUrl) ? currentUrl : "";
   autoGrow();
   updatePreview();
 }

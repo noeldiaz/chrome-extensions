@@ -4,6 +4,13 @@ All notable changes to QRmaker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.10.1] — 2026-05-25
+
+### Fixed
+- Don't prefill the QR content from non-web tabs (`chrome://`, the new tab page,
+  `about:blank`, `file://`) — those made a useless code; the field starts empty
+  and prompts for input instead.
+
 ## [0.10.0] — 2026-05-25
 
 ### Changed
