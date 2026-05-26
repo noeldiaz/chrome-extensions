@@ -17,7 +17,7 @@ export default [
       "icons.js",
       "i18n.js",
       "options.js",
-      "sync.js",
+      "sync.js", "sync-core.js",
       "dialog.js",
       "backup.js",
     ],
