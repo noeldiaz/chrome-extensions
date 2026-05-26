@@ -1,0 +1,5 @@
+{
+  "backup.js": ["blocker", "qrmaker", "refresher", "screener", "picker"],
+  "i18n.js": ["blocker", "qrmaker", "refresher", "screener", "picker"],
+  "dialog.js": ["blocker", "qrmaker", "refresher", "screener"]
+}

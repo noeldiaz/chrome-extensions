@@ -21,6 +21,11 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ROOT, "dist");
 const EXTENSIONS = ["qrmaker", "refresher", "screener", "picker", "blocker"];
 
+// Modules kept canonical in shared/ and overlaid into each extension's output, so
+// a release is always built from the single source of truth (the committed
+// per-extension copies are for load-unpacked dev). See shared/README.md.
+const SHARED = JSON.parse(readFileSync(join(ROOT, "shared", "files.json"), "utf8"));
+
 const TARGETS = {
   chrome: {
     features: { fullscreenCapture: true, nativeDownloads: true },
@@ -86,6 +91,14 @@ function copyExt(srcDir, outDir) {
   }
 }
 
+// Overlay the canonical shared modules from shared/ onto the output (authoritative
+// over the committed per-extension copy).
+function overlayShared(outDir, ext) {
+  for (const [file, exts] of Object.entries(SHARED)) {
+    if (exts.includes(ext)) cpSync(join(ROOT, "shared", file), join(outDir, file));
+  }
+}
+
 function transformManifest(outDir, target, ext) {
   if (!target.dropPermissions.length && !target.gecko) return;
   const p = join(outDir, "manifest.json");
@@ -136,6 +149,7 @@ function build(targetName, only) {
     buildCss(srcDir, ext);
     rmSync(outDir, { recursive: true, force: true });
     copyExt(srcDir, outDir);
+    overlayShared(outDir, ext);
     transformManifest(outDir, target, ext);
     writeBuildConfig(srcDir, outDir, targetName, target);
     dropFiles(outDir, target);
