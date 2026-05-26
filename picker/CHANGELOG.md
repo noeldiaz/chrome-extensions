@@ -4,6 +4,14 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] — 2026-05-25
+
+### Changed
+- Confirm dialog unified onto the shared module: the picker-specific variant is
+  gone, so the modal now matches the other extensions — bordered card with a
+  backdrop blur, labelled dialog, Tab focus trap, and focus restored on close.
+  (The shared dialog gained optional `title`/`body`.)
+
 ## [0.11.0] — 2026-05-25
 
 ### Changed

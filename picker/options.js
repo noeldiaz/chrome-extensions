@@ -61,9 +61,9 @@ function recentChip(hex) {
 
 async function removeRecentColor(hex) {
   const ok = await confirmDialog({
-    message: t("recentRemoveConfirm"),
-    confirmText: t("remove"),
-    cancelText: t("cancel"),
+    title: t("recentRemoveConfirm"),
+    confirmLabel: t("remove"),
+    cancelLabel: t("cancel"),
   });
   if (!ok) return;
   const { recent = [] } = await syncGet({ recent: [] });
@@ -150,9 +150,9 @@ async function init() {
   await renderRecentList();
   $("clearRecent").addEventListener("click", async () => {
     const ok = await confirmDialog({
-      message: t("clearRecentConfirm"),
-      confirmText: t("confirmClear"),
-      cancelText: t("cancel"),
+      title: t("clearRecentConfirm"),
+      confirmLabel: t("confirmClear"),
+      cancelLabel: t("cancel"),
     });
     if (!ok) return;
     await syncSet({ recent: [] });
@@ -234,9 +234,10 @@ $("importFile").addEventListener("change", async () => {
     return;
   }
   const ok = await confirmDialog({
-    message: t("importBody"),
-    confirmText: t("importConfirm"),
-    cancelText: t("cancel"),
+    title: t("importTitle"),
+    body: t("importBody"),
+    confirmLabel: t("importConfirm"),
+    cancelLabel: t("cancel"),
   });
   if (!ok) return;
   try {

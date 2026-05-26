@@ -20,5 +20,3 @@ a release is always built from the canonical copy.
 
 - `sync.js` — each extension has its own `SYNC_KEYS`.
 - `theme.js` — diverges per extension (and blocker/refresher inline it).
-- picker's `dialog.js` — a different API (`{ message, confirmText, … }`) and
-  visual; unifying it is a separate task.

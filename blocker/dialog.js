@@ -1,7 +1,8 @@
 // Minimal promise-based confirm modal (workspace convention: always confirm a
 // destructive delete/clear/remove). Text is passed in already-localized; the
-// caller awaits a boolean. No inline handlers (MV3 CSP) — listeners attached here.
-export function confirmDialog({ title, body, confirmLabel = "OK", cancelLabel = "Cancel" }) {
+// caller awaits a boolean. `title` and `body` are each optional, but pass at
+// least one. No inline handlers (MV3 CSP) — listeners attached here.
+export function confirmDialog({ title = "", body = "", confirmLabel = "OK", cancelLabel = "Cancel" }) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.className =
@@ -12,20 +13,27 @@ export function confirmDialog({ title, body, confirmLabel = "OK", cancelLabel = 
       "w-full max-w-xs rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-800";
     card.setAttribute("role", "dialog");
     card.setAttribute("aria-modal", "true");
-    card.setAttribute("aria-labelledby", "cd-title");
-    card.setAttribute("aria-describedby", "cd-body");
     card.tabIndex = -1;
     const prevFocus = document.activeElement; // restored when the dialog closes
 
-    const h = document.createElement("div");
-    h.id = "cd-title";
-    h.className = "text-sm font-semibold text-slate-800 dark:text-slate-100";
-    h.textContent = title;
-
-    const p = document.createElement("p");
-    p.id = "cd-body";
-    p.className = "mt-1.5 text-xs text-slate-500 dark:text-slate-400";
-    p.textContent = body;
+    // Title and body are both optional; render (and label) only what's given.
+    const text = [];
+    if (title) {
+      const h = document.createElement("div");
+      h.id = "cd-title";
+      h.className = "text-sm font-semibold text-slate-800 dark:text-slate-100";
+      h.textContent = title;
+      card.setAttribute("aria-labelledby", "cd-title");
+      text.push(h);
+    }
+    if (body) {
+      const p = document.createElement("p");
+      p.id = "cd-body";
+      p.className = (title ? "mt-1.5 " : "") + "text-xs text-slate-500 dark:text-slate-400";
+      p.textContent = body;
+      card.setAttribute("aria-describedby", "cd-body");
+      text.push(p);
+    }
 
     const row = document.createElement("div");
     row.className = "mt-4 flex justify-end gap-2";
@@ -71,7 +79,7 @@ export function confirmDialog({ title, body, confirmLabel = "OK", cancelLabel = 
     document.addEventListener("keydown", onKey);
 
     row.append(cancel, ok);
-    card.append(h, p, row);
+    card.append(...text, row);
     overlay.append(card);
     document.body.append(overlay);
     ok.focus();

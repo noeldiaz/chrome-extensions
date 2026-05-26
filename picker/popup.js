@@ -659,7 +659,7 @@ async function toggleFav() {
 }
 
 const confirmRemoveFav = () =>
-  confirmDialog({ message: t("favRemoveConfirm"), confirmText: t("remove"), cancelText: t("cancel") });
+  confirmDialog({ title: t("favRemoveConfirm"), confirmLabel: t("remove"), cancelLabel: t("cancel") });
 
 async function removeFav(hex) {
   if (!(await confirmRemoveFav())) return;
@@ -764,9 +764,9 @@ function renderRecent(list) {
 
 async function removeRecent(hex) {
   const ok = await confirmDialog({
-    message: t("recentRemoveConfirm"),
-    confirmText: t("remove"),
-    cancelText: t("cancel"),
+    title: t("recentRemoveConfirm"),
+    confirmLabel: t("remove"),
+    cancelLabel: t("cancel"),
   });
   if (!ok) return;
   const { recent = [] } = await syncGet({ recent: [] });
@@ -1031,9 +1031,9 @@ function init() {
 
   els.clearRecent.addEventListener("click", async () => {
     const ok = await confirmDialog({
-      message: t("clearRecentConfirm"),
-      confirmText: t("confirmClear"),
-      cancelText: t("cancel"),
+      title: t("clearRecentConfirm"),
+      confirmLabel: t("confirmClear"),
+      cancelLabel: t("cancel"),
     });
     if (!ok) return;
     await syncSet({ recent: [] });
