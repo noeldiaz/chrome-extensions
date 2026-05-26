@@ -32,6 +32,7 @@
   "backupExported": { "message": "Backup downloaded." },
   "backupErrJson": { "message": "That file isn’t valid JSON." },
   "backupErrApp": { "message": "That file isn’t a Refresher backup." },
+  "backupErrVersion": { "message": "This backup was made by a newer version. Update the extension and try again." },
   "backupErr": {
     "message": "Backup failed: $error$",
     "placeholders": { "error": { "content": "$1" } }

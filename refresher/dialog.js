@@ -12,12 +12,18 @@ export function confirmDialog({ title, body, confirmLabel = "OK", cancelLabel = 
       "w-full max-w-xs rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-800";
     card.setAttribute("role", "dialog");
     card.setAttribute("aria-modal", "true");
+    card.setAttribute("aria-labelledby", "cd-title");
+    card.setAttribute("aria-describedby", "cd-body");
+    card.tabIndex = -1;
+    const prevFocus = document.activeElement; // restored when the dialog closes
 
     const h = document.createElement("div");
+    h.id = "cd-title";
     h.className = "text-sm font-semibold text-slate-800 dark:text-slate-100";
     h.textContent = title;
 
     const p = document.createElement("p");
+    p.id = "cd-body";
     p.className = "mt-1.5 text-xs text-slate-500 dark:text-slate-400";
     p.textContent = body;
 
@@ -39,11 +45,22 @@ export function confirmDialog({ title, body, confirmLabel = "OK", cancelLabel = 
     function close(result) {
       document.removeEventListener("keydown", onKey);
       overlay.remove();
+      if (prevFocus && typeof prevFocus.focus === "function") prevFocus.focus();
       resolve(result);
     }
     function onKey(e) {
-      if (e.key === "Escape") close(false);
-      if (e.key === "Enter") close(true);
+      if (e.key === "Escape") return close(false);
+      if (e.key === "Enter") return close(true);
+      if (e.key === "Tab") {
+        // trap focus between the two buttons
+        if (!e.shiftKey && document.activeElement === ok) {
+          e.preventDefault();
+          cancel.focus();
+        } else if (e.shiftKey && document.activeElement === cancel) {
+          e.preventDefault();
+          ok.focus();
+        }
+      }
     }
 
     cancel.addEventListener("click", () => close(false));
