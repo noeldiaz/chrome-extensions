@@ -65,6 +65,9 @@ const EXCLUDE = new Set([
   "test",
   "scripts",
   "enterprise",
+  "screenshots", // raw store-listing grabs — not shipped
+  "store", // framed store assets (screenshots, marquee) — not shipped
+  "icon.svg", // icon source — runtime uses the PNGs in icons/
   "eslint.config.js",
   "package.json",
   "package-lock.json",

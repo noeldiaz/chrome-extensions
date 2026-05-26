@@ -91,13 +91,18 @@ https://github.com/noeldiaz/chrome-extensions/blob/main/refresher/PRIVACY.md
 
 ---
 
-## Assets to produce (not text — you create these)
+## Assets
 
-- [ ] **Screenshots** — 1–5 at 1280×800 (or 640×400). Suggested: popup over a real
-      page in light mode; same in dark mode; multi-tab list showing countdown + stats.
-- [ ] **Store icon** — 128×128 (already in `icons/icon128.png`).
-- [ ] **Small promo tile** — 440×280 (optional, improves placement).
-- [ ] **Marquee** — 1400×560 (optional).
+Built with `node tools/shoot-store.mjs refresher` (frames raw `screenshots/`
+grabs onto the brand canvas + builds the marquee). Source grabs live in
+`refresher/screenshots/`; finished assets in `refresher/store/`.
+
+- [x] **Screenshots** — 4 at 1280×800 in `store/screenshots/`: popup over a real
+      page (light), options (Sync + Backup), active tab with live countdown badge,
+      and dark mode.
+- [x] **Store icon** — 128×128 (`icons/icon128.png`).
+- [x] **Marquee** — 1400×560 (`store/marquee.png`).
+- [ ] **Small promo tile** — 440×280 (optional, improves placement). Not yet made.
 
 ## Pre-submit checklist
 
