@@ -28,16 +28,21 @@ Windows Registry Editor Version 5.00
 ; Keep the student on the managed profile.
 "ForceEphemeralProfiles"=dword:00000000
 
-; --- Force-install Blocker so it cannot be disabled or removed -----------------
-; The student will not see a Remove/Disable option in chrome://extensions.
-; Format: "<EXTENSION_ID>;<update_url>". The URL below is the Chrome Web Store's;
-; use your own update manifest URL if you self-host the .crx (see KIOSK.md).
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist]
-"1"="EXTENSION_ID_HERE;https://clients2.google.com/service/update2/crx"
+; --- Force-install Blocker AND grant it host access ---------------------------
+; ExtensionSettings does two jobs here: force_installed (no Remove/Disable button
+; for the student) and runtime_allowed_hosts (grants host access by policy, with
+; no runtime prompt — without this, Blocker's own webNavigation enforcement and
+; the friendly block page do NOT run, because host access is otherwise an opt-in
+; the kiosk flow never triggers). The value is a single JSON string.
+; Replace EXTENSION_ID_HERE; use your own update_url if you self-host the .crx.
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome]
+"ExtensionSettings"="{\"EXTENSION_ID_HERE\":{\"installation_mode\":\"force_installed\",\"update_url\":\"https://clients2.google.com/service/update2/crx\",\"runtime_allowed_hosts\":[\"*://*/*\"],\"toolbar_pin\":\"force_pinned\"}}"
 
-; --- Native URL allowlist (the strongest gate) ---------------------------------
-; Block everything, then permit only approved destinations. This is enforced by
-; Chrome itself, so it holds even if the extension is somehow not running.
+; --- Native URL allowlist (MANDATORY — the actual gate) ------------------------
+; This is the enforcement guarantee: Chrome itself blocks at the network layer,
+; before any page loads, with no service-worker timing gaps. Do not skip it — the
+; extension's own blocking is a convenience layer on top, not a substitute.
+; Block everything, then permit only approved destinations.
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\URLBlocklist]
 "1"="*"
 ; Block the pages a student would use to undo the lockdown.

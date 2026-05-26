@@ -22,8 +22,13 @@ Think of it as three layers, strongest first:
 | `IncognitoModeAvailability` | `1` | No incognito windows at all (closes the main bypass). |
 | `DeveloperToolsAvailability` | `2` | DevTools off everywhere — can't edit storage to clear the PIN or flip the flag. |
 | `BrowserGuestModeEnabled` / `BrowserAddPersonEnabled` | `0` | No guest session, no second profile. |
-| `ExtensionInstallForcelist` | `<id>;<update_url>` | Force-installs Blocker; the student gets no Remove/Disable button. |
-| `URLBlocklist` = `["*"]` + `URLAllowlist` = approved | — | Browser-level site gate. Holds even if the extension isn't running. |
+| `ExtensionSettings` → `force_installed` + `runtime_allowed_hosts` | — | Force-installs Blocker (no Remove/Disable button) **and** grants it host access by policy, so its own blocking + the friendly block page actually run. |
+| `URLBlocklist` = `["*"]` + `URLAllowlist` = approved | — | **Mandatory.** The real gate — Chrome blocks at the network layer before any page loads, with no service-worker timing gaps. The extension's blocking is a convenience layer on top, not a substitute. |
+
+> ⚠️ **The `URLAllowlist`/`URLBlocklist` policy is the enforcement guarantee — do
+> not skip it.** Blocker's own blocking needs host access; `ExtensionSettings`
+> `runtime_allowed_hosts` grants that for the extension UI/block page, but the URL
+> policy is what reliably stops navigation in every case.
 
 The extension config (`blocker-managed.reg`) then sets `forceBlocking` (always on,
 no stopping) and `lockAllowlist` (only your `allowedSites` apply; the student can't
@@ -34,8 +39,8 @@ add/remove). Admin-pushed sites appear in the popup as **locked** rows.
 1. **Get Blocker's extension ID.** It must be stable, which means installing from
    a hosted source rather than an unpacked folder:
    - **Easiest:** publish Blocker to the Chrome Web Store as **Unlisted** (private)
-     and copy the 32-character ID from its URL. Keep the CWS update URL in the
-     forcelist: `https://clients2.google.com/service/update2/crx`.
+     and copy the 32-character ID from its URL. Keep the CWS update URL in
+     `ExtensionSettings`: `https://clients2.google.com/service/update2/crx`.
    - **Self-host:** serve the packed `.crx` + an `update.xml` on your network and
      use that URL instead. (Pin a `key` in `manifest.json` so the ID is stable.)
 2. **Edit the templates.** In both `.reg` files, replace every `EXTENSION_ID_HERE`

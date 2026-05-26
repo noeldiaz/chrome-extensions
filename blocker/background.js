@@ -1,8 +1,10 @@
-import { shouldBlock, isHttpUrl, effectiveAllowed } from "./lib.js";
+import { shouldBlock, isHttpUrl, hostFromUrl, effectiveAllowed } from "./lib.js";
 import { syncGet } from "./sync.js";
 
 const BLOCKED_PAGE = "blocked.html";
 const BADGE_COLOR = "#dc2626"; // red-600 — blocking is active
+const EXPIRY_ALARM = "blockExpiry"; // fires when a timed session ends
+const LOG_CAP = 200; // most recent blocked attempts kept for proctor review
 
 // Admin policy pushed via chrome.storage.managed (Windows registry / GPO). Empty
 // when the machine is unmanaged. See schema.json + KIOSK.md.
@@ -43,6 +45,20 @@ function redirect(tabId) {
   chrome.tabs.update(tabId, { url: blockedUrl() }).catch(() => {});
 }
 
+// Append a blocked attempt to a capped, newest-first local log (for a proctor to
+// review). Collapses immediate repeats of the same host so one stubborn page
+// doesn't flood the list. Local only — never synced.
+async function logBlocked(url) {
+  const host = hostFromUrl(url);
+  if (!host) return;
+  const { blockedLog = [] } = await chrome.storage.local.get({ blockedLog: [] });
+  const last = blockedLog[0];
+  if (last && last.host === host && Date.now() - last.ts < 2000) return;
+  blockedLog.unshift({ host, ts: Date.now() });
+  if (blockedLog.length > LOG_CAP) blockedLog.length = LOG_CAP;
+  await chrome.storage.local.set({ blockedLog });
+}
+
 // Gate top-frame navigations. We read fresh state each time (cheap storage get)
 // so a just-woken service worker never lets a navigation slip through with a
 // stale in-memory cache. iframes/sub-resources are left alone.
@@ -50,7 +66,10 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0) return;
   if (!isHttpUrl(details.url)) return;
   const { blocking, allowed } = await state();
-  if (shouldBlock(details.url, allowed, blocking)) redirect(details.tabId);
+  if (shouldBlock(details.url, allowed, blocking)) {
+    redirect(details.tabId);
+    await logBlocked(details.url);
+  }
 });
 
 // When blocking turns on, send already-open disallowed tabs to the block page,
@@ -64,14 +83,40 @@ async function sweepOpenTabs() {
     return;
   }
   for (const tab of tabs) {
-    if (tab.id != null && shouldBlock(tab.url || "", allowed, true)) redirect(tab.id);
+    if (tab.id != null && shouldBlock(tab.url || "", allowed, true)) {
+      redirect(tab.id);
+      await logBlocked(tab.url || "");
+    }
   }
 }
+
+// End a timed session: turn blocking off and clear its PIN + expiry.
+async function endSession() {
+  await chrome.storage.local.set({ blocking: false });
+  await chrome.storage.local.remove(["pinHash", "blockUntil"]);
+}
+
+// Keep the expiry alarm in sync with a timed session. If the end time has
+// already passed (e.g. the machine was asleep), end the session now.
+async function syncExpiryAlarm() {
+  const { blocking = false, blockUntil = 0 } = await chrome.storage.local.get({ blocking: false, blockUntil: 0 });
+  if (blocking && blockUntil > Date.now()) {
+    chrome.alarms.create(EXPIRY_ALARM, { when: blockUntil });
+  } else {
+    await chrome.alarms.clear(EXPIRY_ALARM);
+    if (blocking && blockUntil && blockUntil <= Date.now()) await endSession();
+  }
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === EXPIRY_ALARM) endSession();
+});
 
 // Re-badge and re-sweep whenever blocking flips, the allowlist changes, or the
 // admin policy changes — so a removed site immediately kicks its open tabs and
 // a forced/locked policy takes effect without a restart.
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName === "local" && (changes.blocking || changes.blockUntil)) await syncExpiryAlarm();
   const relevant =
     (areaName === "local" && (changes.blocking || changes.allowed)) ||
     (areaName === "sync" && changes.allowed) ||
@@ -93,6 +138,7 @@ chrome.windows.onCreated.addListener(async (win) => {
 });
 
 async function syncBadge() {
+  await syncExpiryAlarm(); // restore the alarm, or end an already-expired session
   const { blocking } = await state();
   await setBadge(blocking);
 }

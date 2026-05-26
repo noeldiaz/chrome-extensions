@@ -77,6 +77,64 @@ export function domainAllowed(host, allowed) {
   return allowed.some((d) => h === d || h.endsWith("." + d));
 }
 
+// An allow entry is a string: a base domain ("example.com") that permits the
+// domain and all its subdomains, optionally narrowed by a path prefix
+// ("example.com/exam" permits only URLs whose path is /exam or under it). Split
+// it into { base, path } ("" path = whole site).
+export function parseRule(rule) {
+  if (!rule) return null;
+  const s = String(rule).trim().toLowerCase();
+  if (!s) return null;
+  const slash = s.indexOf("/");
+  const base = slash === -1 ? s : s.slice(0, slash);
+  if (!base) return null;
+  const path = slash === -1 ? "" : s.slice(slash).replace(/\/+$/, "");
+  return { base, path };
+}
+
+// Normalize free-form input (URL / host / "host/path") to a canonical allow
+// entry — base domain, plus a tidy path prefix if one was given. Null if junk.
+export function normalizeRule(input) {
+  if (!input) return null;
+  let s = String(input).trim().toLowerCase();
+  if (!s) return null;
+  if (/^[a-z][a-z0-9+.-]*:\/\//.test(s)) {
+    try {
+      const u = new URL(s);
+      if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+      s = u.host + u.pathname;
+    } catch {
+      return null;
+    }
+  }
+  const slash = s.indexOf("/");
+  const host = (slash === -1 ? s : s.slice(0, slash)).replace(/^www\./, "").replace(/:\d+$/, "");
+  if (!host || (host !== "localhost" && !host.includes("."))) return null;
+  const base = baseDomain(host);
+  if (!base) return null;
+  const path = (slash === -1 ? "" : s.slice(slash)).split("?")[0].split("#")[0].replace(/\/+$/, "");
+  return path && path !== "" ? base + path : base;
+}
+
+// Does `url` satisfy a single allow rule? Host must equal the rule's base domain
+// or be a subdomain of it; when the rule has a path prefix, the URL's path must
+// equal it or sit beneath it (so /exam matches /exam and /exam/q1, not /examine).
+export function ruleMatches(url, rule) {
+  const p = parseRule(rule);
+  if (!p) return false;
+  const host = hostFromUrl(url);
+  if (!host) return false;
+  if (host !== p.base && !host.endsWith("." + p.base)) return false;
+  if (!p.path) return true;
+  let path;
+  try {
+    path = new URL(url).pathname.toLowerCase().replace(/\/+$/, "") || "/";
+  } catch {
+    return false;
+  }
+  return path === p.path || path.startsWith(p.path + "/");
+}
+
 // The core decision: should a top-frame navigation to `url` be blocked, given
 // the allowlist and whether blocking is active? Non-http(s) is always allowed.
 export function shouldBlock(url, allowed, blocking) {
@@ -84,7 +142,7 @@ export function shouldBlock(url, allowed, blocking) {
   if (!isHttpUrl(url)) return false;
   const host = hostFromUrl(url);
   if (!host) return false;
-  return !domainAllowed(host, allowed);
+  return !allowed.some((rule) => ruleMatches(url, rule));
 }
 
 // Add a base domain to the list (dedup, sorted); returns a new array.

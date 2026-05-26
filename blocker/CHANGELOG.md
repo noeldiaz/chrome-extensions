@@ -4,6 +4,25 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-05-25
+
+### Added
+- **Timed sessions** — choose a duration (15–120 min) when starting; blocking
+  ends automatically at expiry (no PIN needed then) via a persisted alarm. A live
+  countdown shows the time left. "Until I stop" keeps the old open-ended behavior.
+- **Path-scoped allow rules** — an allow entry can include a path prefix, e.g.
+  `example.com/exam` permits only `/exam` and below. Bare domains still match the
+  whole base domain + subdomains.
+- **Blocked-attempt log** — Options gains a read-only **Log** tab (between Settings
+  and About) recording the off-limits sites that were blocked (host + time), most
+  recent 200, clearable. Recorded locally; never synced.
+
+### Fixed
+- **Kiosk enforcement gap** — under `forceBlocking` the extension previously did
+  not enforce on its own (it never held host access). The policy kit now uses
+  `ExtensionSettings` with `runtime_allowed_hosts`, and `KIOSK.md` marks the
+  native `URLAllowlist`/`URLBlocklist` as the mandatory enforcement layer.
+
 ## [0.4.0] — 2026-05-25
 
 ### Added

@@ -1,4 +1,4 @@
-import { baseDomain, hostFromUrl, normalizeDomain, domainAllowed, addDomain, removeDomain, effectiveAllowed } from "./lib.js";
+import { baseDomain, hostFromUrl, normalizeRule, ruleMatches, addDomain, removeDomain, effectiveAllowed } from "./lib.js";
 import { localize, t } from "./i18n.js";
 import { syncGet, syncSet, isSyncOn } from "./sync.js";
 import { confirmDialog } from "./dialog.js";
@@ -23,11 +23,16 @@ const listEl = document.getElementById("list");
 const emptyEl = document.getElementById("empty");
 const clearAllEl = document.getElementById("clearAll");
 const allowedCountEl = document.getElementById("allowedCount");
+const durationRowEl = document.getElementById("durationRow");
+const durationEl = document.getElementById("duration");
+const countdownEl = document.getElementById("countdown");
 
 const TOGGLE_OFF = ["bg-blue-600", "text-white", "hover:bg-blue-700", "focus:ring-blue-400"];
 const TOGGLE_ON = ["bg-red-600", "text-white", "hover:bg-red-700", "focus:ring-red-400"];
 
 let currentBase = null; // base domain of the active tab, or null (non-http page)
+let currentUrl = null; // full URL of the active tab (for path-aware allow checks)
+let countdownTimer = null; // setInterval id for the timed-session countdown
 let blockingNow = false; // last-rendered blocking state; lets the toggle branch
 //                          synchronously so permissions.request stays the first
 //                          await inside the click gesture (Chrome requires it).
@@ -77,14 +82,42 @@ async function activeTab() {
   return tab;
 }
 
-async function getBlocking() {
-  const { blocking = false } = await chrome.storage.local.get({ blocking: false });
-  return blocking;
-}
-
 async function getAllowed() {
   const { allowed = [] } = await syncGet({ allowed: [] });
   return allowed;
+}
+
+// Show "Ends in mm:ss" for a timed session, ticking every second. Background's
+// alarm flips blocking off at expiry, which re-renders us via storage.onChanged.
+function manageCountdown(blocking, blockUntil) {
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+  if (!blocking || !blockUntil) {
+    countdownEl.classList.add("hidden");
+    countdownEl.textContent = "";
+    return;
+  }
+  const tick = () => {
+    const ms = blockUntil - Date.now();
+    if (ms <= 0) {
+      countdownEl.classList.add("hidden");
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      return;
+    }
+    const total = Math.ceil(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const parts = h > 0 ? [h, Math.floor((total % 3600) / 60), total % 60] : [Math.floor(total / 60), total % 60];
+    const clock = parts.map((n, i) => (i === 0 ? String(n) : String(n).padStart(2, "0"))).join(":");
+    countdownEl.textContent = t("endsIn", clock);
+    countdownEl.classList.remove("hidden");
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
 }
 
 // --- render ---
@@ -101,11 +134,14 @@ function renderControl(blocking, allowed) {
   // While blocking, hide the "allow this tab" card — you set the allowlist
   // before starting, and the Allowed tab still manages it.
   thisCardEl.classList.toggle("hidden", blocking);
+  // Session-length picker only makes sense before starting (and never when an
+  // admin forces blocking on).
+  durationRowEl.classList.toggle("hidden", blocking || forced);
 
   // While blocking, the Options page is off limits too (locked behind the PIN).
   settingsBtnEl.disabled = blocking;
 
-  const allowed_ = currentBase ? domainAllowed(currentBase, allowed) : false;
+  const allowed_ = currentUrl ? allowed.some((r) => ruleMatches(currentUrl, r)) : false;
   thisSiteEl.textContent = currentBase || t("noSiteHere");
   allowThisEl.disabled = !currentBase || allowed_;
   const allowLabel = allowed_ ? t("alreadyAllowed") : t("allowThisSite");
@@ -151,13 +187,17 @@ function buildRow(domain, { removable = true, managed: isManaged = false } = {})
 }
 
 async function render() {
-  const [blockingLocal, userAllowed] = await Promise.all([getBlocking(), getAllowed()]);
+  const [{ blocking: blockingLocal = false, blockUntil = 0 }, userAllowed] = await Promise.all([
+    chrome.storage.local.get({ blocking: false, blockUntil: 0 }),
+    getAllowed(),
+  ]);
   const blocking = blockingLocal || !!managed.forceBlocking;
   const managedSites = (managed.allowedSites || []).map((d) => String(d).toLowerCase());
   const managedSet = new Set(managedSites);
   const allowed = effectiveAllowed(managedSites, userAllowed, managed.lockAllowlist);
 
   renderControl(blocking, allowed);
+  manageCountdown(blocking, blockUntil);
 
   allowedCountEl.textContent = String(allowed.length);
   allowedCountEl.classList.toggle("hidden", allowed.length === 0);
@@ -208,7 +248,12 @@ async function startBlocking() {
   const allowed = await getAllowed();
   const next = currentBase ? addDomain(allowed, currentBase) : allowed;
   if (next !== allowed) await syncSet({ allowed: next });
+  const minutes = parseInt(durationEl.value, 10) || 0;
   await chrome.storage.local.set({ blocking: true, pinHash: await hashPin(pin) });
+  // Timed session → store an end time (background sets the alarm); "until I stop"
+  // → clear any leftover end time from a previous session.
+  if (minutes > 0) await chrome.storage.local.set({ blockUntil: Date.now() + minutes * 60000 });
+  else await chrome.storage.local.remove("blockUntil");
   await render();
 }
 
@@ -228,7 +273,7 @@ async function stopBlocking() {
     if (!pin) return; // cancelled or never verified — stay blocked
   }
   await chrome.storage.local.set({ blocking: false });
-  await chrome.storage.local.remove("pinHash");
+  await chrome.storage.local.remove(["pinHash", "blockUntil"]);
   statusEl.textContent = "";
   await render();
 }
@@ -250,7 +295,7 @@ async function allowThisSite() {
 async function addManual(e) {
   e.preventDefault();
   if (blockingNow || managed.lockAllowlist) return; // read-only while blocking or locked
-  const domain = normalizeDomain(addInputEl.value);
+  const domain = normalizeRule(addInputEl.value);
   if (!domain) {
     statusEl.textContent = t("invalidDomain");
     return;
@@ -294,7 +339,10 @@ async function clearAll() {
 // --- wiring ---
 
 const tabBtns = document.querySelectorAll(".tab-btn");
-const panels = { control: document.getElementById("panel-control"), allowed: document.getElementById("panel-allowed") };
+const panels = {
+  control: document.getElementById("panel-control"),
+  allowed: document.getElementById("panel-allowed"),
+};
 for (const b of tabBtns)
   b.addEventListener("click", () => {
     for (const x of tabBtns) x.classList.toggle("is-active", x === b);
@@ -311,22 +359,27 @@ allowThisEl.addEventListener("click", allowThisSite);
 addFormEl.addEventListener("submit", addManual);
 clearAllEl.addEventListener("click", clearAll);
 
-// Live-refresh when blocking flips, the allowlist changes (incl. from another
-// signed-in device while sync is the active area), or the admin policy changes.
+// Live-refresh when blocking flips, the session timer changes, the allowlist
+// changes (incl. from another signed-in device while sync is the active area),
+// or the admin policy changes.
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area === "managed") {
     await loadManaged();
     await render();
     return;
   }
-  if ((area === "local" && (changes.blocking || changes.allowed)) || (area === "sync" && changes.allowed && (await isSyncOn()))) {
+  if (
+    (area === "local" && (changes.blocking || changes.blockUntil || changes.allowed)) ||
+    (area === "sync" && changes.allowed && (await isSyncOn()))
+  ) {
     await render();
   }
 });
 
 async function load() {
   const tab = await activeTab();
-  const host = hostFromUrl(tab?.url || "");
+  currentUrl = tab?.url || null;
+  const host = hostFromUrl(currentUrl || "");
   currentBase = host ? baseDomain(host) : null;
   await loadManaged();
   await render();

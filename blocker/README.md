@@ -8,10 +8,12 @@ Manifest V3.
 - **One-click blocking** — start blocking from the popup; the tab you're on is auto-allowed so you don't lock yourself out. A red **ON** badge shows when it's active.
 - **Unlock PIN** — when you start blocking, a numeric keypad has you set a 4-digit PIN. Stopping blocking later requires that PIN, so it's harder to give in on impulse. The PIN is stored hashed and only on this device.
 - **Exam-kiosk / managed mode** — on machines you manage, an administrator can push a locked allowlist and force blocking on via Chrome policy (`chrome.storage.managed`); the student then can't add/remove sites, stop blocking, or open Options. See [`enterprise/KIOSK.md`](enterprise/KIOSK.md).
-- **Allowlist by base domain** — allowing `example.com` allows every subdomain (`www.`, `app.`, …). Add the current tab with one button, or type any domain manually.
+- **Allowlist by base domain — or a path** — allowing `example.com` allows every subdomain (`www.`, `app.`, …). You can also scope to a path: `example.com/exam` permits only `/exam` and below. Add the current tab with one button, or type any domain/pattern manually.
+- **Timed sessions** — pick a duration (15–120 min) when you start; blocking ends automatically at expiry (no PIN needed at the end). A live countdown shows the time left. "Until I stop" disables the timer.
+- **Blocked-attempt log** — a read-only **Log** tab in Options records the off-limits sites that were blocked (host + time), capped to the most recent 200, for a proctor to review. Local only; clearable.
 - **Custom block page** — disallowed navigations land on a plain warning page (not a raw browser error) with a single **Go back** action; there's no shortcut to disable blocking from it.
 - **Sweeps open tabs** — turning blocking on sends already-open disallowed tabs to the block page, not just future navigations.
-- **Two-tab popup** — *Control* (start/stop + allow this tab) and *Allowed* (manage the list).
+- **Two-tab popup** — *Control* (start/stop + allow this tab + session timer) and *Allowed* (manage the list); the **Log** lives in Options.
 - **Sync across devices** *(opt-in)* — a toggle in Options syncs your allowlist across the devices you're signed in to. Whether blocking is on stays local to each device. Off by default.
 - **Backup & restore** — export all your settings and data to a JSON file, or import one to restore them on another machine (Options → Backup & restore). Imports are confirmed first and replace what's on the device.
 - **Opt-in host access** — Blocker asks for permission to watch your navigations only the first time you start blocking, not at install.

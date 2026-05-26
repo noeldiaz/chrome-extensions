@@ -51,9 +51,13 @@ document.getElementById("winClose").addEventListener("click", async () => {
   window.close();
 });
 
-// Tabs: Settings / About
+// Tabs: Settings / Log / About
 document.getElementById("aboutVersion").textContent = `${t("version")} ${chrome.runtime.getManifest().version}`;
-const opanels = { settings: document.getElementById("opanel-settings"), about: document.getElementById("opanel-about") };
+const opanels = {
+  settings: document.getElementById("opanel-settings"),
+  log: document.getElementById("opanel-log"),
+  about: document.getElementById("opanel-about"),
+};
 const tabBtns = document.querySelectorAll(".tab-btn");
 for (const b of tabBtns)
   b.addEventListener("click", () => {
@@ -121,6 +125,55 @@ importFileEl.addEventListener("change", async () => {
   }
 });
 
+// --- Blocked-attempt log (read-only history; clearable) ---
+const logListEl = document.getElementById("logList");
+const logEmptyEl = document.getElementById("logEmpty");
+const logCountEl = document.getElementById("logCount");
+const clearLogEl = document.getElementById("clearLog");
+
+function buildLogRow(entry) {
+  const row = document.createElement("div");
+  row.className =
+    "flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-800";
+  const host = document.createElement("span");
+  host.className = "truncate text-sm text-slate-800 dark:text-slate-100";
+  host.textContent = entry.host;
+  host.title = entry.host;
+  const time = document.createElement("span");
+  time.className = "shrink-0 text-xs tabular-nums text-slate-400 dark:text-slate-500";
+  time.textContent = new Date(entry.ts).toLocaleString();
+  row.append(host, time);
+  return row;
+}
+
+async function renderLog() {
+  const { blockedLog = [] } = await chrome.storage.local.get({ blockedLog: [] });
+  logCountEl.textContent = String(blockedLog.length);
+  logCountEl.classList.toggle("hidden", blockedLog.length === 0);
+  logEmptyEl.hidden = blockedLog.length > 0;
+  clearLogEl.disabled = blockedLog.length === 0;
+  logListEl.replaceChildren(...blockedLog.map(buildLogRow));
+}
+
+clearLogEl.addEventListener("click", async () => {
+  const { blockedLog = [] } = await chrome.storage.local.get({ blockedLog: [] });
+  if (!blockedLog.length) return;
+  const ok = await confirmDialog({
+    title: t("clearLogTitle"),
+    body: t("clearLogBody"),
+    confirmLabel: t("clearLog"),
+    cancelLabel: t("cancel"),
+  });
+  if (!ok) return;
+  await chrome.storage.local.set({ blockedLog: [] });
+  await renderLog();
+});
+
+// Keep the log fresh if attempts are recorded while this page is open.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.blockedLog) renderLog();
+});
+
 localize();
 
 // While blocking is on, the whole Options page is locked behind the PIN: show a
@@ -143,6 +196,7 @@ async function init() {
   if (!blocking) syncToggleEl.checked = await isSyncOn();
 }
 init();
+renderLog();
 
 // If blocking flips while this page is open (e.g. stopped from the popup),
 // reload so the page locks or unlocks to match.

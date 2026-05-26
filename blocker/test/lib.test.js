@@ -12,6 +12,9 @@ import {
   addDomain,
   removeDomain,
   effectiveAllowed,
+  parseRule,
+  normalizeRule,
+  ruleMatches,
 } from "../lib.js";
 
 test("isHttpUrl matches only http/https", () => {
@@ -92,6 +95,39 @@ test("domainAllowed matches exact and subdomains", () => {
   assert.equal(domainAllowed("notexample.com", allowed), false);
   assert.equal(domainAllowed("example.com.evil.com", allowed), false);
   assert.equal(domainAllowed("", allowed), false);
+});
+
+test("parseRule splits host and path prefix", () => {
+  assert.deepEqual(parseRule("example.com"), { base: "example.com", path: "" });
+  assert.deepEqual(parseRule("example.com/exam"), { base: "example.com", path: "/exam" });
+  assert.deepEqual(parseRule("example.com/exam/"), { base: "example.com", path: "/exam" });
+  assert.equal(parseRule(""), null);
+});
+
+test("normalizeRule canonicalizes URLs, hosts, and host/path input", () => {
+  assert.equal(normalizeRule("https://www.Example.com/Exam/?q=1"), "example.com/exam");
+  assert.equal(normalizeRule("app.example.com"), "example.com");
+  assert.equal(normalizeRule("example.com/"), "example.com");
+  assert.equal(normalizeRule("bbc.co.uk/news"), "bbc.co.uk/news");
+  assert.equal(normalizeRule("notadomain"), null);
+  assert.equal(normalizeRule("ftp://x.com/a"), null);
+});
+
+test("ruleMatches honors subdomains and path prefixes", () => {
+  assert.equal(ruleMatches("https://example.com/x", "example.com"), true);
+  assert.equal(ruleMatches("https://sub.example.com/x", "example.com"), true);
+  assert.equal(ruleMatches("https://example.com/exam", "example.com/exam"), true);
+  assert.equal(ruleMatches("https://example.com/exam/q1", "example.com/exam"), true);
+  assert.equal(ruleMatches("https://example.com/examine", "example.com/exam"), false);
+  assert.equal(ruleMatches("https://example.com/other", "example.com/exam"), false);
+  assert.equal(ruleMatches("https://other.com/", "example.com"), false);
+  assert.equal(ruleMatches("chrome://x", "example.com"), false);
+});
+
+test("shouldBlock respects path-scoped allow rules", () => {
+  const allowed = ["example.com/exam"];
+  assert.equal(shouldBlock("https://example.com/exam/q1", allowed, true), false);
+  assert.equal(shouldBlock("https://example.com/grades", allowed, true), true);
 });
 
 test("shouldBlock gates only disallowed http(s) top navigations", () => {

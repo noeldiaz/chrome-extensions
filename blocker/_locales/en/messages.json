@@ -52,11 +52,18 @@
 
   "tabControl": { "message": "Control" },
   "tabAllowed": { "message": "Allowed" },
+  "tabLog": { "message": "Log" },
 
   "startBlocking": { "message": "Start blocking" },
   "stopBlocking": { "message": "Stop blocking" },
   "lockedByAdmin": { "message": "Locked by administrator" },
   "managedSite": { "message": "Set by your administrator" },
+  "sessionLength": { "message": "Block for" },
+  "durationUntilStop": { "message": "Until I stop" },
+  "endsIn": {
+    "message": "Ends in $time$",
+    "placeholders": { "time": { "content": "$1" } }
+  },
 
   "allowThisSite": { "message": "Allow this site" },
   "alreadyAllowed": { "message": "Already allowed" },
@@ -79,6 +86,13 @@
   "clearAll": { "message": "Clear all" },
   "emptyAllowed": { "message": "No sites allowed yet." },
   "invalidDomain": { "message": "Enter a valid domain, like example.com." },
+
+  "blockedAttempts": { "message": "Blocked attempts" },
+  "logHint": { "message": "The most recent off-limits sites that were blocked (host and time). Kept locally on this device." },
+  "clearLog": { "message": "Clear log" },
+  "emptyLog": { "message": "No blocked attempts yet." },
+  "clearLogTitle": { "message": "Clear the log?" },
+  "clearLogBody": { "message": "Remove all recorded blocked attempts? This can’t be undone." },
   "removeSite": {
     "message": "Remove $domain$",
     "placeholders": { "domain": { "content": "$1" } }

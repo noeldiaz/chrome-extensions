@@ -40,6 +40,11 @@ FEATURES
   Go back action — not a cryptic browser error, and no shortcut to disable.
 • Unlock PIN — set a PIN when you start blocking; stopping requires it, so it
   can't be turned off on impulse. While blocking, the allowlist and Options lock.
+• Timed sessions — block for a set length (15–120 min) that ends on its own, or
+  block until you stop. A live countdown shows the time left.
+• Path-scoped sites — allow a whole domain, or just part of it (example.com/exam).
+• Blocked-attempt log — Options keeps a read-only list of blocked sites (host and
+  time) for review.
 • Sweeps open tabs — turning blocking on also handles tabs you already had open.
 • Sync across devices (optional) — roam your allowlist through your own browser
   account. Off by default; whether blocking is on stays per-device.
