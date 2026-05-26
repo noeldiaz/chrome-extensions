@@ -93,7 +93,7 @@ async function sweepOpenTabs() {
 // End a timed session: turn blocking off and clear its PIN + expiry.
 async function endSession() {
   await chrome.storage.local.set({ blocking: false });
-  await chrome.storage.local.remove(["pinHash", "blockUntil"]);
+  await chrome.storage.local.remove(["pinHash", "pinDigits", "blockUntil"]);
 }
 
 // Keep the expiry alarm in sync with a timed session. If the end time has

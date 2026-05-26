@@ -4,6 +4,13 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-05-25
+
+### Added
+- **Configurable unlock-PIN length.** Options → Settings lets you choose a 4–8
+  digit PIN; it applies the next time you start blocking. The active PIN keeps
+  the length it was set with, so the stop prompt always expects the right count.
+
 ## [0.5.0] — 2026-05-25
 
 ### Added

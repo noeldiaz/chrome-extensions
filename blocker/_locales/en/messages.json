@@ -79,6 +79,8 @@
   "pinEnterSubtitle": { "message": "Enter your unlock PIN to stop blocking." },
   "pinWrong": { "message": "Wrong PIN. Try again." },
   "pinBackspace": { "message": "Delete" },
+  "optPinLength": { "message": "Unlock PIN length" },
+  "optPinLengthHint": { "message": "How many digits the unlock PIN has. Applies the next time you start blocking." },
 
   "addPlaceholder": { "message": "example.com" },
   "add": { "message": "Add" },

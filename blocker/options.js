@@ -65,6 +65,13 @@ for (const b of tabBtns)
     for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
   });
 
+// Unlock PIN length (4–8). A preference applied the next time blocking starts;
+// the active PIN keeps the length it was set with.
+const pinLengthEl = document.getElementById("pinLength");
+pinLengthEl.addEventListener("change", async () => {
+  await chrome.storage.local.set({ pinLength: parseInt(pinLengthEl.value, 10) || 4 });
+});
+
 // Sync across devices (opt-in). Toggling migrates the synced allowlist, then we
 // reload so the page reflects the now-active storage area.
 const syncToggleEl = document.getElementById("syncToggle");
@@ -193,7 +200,11 @@ async function init() {
     for (const p of document.querySelectorAll(".tabpanel")) p.classList.add("hidden");
   }
   await loadTheme(); // removes `invisible` last, so locked content never flashes
-  if (!blocking) syncToggleEl.checked = await isSyncOn();
+  if (!blocking) {
+    syncToggleEl.checked = await isSyncOn();
+    const { pinLength = 4 } = await chrome.storage.local.get({ pinLength: 4 });
+    pinLengthEl.value = String(pinLength);
+  }
 }
 init();
 renderLog();

@@ -234,8 +234,11 @@ async function startBlocking() {
   }
   statusEl.textContent = "";
   // Choose an unlock PIN before blocking starts; it's required to stop later.
+  // Length comes from the Options preference (4–8, default 4).
+  const { pinLength = 4 } = await chrome.storage.local.get({ pinLength: 4 });
   const pin = await pinPad({
     mode: "set",
+    length: pinLength,
     title: t("pinSetTitle"),
     subtitle: t("pinSetSubtitle"),
     confirmTitle: t("pinConfirmTitle"),
@@ -249,7 +252,8 @@ async function startBlocking() {
   const next = currentBase ? addDomain(allowed, currentBase) : allowed;
   if (next !== allowed) await syncSet({ allowed: next });
   const minutes = parseInt(durationEl.value, 10) || 0;
-  await chrome.storage.local.set({ blocking: true, pinHash: await hashPin(pin) });
+  // Store the PIN's length so the stop prompt expects the right number of digits.
+  await chrome.storage.local.set({ blocking: true, pinHash: await hashPin(pin), pinDigits: pin.length });
   // Timed session → store an end time (background sets the alarm); "until I stop"
   // → clear any leftover end time from a previous session.
   if (minutes > 0) await chrome.storage.local.set({ blockUntil: Date.now() + minutes * 60000 });
@@ -259,10 +263,12 @@ async function startBlocking() {
 
 async function stopBlocking() {
   // Require the unlock PIN (when one was set) before turning blocking off.
-  const { pinHash = null } = await chrome.storage.local.get({ pinHash: null });
+  // Use the length the PIN was set with (default 4 for PINs from older versions).
+  const { pinHash = null, pinDigits = 4 } = await chrome.storage.local.get({ pinHash: null, pinDigits: 4 });
   if (pinHash) {
     const pin = await pinPad({
       mode: "enter",
+      length: pinDigits,
       title: t("pinEnterTitle"),
       subtitle: t("pinEnterSubtitle"),
       wrong: t("pinWrong"),
@@ -273,7 +279,7 @@ async function stopBlocking() {
     if (!pin) return; // cancelled or never verified — stay blocked
   }
   await chrome.storage.local.set({ blocking: false });
-  await chrome.storage.local.remove(["pinHash", "blockUntil"]);
+  await chrome.storage.local.remove(["pinHash", "pinDigits", "blockUntil"]);
   statusEl.textContent = "";
   await render();
 }

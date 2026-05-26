@@ -6,7 +6,7 @@ Manifest V3.
 ## Features
 
 - **One-click blocking** — start blocking from the popup; the tab you're on is auto-allowed so you don't lock yourself out. A red **ON** badge shows when it's active.
-- **Unlock PIN** — when you start blocking, a numeric keypad has you set a 4-digit PIN. Stopping blocking later requires that PIN, so it's harder to give in on impulse. The PIN is stored hashed and only on this device.
+- **Unlock PIN** — when you start blocking, a numeric keypad has you set a PIN (length configurable 4–8 digits in Options). Stopping blocking later requires that PIN, so it's harder to give in on impulse. The PIN is stored hashed and only on this device.
 - **Exam-kiosk / managed mode** — on machines you manage, an administrator can push a locked allowlist and force blocking on via Chrome policy (`chrome.storage.managed`); the student then can't add/remove sites, stop blocking, or open Options. See [`enterprise/KIOSK.md`](enterprise/KIOSK.md).
 - **Allowlist by base domain — or a path** — allowing `example.com` allows every subdomain (`www.`, `app.`, …). You can also scope to a path: `example.com/exam` permits only `/exam` and below. Add the current tab with one button, or type any domain/pattern manually.
 - **Timed sessions** — pick a duration (15–120 min) when you start; blocking ends automatically at expiry (no PIN needed at the end). A live countdown shows the time left. "Until I stop" disables the timer.
