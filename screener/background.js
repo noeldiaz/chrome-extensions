@@ -249,8 +249,15 @@ async function ensureOffscreen() {
 // --- capture orchestration ---
 
 async function captureVisible(tab) {
-  const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
-  return finalizeCapture(dataUrl, "visible", tab);
+  if (tab?.id == null || tab?.windowId == null) {
+    return { ok: false, error: chrome.i18n.getMessage("captureFailed") };
+  }
+  try {
+    const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+    return await finalizeCapture(dataUrl, "visible", tab);
+  } catch (e) {
+    return { ok: false, error: String(e?.message || e) };
+  }
 }
 
 async function captureSelection(tab) {

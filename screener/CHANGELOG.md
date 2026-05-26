@@ -4,6 +4,17 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-05-25
+
+### Changed
+- Deleting a comment pin now asks for confirmation first.
+
+### Fixed
+- Hardening pass: the visible-area capture validates the tab and handles a
+  failed capture (closed tab, non-capturable page, revoked permission) instead
+  of throwing; undo/redo survives a corrupted history entry; and the ticket
+  description field is capped at 2000 characters.
+
 ## [0.5.0] — 2026-05-25
 
 ### Added

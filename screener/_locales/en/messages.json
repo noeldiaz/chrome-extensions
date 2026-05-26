@@ -13,6 +13,7 @@
   "version": { "message": "Version" },
   "copy": { "message": "Copy" },
   "cancel": { "message": "Cancel" },
+  "delete": { "message": "Delete" },
 
   "capVisible": { "message": "Visible area" },
   "capVisibleDesc": { "message": "What you see right now" },
@@ -40,6 +41,8 @@
   "commentPlaceholder": { "message": "Add a comment…" },
   "commentHint": { "message": "Enter to save · Esc to cancel" },
   "commentDeletePin": { "message": "Delete pin" },
+  "deletePinTitle": { "message": "Delete pin?" },
+  "deletePinBody": { "message": "This removes the pin and its comment. This can't be undone." },
   "commentsLegendTitle": { "message": "Comments" },
   "toolRedactTitle": { "message": "Redact — solid block" },
   "toolRedactAria": { "message": "Redact with a solid block" },

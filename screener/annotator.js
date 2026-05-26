@@ -4,6 +4,7 @@
 // resolution. When zoomed past the viewport, the wrap's scrollbars pan.
 
 import { t } from "./i18n.js";
+import { confirmDialog } from "./dialog.js";
 
 const REDACT_FILL = "#000000";
 const TEXT_FONT_SIZE = 22; // natural px
@@ -195,9 +196,15 @@ export class Annotator {
 
   restore(state) {
     const Konva = globalThis.Konva;
+    let parsed;
+    try {
+      parsed = JSON.parse(state);
+    } catch {
+      return; // corrupted history entry — skip the restore rather than crash
+    }
     this.clearSelection();
     for (const s of this.shapes()) s.destroy();
-    for (const obj of JSON.parse(state)) {
+    for (const obj of parsed) {
       const node = Konva.Node.create(obj);
       this.annoLayer.add(node);
       // Image nodes (pixelate redactions) don't serialize their bitmap or
@@ -660,7 +667,15 @@ export class Annotator {
       del.innerHTML =
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.35 9m-4.78 0L9.26 9M9.97 4.5h4.06M19.5 5.25l-.84 12.6a2.25 2.25 0 01-2.24 2.1H7.58a2.25 2.25 0 01-2.24-2.1L4.5 5.25M3.75 5.25h16.5"/></svg>';
       del.addEventListener("mousedown", (ev) => ev.preventDefault()); // keep textarea focus (don't blur-commit first)
-      del.addEventListener("click", () => this.deletePin(pin));
+      del.addEventListener("click", async () => {
+        const ok = await confirmDialog({
+          title: t("deletePinTitle"),
+          body: t("deletePinBody"),
+          confirmLabel: t("delete"),
+          cancelLabel: t("cancel"),
+        });
+        if (ok) this.deletePin(pin);
+      });
       header.append(spacer, del);
     }
     card.appendChild(header);
