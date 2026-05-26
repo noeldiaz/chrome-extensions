@@ -69,6 +69,7 @@
     "message": "Couldn't copy: $error$",
     "placeholders": { "error": { "content": "$1" } }
   },
+  "errInvalidHex": { "message": "That isn’t a valid color." },
 
   "tabColor": { "message": "Color" },
   "tabPage": { "message": "Page" },

@@ -751,7 +751,11 @@ function renderRecent(list) {
     moreLabel.textContent = t("recentMore");
     more.appendChild(moreLabel);
     more.addEventListener("click", async () => {
-      await chrome.storage.local.set({ optionsTab: "recent" });
+      try {
+        await chrome.storage.local.set({ optionsTab: "recent" });
+      } catch {
+        /* opening the options page still works without the deep-link flag */
+      }
       chrome.runtime.openOptionsPage();
     });
     els.recent.appendChild(more);
@@ -984,7 +988,9 @@ function init() {
     const h = els.fixShade.dataset.hex;
     if (h) show(h);
   });
-  els.native.addEventListener("input", () => show(els.native.value));
+  els.native.addEventListener("input", () => {
+    if (!show(els.native.value)) flash(t("errInvalidHex"));
+  });
   els.native.addEventListener("change", () => record(els.native.value));
 
   // fine-tune sliders nudge the current color live

@@ -4,6 +4,15 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] — 2026-05-25
+
+### Fixed
+- Manual hex entry now flashes a message ("That isn’t a valid color.") when the
+  typed value can’t be parsed, instead of silently doing nothing.
+- The "More" recent-colors deep link no longer fails to open Settings if writing
+  the `optionsTab` flag to storage throws — the write is guarded and the options
+  page opens regardless.
+
 ## [0.9.0] — 2026-05-25
 
 ### Added
