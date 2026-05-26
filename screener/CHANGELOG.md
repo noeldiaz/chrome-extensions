@@ -4,6 +4,12 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] — 2026-05-25
+
+### Fixed
+- Saving an image no longer throws an uncaught rejection when the "Save As"
+  dialog is cancelled (now silent), and surfaces a message on a real failure.
+
 ## [0.7.0] — 2026-05-25
 
 ### Changed

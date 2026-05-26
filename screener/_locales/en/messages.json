@@ -131,6 +131,10 @@
     "message": "Copy failed: $error$",
     "placeholders": { "error": { "content": "$1" } }
   },
+  "errDownload": {
+    "message": "Couldn’t save the image: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
 
   "capturingFullPage": { "message": "Capturing full page…" },
   "captureFailed": { "message": "Capture failed." },

@@ -149,6 +149,11 @@ async function download() {
       a.download = captureName();
       a.click();
     }
+  } catch (e) {
+    // Cancelling the "Save As" dialog rejects — that's intentional, so stay quiet;
+    // surface anything else.
+    const msg = String(e?.message || e);
+    if (!/cancel/i.test(msg)) flash(t("errDownload", [msg]), false);
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 60000); // let the download read it first
   }
