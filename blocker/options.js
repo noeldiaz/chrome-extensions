@@ -92,7 +92,30 @@ async function renderMaster() {
   removeMasterEl.classList.toggle("hidden", !isSet);
 }
 
+// Once a master PIN is set, it can only be changed or removed by entering it —
+// so nobody can quietly swap or clear someone else's override. Returns true when
+// there's no master yet (nothing to verify) or the entered PIN matches.
+async function verifyMaster() {
+  const { masterPinHash = null, masterPinDigits = 4 } = await chrome.storage.local.get({
+    masterPinHash: null,
+    masterPinDigits: 4,
+  });
+  if (!masterPinHash) return true;
+  const pin = await pinPad({
+    mode: "enter",
+    length: masterPinDigits,
+    title: t("masterVerifyTitle"),
+    subtitle: t("masterVerifySubtitle"),
+    wrong: t("pinWrong"),
+    cancelLabel: t("cancel"),
+    backspaceLabel: t("pinBackspace"),
+    verify: async (entered) => (await hashPin(entered)) === masterPinHash,
+  });
+  return !!pin;
+}
+
 setMasterEl.addEventListener("click", async () => {
+  if (!(await verifyMaster())) return; // changing requires the current master PIN
   const { pinLength = 4 } = await chrome.storage.local.get({ pinLength: 4 });
   const pin = await pinPad({
     mode: "set",
@@ -111,13 +134,7 @@ setMasterEl.addEventListener("click", async () => {
 });
 
 removeMasterEl.addEventListener("click", async () => {
-  const ok = await confirmDialog({
-    title: t("masterRemoveTitle"),
-    body: t("masterRemoveBody"),
-    confirmLabel: t("masterRemove"),
-    cancelLabel: t("cancel"),
-  });
-  if (!ok) return;
+  if (!(await verifyMaster())) return; // removing requires the current master PIN
   await chrome.storage.local.remove(["masterPinHash", "masterPinDigits"]);
   await renderMaster();
 });

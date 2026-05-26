@@ -90,8 +90,8 @@
   "masterRemove": { "message": "Remove" },
   "masterSetTitle": { "message": "Set master PIN" },
   "masterSetSubtitle": { "message": "This can always stop blocking." },
-  "masterRemoveTitle": { "message": "Remove the master PIN?" },
-  "masterRemoveBody": { "message": "The override PIN will no longer work until you set a new one." },
+  "masterVerifyTitle": { "message": "Enter master PIN" },
+  "masterVerifySubtitle": { "message": "Enter the current master PIN to make changes." },
 
   "addPlaceholder": { "message": "example.com" },
   "add": { "message": "Add" },

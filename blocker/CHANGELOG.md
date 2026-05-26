@@ -4,6 +4,14 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.1] — 2026-05-25
+
+### Changed
+- **Master PIN is now self-protecting:** once set, changing or removing it
+  requires entering the current master PIN first, so no one can quietly swap or
+  clear it.
+- Moved the **How blocking works** card from Settings to the About tab.
+
 ## [0.8.0] — 2026-05-25
 
 ### Added
