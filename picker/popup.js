@@ -791,6 +791,7 @@ function show(hexInput) {
   els.swatch.style.background = hex;
   els.swatch.style.color = contrastText(current._rgb);
   els.swatch.textContent = current.hex;
+  els.swatch.setAttribute("aria-label", `${t("swatchAria")} ${current.hex}`);
 
   for (const { key } of FORMATS) {
     const r = rowEls[key];
@@ -821,7 +822,11 @@ function show(hexInput) {
 let pageScanned = false;
 
 function switchTab(name) {
-  for (const b of els.tabBtns) b.classList.toggle("is-active", b.dataset.tab === name);
+  for (const b of els.tabBtns) {
+    const on = b.dataset.tab === name;
+    b.classList.toggle("is-active", on);
+    b.setAttribute("aria-selected", String(on));
+  }
   for (const [k, panel] of Object.entries(els.panels)) panel.classList.toggle("hidden", k !== name);
   if (name === "page" && !pageScanned) scanPage();
 }

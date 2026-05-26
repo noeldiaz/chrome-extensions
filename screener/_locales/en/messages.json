@@ -10,6 +10,7 @@
   "tabSettings": { "message": "Settings" },
   "tabTickets": { "message": "Tickets" },
   "tabAbout": { "message": "About" },
+  "optionsTablist": { "message": "Options sections" },
   "version": { "message": "Version" },
   "copy": { "message": "Copy" },
   "cancel": { "message": "Cancel" },
@@ -25,6 +26,11 @@
   "capFullscreenDesc": { "message": "Whole monitor or a window" },
 
   "titleEditor": { "message": "Screener — Editor" },
+
+  "toolbarTools": { "message": "Annotation tools" },
+  "toolbarColors": { "message": "Stroke colour" },
+  "toolbarWidths": { "message": "Stroke width" },
+  "toolbarZoom": { "message": "Zoom" },
 
   "toolSelectTitle": { "message": "Select / move (V)" },
   "toolSelectAria": { "message": "Select or move" },

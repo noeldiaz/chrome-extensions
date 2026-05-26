@@ -175,7 +175,11 @@ async function init() {
   const tabs = document.querySelectorAll(".tab-btn");
   for (const b of tabs) {
     b.addEventListener("click", () => {
-      for (const x of tabs) x.classList.toggle("is-active", x === b);
+      for (const x of tabs) {
+        const on = x === b;
+        x.classList.toggle("is-active", on);
+        x.setAttribute("aria-selected", String(on));
+      }
       for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
     });
   }

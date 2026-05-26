@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title data-i18n="titleEditor">Screener — Editor</title>
@@ -22,7 +22,7 @@
           title="Settings"
           aria-label="Settings"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -35,10 +35,10 @@
           title="Toggle dark mode"
           aria-label="Toggle dark mode"
         >
-          <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+          <svg aria-hidden="true" data-theme-moon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
           </svg>
-          <svg data-theme-sun xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden h-5 w-5">
+          <svg aria-hidden="true" data-theme-sun xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden h-5 w-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
           </svg>
         </button>
@@ -47,76 +47,76 @@
 
     <!-- Toolbar -->
     <div id="toolbar" class="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-800">
-      <div class="flex items-center gap-0.5" data-tools>
+      <div class="flex items-center gap-0.5" data-tools role="toolbar" data-i18n-attr="aria-label:toolbarTools" aria-label="Annotation tools">
         <button class="tool-btn" data-tool="select" data-i18n-attr="title:toolSelectTitle,aria-label:toolSelectAria" title="Select / move (V)" aria-label="Select or move">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M5.5 3.2l13 7.1-5.7 1.3-1.3 5.7-6-14.1z"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M5.5 3.2l13 7.1-5.7 1.3-1.3 5.7-6-14.1z"/></svg>
         </button>
         <button class="tool-btn" data-tool="rect" data-i18n-attr="title:toolRectTitle,aria-label:toolRectAria" title="Rectangle (R)" aria-label="Rectangle">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/></svg>
         </button>
         <button class="tool-btn is-active" data-tool="arrow" data-i18n-attr="title:toolArrowTitle,aria-label:toolArrowAria" title="Arrow (A)" aria-label="Arrow">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M5 19L19 5M9 5h10v10"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M5 19L19 5M9 5h10v10"/></svg>
         </button>
         <button class="tool-btn" data-tool="pen" data-i18n-attr="title:toolPenTitle,aria-label:toolPenAria" title="Pen (P)" aria-label="Pen">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M16.5 3.5l4 4L7 21l-4 1 1-4L16.5 3.5z"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M16.5 3.5l4 4L7 21l-4 1 1-4L16.5 3.5z"/></svg>
         </button>
         <button class="tool-btn" data-tool="text" data-i18n-attr="title:toolTextTitle,aria-label:toolTextAria" title="Text (T)" aria-label="Text">
-          <span class="text-sm font-bold leading-none">T</span>
+          <span aria-hidden="true" class="text-sm font-bold leading-none">T</span>
         </button>
         <button class="tool-btn" data-tool="comment" data-i18n-attr="title:toolCommentTitle,aria-label:toolCommentAria" title="Comment pin (C)" aria-label="Numbered comment pin">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/><circle cx="12" cy="10.5" r="2.5"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/><circle cx="12" cy="10.5" r="2.5"/></svg>
         </button>
         <button class="tool-btn" data-tool="redact" data-i18n-attr="title:toolRedactTitle,aria-label:toolRedactAria" title="Redact — solid block" aria-label="Redact with a solid block">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><rect x="3.5" y="6.5" width="17" height="11" rx="1.5"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><rect x="3.5" y="6.5" width="17" height="11" rx="1.5"/></svg>
         </button>
         <button class="tool-btn" data-tool="pixelate" data-i18n-attr="title:toolPixelateTitle,aria-label:toolPixelateAria" title="Redact — pixelate" aria-label="Redact by pixelating">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
         </button>
       </div>
 
       <span class="mx-1.5 h-5 w-px bg-slate-200 dark:bg-slate-600"></span>
 
-      <div class="flex items-center gap-1" data-colors>
-        <button class="swatch is-active" data-color="#ef4444" style="background:#ef4444" data-i18n-attr="title:colorRed" title="Red"></button>
-        <button class="swatch" data-color="#f59e0b" style="background:#f59e0b" data-i18n-attr="title:colorAmber" title="Amber"></button>
-        <button class="swatch" data-color="#22c55e" style="background:#22c55e" data-i18n-attr="title:colorGreen" title="Green"></button>
-        <button class="swatch" data-color="#3b82f6" style="background:#3b82f6" data-i18n-attr="title:colorBlue" title="Blue"></button>
-        <button class="swatch" data-color="#0f172a" style="background:#0f172a" data-i18n-attr="title:colorBlack" title="Black"></button>
-        <button class="swatch" data-color="#ffffff" style="background:#ffffff" data-i18n-attr="title:colorWhite" title="White"></button>
+      <div class="flex items-center gap-1" data-colors role="toolbar" data-i18n-attr="aria-label:toolbarColors" aria-label="Stroke colour">
+        <button class="swatch is-active" data-color="#ef4444" style="background:#ef4444" data-i18n-attr="title:colorRed,aria-label:colorRed" title="Red" aria-label="Red"></button>
+        <button class="swatch" data-color="#f59e0b" style="background:#f59e0b" data-i18n-attr="title:colorAmber,aria-label:colorAmber" title="Amber" aria-label="Amber"></button>
+        <button class="swatch" data-color="#22c55e" style="background:#22c55e" data-i18n-attr="title:colorGreen,aria-label:colorGreen" title="Green" aria-label="Green"></button>
+        <button class="swatch" data-color="#3b82f6" style="background:#3b82f6" data-i18n-attr="title:colorBlue,aria-label:colorBlue" title="Blue" aria-label="Blue"></button>
+        <button class="swatch" data-color="#0f172a" style="background:#0f172a" data-i18n-attr="title:colorBlack,aria-label:colorBlack" title="Black" aria-label="Black"></button>
+        <button class="swatch" data-color="#ffffff" style="background:#ffffff" data-i18n-attr="title:colorWhite,aria-label:colorWhite" title="White" aria-label="White"></button>
       </div>
 
       <span class="mx-1.5 h-5 w-px bg-slate-200 dark:bg-slate-600"></span>
 
-      <div class="flex items-center gap-0.5" data-widths>
-        <button class="tool-btn" data-width="2" data-i18n-attr="title:widthThin" title="Thin"><span class="block h-0.5 w-4 rounded bg-current"></span></button>
-        <button class="tool-btn" data-width="4" data-i18n-attr="title:widthMedium" title="Medium"><span class="block h-1 w-4 rounded bg-current"></span></button>
-        <button class="tool-btn is-active" data-width="8" data-i18n-attr="title:widthThick" title="Thick"><span class="block h-1.5 w-4 rounded bg-current"></span></button>
+      <div class="flex items-center gap-0.5" data-widths role="toolbar" data-i18n-attr="aria-label:toolbarWidths" aria-label="Stroke width">
+        <button class="tool-btn" data-width="2" data-i18n-attr="title:widthThin,aria-label:widthThin" title="Thin" aria-label="Thin"><span aria-hidden="true" class="block h-0.5 w-4 rounded bg-current"></span></button>
+        <button class="tool-btn" data-width="4" data-i18n-attr="title:widthMedium,aria-label:widthMedium" title="Medium" aria-label="Medium"><span aria-hidden="true" class="block h-1 w-4 rounded bg-current"></span></button>
+        <button class="tool-btn is-active" data-width="8" data-i18n-attr="title:widthThick,aria-label:widthThick" title="Thick" aria-label="Thick"><span aria-hidden="true" class="block h-1.5 w-4 rounded bg-current"></span></button>
       </div>
 
       <span class="mx-1.5 h-5 w-px bg-slate-200 dark:bg-slate-600"></span>
 
       <button id="undo" class="tool-btn" data-i18n-attr="title:undoTitle,aria-label:undoAria" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo" disabled>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-1"/></svg>
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-1"/></svg>
       </button>
       <button id="redo" class="tool-btn" data-i18n-attr="title:redoTitle,aria-label:redoAria" title="Redo (Ctrl/Cmd+Shift+Z)" aria-label="Redo" disabled>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h1"/></svg>
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h1"/></svg>
       </button>
       <button id="delete" class="tool-btn" data-i18n-attr="title:deleteTitle,aria-label:deleteAria" title="Delete selected (Del)" aria-label="Delete selected">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
       </button>
 
       <span class="mx-1.5 h-5 w-px bg-slate-200 dark:bg-slate-600"></span>
 
-      <div class="flex items-center gap-0.5">
+      <div class="flex items-center gap-0.5" role="toolbar" data-i18n-attr="aria-label:toolbarZoom" aria-label="Zoom">
         <button id="zoomOut" class="tool-btn" data-i18n-attr="title:zoomOut,aria-label:zoomOut" title="Zoom out" aria-label="Zoom out">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4"><path d="M5 12h14"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4"><path d="M5 12h14"/></svg>
         </button>
-        <span id="zoomLabel" class="w-10 text-center text-xs tabular-nums text-slate-500 dark:text-slate-400">100%</span>
+        <span id="zoomLabel" aria-live="polite" class="w-10 text-center text-xs tabular-nums text-slate-500 dark:text-slate-400">100%</span>
         <button id="zoomIn" class="tool-btn" data-i18n-attr="title:zoomIn,aria-label:zoomIn" title="Zoom in" aria-label="Zoom in">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4"><path d="M12 5v14M5 12h14"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4"><path d="M12 5v14M5 12h14"/></svg>
         </button>
         <button id="zoomFit" class="tool-btn" data-i18n-attr="title:zoomFit,aria-label:zoomFit" title="Fit to window" aria-label="Fit to window">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
         </button>
       </div>
     </div>
@@ -131,7 +131,7 @@
 
     <!-- Action bar -->
     <footer class="flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
-      <p id="status" class="mr-auto text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
+      <p id="status" role="status" aria-live="polite" class="mr-auto text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
 
       <button id="copy" type="button" disabled
         class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
@@ -156,7 +156,7 @@
       </button>
       <button id="winClose" type="button"
         class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3.5 w-3.5">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3.5 w-3.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
         </svg>
         <span data-i18n="close">Close</span>
@@ -164,10 +164,10 @@
     </footer>
 
     <!-- Submit-ticket modal -->
-    <div id="submitModal" hidden class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+    <div id="submitModal" hidden role="dialog" aria-modal="true" aria-labelledby="submitModalTitle" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
       <div class="w-full max-w-md rounded-lg bg-white p-5 shadow-xl dark:bg-slate-800">
         <div class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100" data-i18n="submitTicket">Submit ticket</h2>
+          <h2 id="submitModalTitle" class="text-sm font-semibold text-slate-800 dark:text-slate-100" data-i18n="submitTicket">Submit ticket</h2>
           <button id="openOptions" type="button" data-i18n="settings" class="text-xs text-blue-600 hover:underline dark:text-blue-400">Settings</button>
         </div>
 
@@ -190,7 +190,7 @@
               class="w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"
             ></textarea>
           </div>
-          <p id="submitStatus" class="min-h-[1rem] text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
+          <p id="submitStatus" role="status" aria-live="polite" class="min-h-[1rem] text-xs text-slate-500 empty:hidden dark:text-slate-400"></p>
         </div>
 
         <div class="mt-4 flex items-center justify-end gap-2">

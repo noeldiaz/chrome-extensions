@@ -4,6 +4,18 @@ All notable changes to Refresher are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.0] — 2026-05-25
+
+### Changed
+- Cross-device sync mechanism extracted to the shared `sync-core.js`; `sync.js`
+  is now just the per-extension `SYNC_KEYS` config.
+
+### Accessibility
+- All pages: `lang="en"`, status region announced, decorative icons
+  `aria-hidden`, and the Options tablist completed (`aria-selected` wired, panels
+  labelled + focusable). The per-second countdown is deliberately not a live
+  region (avoids screen-reader spam).
+
 ## [0.10.0] — 2026-05-25
 
 ### Changed

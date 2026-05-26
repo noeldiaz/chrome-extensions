@@ -4,6 +4,19 @@ All notable changes to Blocker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.13.0] — 2026-05-25
+
+### Changed
+- **Public Suffix List stored in punycode (ASCII A-labels)** so IDN / non-ASCII
+  hostnames (which the browser delivers as `xn--…`) match correctly.
+- Cross-device sync mechanism extracted to the shared `sync-core.js`; `sync.js`
+  is now just the per-extension `SYNC_KEYS` config.
+
+### Accessibility
+- Popup and Options: completed the ARIA tablist (`aria-selected` wired into the
+  tab switch, panels labelled + focusable), decorative icons `aria-hidden`,
+  status/countdown regions announced, and `lang="en"` on every page.
+
 ## [0.12.0] — 2026-05-25
 
 ### Changed

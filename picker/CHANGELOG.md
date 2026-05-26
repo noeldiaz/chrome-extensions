@@ -4,6 +4,17 @@ All notable changes to Picker are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.13.0] — 2026-05-25
+
+### Changed
+- Cross-device sync mechanism extracted to the shared `sync-core.js`; `sync.js`
+  is now just the per-extension `SYNC_KEYS` config.
+
+### Accessibility
+- Popup and Options: completed the ARIA tablist (`aria-selected` wired, panels
+  labelled + focusable), the color-swatch button's `aria-label` now reflects the
+  current hex, decorative icons `aria-hidden`, and `lang="en"` on every page.
+
 ## [0.12.0] — 2026-05-25
 
 ### Changed

@@ -4,6 +4,19 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-05-25
+
+### Changed
+- Cross-device sync mechanism extracted to the shared `sync-core.js`; `sync.js`
+  is now just the per-extension `SYNC_KEYS` config.
+
+### Accessibility
+- All pages: `lang="en"`, status regions announced, decorative icons
+  `aria-hidden`. Editor: annotation toolbar groups are labelled `role="toolbar"`,
+  every icon-only tool/colour/width/zoom button has an `aria-label`, the zoom
+  level is announced, and the submit modal is a labelled dialog. Options tablist
+  completed.
+
 ## [0.7.1] — 2026-05-25
 
 ### Fixed

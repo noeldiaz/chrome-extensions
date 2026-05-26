@@ -36,7 +36,11 @@ const opanels = { settings: $("opanel-settings"), about: $("opanel-about") };
 const tabBtns = document.querySelectorAll(".tab-btn");
 for (const b of tabBtns)
   b.addEventListener("click", () => {
-    for (const x of tabBtns) x.classList.toggle("is-active", x === b);
+    for (const x of tabBtns) {
+      const active = x === b;
+      x.classList.toggle("is-active", active);
+      x.setAttribute("aria-selected", active ? "true" : "false");
+    }
     for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
   });
 

@@ -57,7 +57,10 @@ const opanels = { settings: document.getElementById("opanel-settings"), about: d
 const tabBtns = document.querySelectorAll(".tab-btn");
 for (const b of tabBtns)
   b.addEventListener("click", () => {
-    for (const x of tabBtns) x.classList.toggle("is-active", x === b);
+    for (const x of tabBtns) {
+      x.classList.toggle("is-active", x === b);
+      x.setAttribute("aria-selected", x === b ? "true" : "false");
+    }
     for (const [k, p] of Object.entries(opanels)) p.classList.toggle("hidden", k !== b.dataset.tab);
   });
 
