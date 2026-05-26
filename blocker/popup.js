@@ -2,6 +2,7 @@ import { baseDomain, hostFromUrl, normalizeDomain, domainAllowed, addDomain, rem
 import { localize, t } from "./i18n.js";
 import { syncGet, syncSet, isSyncOn } from "./sync.js";
 import { confirmDialog } from "./dialog.js";
+import { pinPad } from "./pinpad.js";
 
 const HOST_PERMS = { origins: ["http://*/*", "https://*/*"] };
 
@@ -9,21 +10,20 @@ const themeToggleEl = document.getElementById("theme-toggle");
 const moonIconEl = document.getElementById("moon-icon");
 const sunIconEl = document.getElementById("sun-icon");
 const statusEl = document.getElementById("status");
-const statusDotEl = document.getElementById("statusDot");
-const statusTextEl = document.getElementById("statusText");
-const statusBannerEl = document.getElementById("statusBanner");
 const toggleEl = document.getElementById("toggleBlock");
 const toggleLabelEl = document.getElementById("toggleLabel");
 const thisSiteEl = document.getElementById("thisSite");
 const allowThisEl = document.getElementById("allowThis");
+const thisCardEl = document.getElementById("thisCard");
+const settingsBtnEl = document.getElementById("settings");
 const addFormEl = document.getElementById("addForm");
 const addInputEl = document.getElementById("addInput");
+const addBtnEl = document.getElementById("addBtn");
 const listEl = document.getElementById("list");
 const emptyEl = document.getElementById("empty");
 const clearAllEl = document.getElementById("clearAll");
+const allowedCountEl = document.getElementById("allowedCount");
 
-const ON_BANNER = "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300";
-const OFF_BANNER = "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
 const TOGGLE_OFF = ["bg-blue-600", "text-white", "hover:bg-blue-700", "focus:ring-blue-400"];
 const TOGGLE_ON = ["bg-red-600", "text-white", "hover:bg-red-700", "focus:ring-red-400"];
 
@@ -80,22 +80,26 @@ async function getAllowed() {
 
 function renderControl(blocking, allowed) {
   blockingNow = blocking;
-  statusBannerEl.className =
-    "mt-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium " + (blocking ? ON_BANNER : OFF_BANNER);
-  statusDotEl.className = "h-2.5 w-2.5 shrink-0 rounded-full " + (blocking ? "bg-red-500" : "bg-slate-400");
-  statusTextEl.textContent = blocking ? t("statusOn", [String(allowed.length)]) : t("statusOff");
-
   toggleEl.classList.remove(...TOGGLE_OFF, ...TOGGLE_ON);
   toggleEl.classList.add(...(blocking ? TOGGLE_ON : TOGGLE_OFF));
   toggleLabelEl.textContent = blocking ? t("stopBlocking") : t("startBlocking");
 
+  // While blocking, hide the "allow this tab" card — you set the allowlist
+  // before starting, and the Allowed tab still manages it.
+  thisCardEl.classList.toggle("hidden", blocking);
+
+  // While blocking, the Options page is off limits too (locked behind the PIN).
+  settingsBtnEl.disabled = blocking;
+
   const allowed_ = currentBase ? domainAllowed(currentBase, allowed) : false;
   thisSiteEl.textContent = currentBase || t("noSiteHere");
   allowThisEl.disabled = !currentBase || allowed_;
-  document.getElementById("allowThisLabel").textContent = allowed_ ? t("alreadyAllowed") : t("allowThisSite");
+  const allowLabel = allowed_ ? t("alreadyAllowed") : t("allowThisSite");
+  allowThisEl.title = allowLabel;
+  allowThisEl.setAttribute("aria-label", allowLabel);
 }
 
-function buildRow(domain) {
+function buildRow(domain, blocking) {
   const row = document.createElement("div");
   row.className =
     "flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-800";
@@ -107,7 +111,9 @@ function buildRow(domain) {
 
   const del = document.createElement("button");
   del.type = "button";
-  del.className = "shrink-0 rounded p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none dark:hover:bg-red-950";
+  del.disabled = blocking; // read-only while blocking
+  del.className =
+    "shrink-0 rounded p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400 dark:hover:bg-red-950";
   del.title = t("removeSite", [domain]);
   del.setAttribute("aria-label", t("removeSite", [domain]));
   del.innerHTML =
@@ -122,13 +128,27 @@ async function render() {
   const [blocking, allowed] = await Promise.all([getBlocking(), getAllowed()]);
   renderControl(blocking, allowed);
 
+  allowedCountEl.textContent = String(allowed.length);
+  allowedCountEl.classList.toggle("hidden", allowed.length === 0);
+
+  // While blocking, the allowlist is read-only: no Add, Remove, or Clear all.
+  addInputEl.disabled = blocking;
+  addBtnEl.disabled = blocking;
+
   listEl.replaceChildren();
   emptyEl.hidden = allowed.length > 0;
-  clearAllEl.disabled = allowed.length === 0;
-  for (const d of allowed) listEl.appendChild(buildRow(d));
+  clearAllEl.disabled = blocking || allowed.length === 0;
+  for (const d of allowed) listEl.appendChild(buildRow(d, blocking));
 }
 
 // --- actions ---
+
+// SHA-256 hex of the PIN (with a fixed salt) so it isn't stored in the clear.
+// crypto.subtle is available on extension pages (secure context).
+async function hashPin(pin) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("blocker-pin:" + pin));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 async function startBlocking() {
   // chrome.permissions.request must be the first await inside the user gesture.
@@ -138,15 +158,42 @@ async function startBlocking() {
     return;
   }
   statusEl.textContent = "";
+  // Choose an unlock PIN before blocking starts; it's required to stop later.
+  const pin = await pinPad({
+    mode: "set",
+    title: t("pinSetTitle"),
+    subtitle: t("pinSetSubtitle"),
+    confirmTitle: t("pinConfirmTitle"),
+    confirmSubtitle: t("pinConfirmSubtitle"),
+    mismatch: t("pinMismatch"),
+    cancelLabel: t("cancel"),
+    backspaceLabel: t("pinBackspace"),
+  });
+  if (!pin) return; // cancelled — leave blocking off
   const allowed = await getAllowed();
   const next = currentBase ? addDomain(allowed, currentBase) : allowed;
   if (next !== allowed) await syncSet({ allowed: next });
-  await chrome.storage.local.set({ blocking: true });
+  await chrome.storage.local.set({ blocking: true, pinHash: await hashPin(pin) });
   await render();
 }
 
 async function stopBlocking() {
+  // Require the unlock PIN (when one was set) before turning blocking off.
+  const { pinHash = null } = await chrome.storage.local.get({ pinHash: null });
+  if (pinHash) {
+    const pin = await pinPad({
+      mode: "enter",
+      title: t("pinEnterTitle"),
+      subtitle: t("pinEnterSubtitle"),
+      wrong: t("pinWrong"),
+      cancelLabel: t("cancel"),
+      backspaceLabel: t("pinBackspace"),
+      verify: async (entered) => (await hashPin(entered)) === pinHash,
+    });
+    if (!pin) return; // cancelled or never verified — stay blocked
+  }
   await chrome.storage.local.set({ blocking: false });
+  await chrome.storage.local.remove("pinHash");
   statusEl.textContent = "";
   await render();
 }
@@ -158,7 +205,7 @@ function toggleBlocking() {
 }
 
 async function allowThisSite() {
-  if (!currentBase) return;
+  if (blockingNow || !currentBase) return;
   const allowed = await getAllowed();
   await syncSet({ allowed: addDomain(allowed, currentBase) });
   await render();
@@ -166,6 +213,7 @@ async function allowThisSite() {
 
 async function addManual(e) {
   e.preventDefault();
+  if (blockingNow) return; // read-only while blocking
   const domain = normalizeDomain(addInputEl.value);
   if (!domain) {
     statusEl.textContent = t("invalidDomain");
@@ -179,6 +227,7 @@ async function addManual(e) {
 }
 
 async function removeOne(domain) {
+  if (blockingNow) return; // read-only while blocking
   const ok = await confirmDialog({
     title: t("removeTitle"),
     body: t("removeBody", [domain]),
@@ -192,6 +241,7 @@ async function removeOne(domain) {
 }
 
 async function clearAll() {
+  if (blockingNow) return; // read-only while blocking
   const allowed = await getAllowed();
   if (!allowed.length) return;
   const ok = await confirmDialog({
@@ -216,7 +266,10 @@ for (const b of tabBtns)
   });
 
 themeToggleEl.addEventListener("click", toggleTheme);
-document.getElementById("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+settingsBtnEl.addEventListener("click", () => {
+  if (blockingNow) return; // Options are locked while blocking
+  chrome.runtime.openOptionsPage();
+});
 toggleEl.addEventListener("click", toggleBlocking);
 allowThisEl.addEventListener("click", allowThisSite);
 addFormEl.addEventListener("submit", addManual);

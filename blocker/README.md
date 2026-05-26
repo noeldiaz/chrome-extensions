@@ -6,8 +6,9 @@ Manifest V3.
 ## Features
 
 - **One-click blocking** — start blocking from the popup; the tab you're on is auto-allowed so you don't lock yourself out. A red **ON** badge shows when it's active.
+- **Unlock PIN** — when you start blocking, a numeric keypad has you set a 4-digit PIN. Stopping blocking later requires that PIN, so it's harder to give in on impulse. The PIN is stored hashed and only on this device.
 - **Allowlist by base domain** — allowing `example.com` allows every subdomain (`www.`, `app.`, …). Add the current tab with one button, or type any domain manually.
-- **Custom block page** — disallowed navigations land on a friendly page (not a raw browser error) with **Allow this site**, **Go back**, and **Stop blocking** actions.
+- **Custom block page** — disallowed navigations land on a plain warning page (not a raw browser error) with a single **Go back** action; there's no shortcut to disable blocking from it.
 - **Sweeps open tabs** — turning blocking on sends already-open disallowed tabs to the block page, not just future navigations.
 - **Two-tab popup** — *Control* (start/stop + allow this tab) and *Allowed* (manage the list).
 - **Sync across devices** *(opt-in)* — a toggle in Options syncs your allowlist across the devices you're signed in to. Whether blocking is on stays local to each device. Off by default.
@@ -56,7 +57,7 @@ Build CSS, then zip only the runtime files:
 ```bash
 npm run build:css && zip -r blocker.zip \
   manifest.json popup.html popup.css popup.js options.html options.js \
-  blocked.html blocked.js background.js lib.js i18n.js sync.js dialog.js backup.js \
+  blocked.html blocked.js background.js lib.js i18n.js sync.js dialog.js backup.js pinpad.js \
   _locales \
   icons/icon16.png icons/icon32.png icons/icon48.png icons/icon128.png
 ```
@@ -72,7 +73,8 @@ Excludes source/tooling (`src/`, `node_modules/`, `eslint.config.js`, `test/`, `
 
 - `background.js` — service worker (`type: module`): watches `webNavigation`, decides via `lib.js`, redirects disallowed tabs to `blocked.html`, manages the badge, and sweeps open tabs when blocking turns on.
 - `popup.js` / `popup.html` — *Control* tab (start/stop, allow this tab, status) and *Allowed* tab (add/remove/clear the allowlist), plus theme.
-- `blocked.js` / `blocked.html` — the block page: shows the blocked address and offers Allow this site / Go back / Stop blocking.
+- `blocked.js` / `blocked.html` — the block page: a plain warning with a single Go back action (no way to disable blocking from here).
+- `pinpad.js` — promise-based numeric PIN-pad modal used in the popup to set the unlock PIN when blocking starts and to require it before stopping.
 - `options.js` / `options.html` — options page: the **Sync across devices** toggle, a "How blocking works" note, About panel, theme.
 - `sync.js` — opt-in cross-device sync. A `syncEnabled` flag in `chrome.storage.local` selects the active area (`sync` when on, else `local`) for the `allowed` list; toggling migrates it between areas. The blocking switch always uses `chrome.storage.local`.
 - `lib.js` — pure helpers (URL/host parsing, base-domain reduction, allow matching, the block decision), shared by popup/background/blocked and unit-tested.

@@ -122,7 +122,24 @@ importFileEl.addEventListener("change", async () => {
 });
 
 localize();
-loadTheme();
-(async () => {
-  syncToggleEl.checked = await isSyncOn();
-})();
+
+// While blocking is on, the whole Options page is locked behind the PIN: show a
+// notice instead of the settings (this also closes the door on using Import to
+// reset the blocking flag). Stopping blocking happens in the popup.
+async function init() {
+  const { blocking = false } = await chrome.storage.local.get({ blocking: false });
+  if (blocking) {
+    document.getElementById("lockNotice").classList.remove("hidden");
+    document.getElementById("otabs").classList.add("hidden");
+    for (const p of document.querySelectorAll(".tabpanel")) p.classList.add("hidden");
+  }
+  await loadTheme(); // removes `invisible` last, so locked content never flashes
+  if (!blocking) syncToggleEl.checked = await isSyncOn();
+}
+init();
+
+// If blocking flips while this page is open (e.g. stopped from the popup),
+// reload so the page locks or unlocks to match.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.blocking) location.reload();
+});

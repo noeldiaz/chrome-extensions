@@ -14,45 +14,17 @@
         Blocker is on. Only the sites on your allowlist can be opened.
       </p>
 
-      <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
-        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500" data-i18n="blockedUrlLabel">Blocked address</div>
-        <div id="blockedUrl" class="mt-0.5 break-all text-sm font-medium text-slate-700 dark:text-slate-200">—</div>
-      </div>
-
-      <div class="mt-6 flex flex-col gap-2">
+      <div class="mt-6">
         <button
-          id="allow"
+          id="back"
           type="button"
-          class="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          class="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
           </svg>
-          <span id="allowLabel" data-i18n="blockedAllow">Allow this site</span>
+          <span data-i18n="blockedBack">Go back</span>
         </button>
-
-        <div class="flex gap-2">
-          <button
-            id="back"
-            type="button"
-            class="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-            </svg>
-            <span data-i18n="blockedBack">Go back</span>
-          </button>
-          <button
-            id="stop"
-            type="button"
-            class="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-300 dark:border-red-900 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
-            </svg>
-            <span data-i18n="blockedStop">Stop blocking</span>
-          </button>
-        </div>
       </div>
     </main>
     <script type="module" src="blocked.js"></script>

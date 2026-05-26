@@ -12,8 +12,8 @@ async function state() {
   return { blocking, allowed };
 }
 
-function blockedUrl(from) {
-  return chrome.runtime.getURL(BLOCKED_PAGE) + "?from=" + encodeURIComponent(from || "");
+function blockedUrl() {
+  return chrome.runtime.getURL(BLOCKED_PAGE);
 }
 
 // Badge "ON" in red while blocking, cleared otherwise. The color setters aren't
@@ -26,8 +26,8 @@ async function setBadge(blocking) {
   }
 }
 
-function redirect(tabId, fromUrl) {
-  chrome.tabs.update(tabId, { url: blockedUrl(fromUrl) }).catch(() => {});
+function redirect(tabId) {
+  chrome.tabs.update(tabId, { url: blockedUrl() }).catch(() => {});
 }
 
 // Gate top-frame navigations. We read fresh state each time (cheap storage get)
@@ -37,7 +37,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0) return;
   if (!isHttpUrl(details.url)) return;
   const { blocking, allowed } = await state();
-  if (shouldBlock(details.url, allowed, blocking)) redirect(details.tabId, details.url);
+  if (shouldBlock(details.url, allowed, blocking)) redirect(details.tabId);
 });
 
 // When blocking turns on, send already-open disallowed tabs to the block page,
@@ -51,7 +51,7 @@ async function sweepOpenTabs() {
     return;
   }
   for (const tab of tabs) {
-    if (tab.id != null && shouldBlock(tab.url || "", allowed, true)) redirect(tab.id, tab.url);
+    if (tab.id != null && shouldBlock(tab.url || "", allowed, true)) redirect(tab.id);
   }
 }
 

@@ -42,6 +42,9 @@
   },
   "importConfirm": { "message": "Restore" },
 
+  "lockedTitle": { "message": "Settings are locked" },
+  "lockedBody": { "message": "Blocker is on. Stop blocking from the popup (you'll need your PIN) to change settings." },
+
   "howTitle": { "message": "How blocking works" },
   "howBody": {
     "message": "When blocking is on, any top-level navigation to a site that isn’t on your allowlist is sent to a block page. Allowing a site allows its whole base domain (every subdomain). Blocking needs permission to see the pages you navigate to; Blocker asks for it the first time you start."
@@ -52,17 +55,21 @@
 
   "startBlocking": { "message": "Start blocking" },
   "stopBlocking": { "message": "Stop blocking" },
-  "statusOn": {
-    "message": "Blocking on — $count$ allowed",
-    "placeholders": { "count": { "content": "$1" } }
-  },
-  "statusOff": { "message": "Blocking is off" },
 
-  "thisTab": { "message": "This tab" },
   "allowThisSite": { "message": "Allow this site" },
   "alreadyAllowed": { "message": "Already allowed" },
   "noSiteHere": { "message": "No website on this tab" },
   "needsAccess": { "message": "Blocker needs permission to see the pages you visit." },
+
+  "pinSetTitle": { "message": "Set an unlock PIN" },
+  "pinSetSubtitle": { "message": "You'll need this to stop blocking." },
+  "pinConfirmTitle": { "message": "Confirm PIN" },
+  "pinConfirmSubtitle": { "message": "Enter the PIN again." },
+  "pinMismatch": { "message": "PINs didn't match. Start over." },
+  "pinEnterTitle": { "message": "Enter your PIN" },
+  "pinEnterSubtitle": { "message": "Enter your unlock PIN to stop blocking." },
+  "pinWrong": { "message": "Wrong PIN. Try again." },
+  "pinBackspace": { "message": "Delete" },
 
   "addPlaceholder": { "message": "example.com" },
   "add": { "message": "Add" },
@@ -91,10 +98,5 @@
   "blockedTitle": { "message": "Site blocked — Blocker" },
   "blockedHeading": { "message": "This site is blocked" },
   "blockedBody": { "message": "Blocker is on. Only the sites on your allowlist can be opened." },
-  "blockedUrlLabel": { "message": "Blocked address" },
-  "blockedAllow": { "message": "Allow this site" },
-  "blockedBack": { "message": "Go back" },
-  "blockedStop": { "message": "Stop blocking" },
-  "blockedUnknown": { "message": "this page" },
-  "blockedNothingToAllow": { "message": "Can’t allow this page" }
+  "blockedBack": { "message": "Go back" }
 }
