@@ -8,8 +8,14 @@ export function confirmDialog({ message, confirmText, cancelText, danger = true 
 
     const card = document.createElement("div");
     card.className = "w-full max-w-xs rounded-xl bg-white p-4 shadow-xl dark:bg-slate-800";
+    card.setAttribute("role", "dialog");
+    card.setAttribute("aria-modal", "true");
+    card.setAttribute("aria-describedby", "cd-body");
+    card.tabIndex = -1;
+    const prevFocus = document.activeElement; // restored when the dialog closes
 
     const msg = document.createElement("p");
+    msg.id = "cd-body";
     msg.className = "text-sm text-slate-700 dark:text-slate-200";
     msg.textContent = message;
 
@@ -32,11 +38,22 @@ export function confirmDialog({ message, confirmText, cancelText, danger = true 
     function close(val) {
       overlay.remove();
       document.removeEventListener("keydown", onKey);
+      if (prevFocus && typeof prevFocus.focus === "function") prevFocus.focus();
       resolve(val);
     }
     function onKey(e) {
-      if (e.key === "Escape") close(false);
-      else if (e.key === "Enter") close(true);
+      if (e.key === "Escape") return close(false);
+      if (e.key === "Enter") return close(true);
+      if (e.key === "Tab") {
+        // trap focus between the two buttons
+        if (!e.shiftKey && document.activeElement === ok) {
+          e.preventDefault();
+          cancel.focus();
+        } else if (e.shiftKey && document.activeElement === cancel) {
+          e.preventDefault();
+          ok.focus();
+        }
+      }
     }
     cancel.addEventListener("click", () => close(false));
     ok.addEventListener("click", () => close(true));

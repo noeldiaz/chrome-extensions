@@ -56,6 +56,11 @@ export function parseBackup(text, app) {
   if (!data || typeof data !== "object" || Array.isArray(data) || data.app !== app) {
     throw new Error("backupErrApp");
   }
+  // Refuse a backup written by a newer schema than this build understands, rather
+  // than silently mis-restoring it. (err.message is an i18n key for the caller.)
+  if (typeof data.schema === "number" && data.schema > SCHEMA) {
+    throw new Error("backupErrVersion");
+  }
   return data;
 }
 
