@@ -277,9 +277,16 @@ async function captureFullPage(tab) {
   try {
     const m = await exec(tabId, measurePage);
     const steps = planScrollSteps(m.total, m.vh, MAX_FULLPAGE_TILES);
+    const pageBottom = Math.max(0, m.total - m.vh);
+    const maxY = m.dpr > 0 ? MAX_CANVAS_PX / m.dpr : Infinity; // tiles starting past this can't fit the stitched canvas
     const tiles = [];
+    let truncated = false;
     try {
       for (let i = 0; i < steps.length; i++) {
+        if (steps[i] > maxY) {
+          truncated = true; // stop before capturing tiles the canvas can't hold
+          break;
+        }
         const realY = await exec(tabId, scrollToY, [steps[i]]);
         if (i === 1) await exec(tabId, setFixedHidden, [true]); // keep header in top tile only
         await sleep(i === 0 ? 120 : CAPTURE_DELAY_MS); // settle paint / lazy load + rate limit
@@ -290,9 +297,13 @@ async function captureFullPage(tab) {
       await exec(tabId, setFixedHidden, [false]).catch(() => {});
       await exec(tabId, restoreScroll, [m.scrollX, m.scrollY]).catch(() => {});
     }
-    if (tiles.length === 1) return await finalizeCapture(tiles[0].dataUrl, "fullpage", tab);
-    const { dataUrl, truncated } = await stitchTiles(tiles, m.vw, m.total, m.dpr);
-    return await finalizeCapture(dataUrl, "fullpage", tab, truncated ? { truncated: true } : {});
+    // Honest truncation: also flag it when the tile budget never reached the bottom.
+    if (steps[steps.length - 1] < pageBottom) truncated = true;
+    if (tiles.length === 1) {
+      return await finalizeCapture(tiles[0].dataUrl, "fullpage", tab, truncated ? { truncated: true } : {});
+    }
+    const stitched = await stitchTiles(tiles, m.vw, m.total, m.dpr);
+    return await finalizeCapture(stitched.dataUrl, "fullpage", tab, stitched.truncated || truncated ? { truncated: true } : {});
   } catch (e) {
     return surfaceError(e);
   }

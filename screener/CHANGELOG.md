@@ -4,6 +4,23 @@ All notable changes to Screener are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-05-25
+
+### Changed
+- **Confirm-dialog accessibility** (`dialog.js`): the modal is now a labelled
+  dialog, moves focus into itself on open and restores it on close, and traps Tab
+  focus between its buttons.
+
+### Fixed
+- **Full-page capture truncation is now honest:** when the tile budget or the
+  canvas-height ceiling can't reach the bottom of a very tall page, the result is
+  flagged truncated (and tiles the canvas can't hold are no longer captured),
+  instead of silently dropping content.
+
+### Hardened
+- **Backup import** rejects a file whose `schema` is newer than this build
+  understands, instead of silently mis-restoring it.
+
 ## [0.6.0] — 2026-05-25
 
 ### Changed
