@@ -37,9 +37,14 @@ export function msToFields(ms, { ceil = false } = {}) {
 }
 
 // "HH:MM:SS" for the countdown — ceils so a fresh 5-minute timer reads 00:05:00.
-export function formatTimer(ms) {
+// With trimLeading, fully-zero leading groups (and the first group's leading zero)
+// are dropped: 00:04:54 → 4:54, 00:00:09 → 9, 01:04:54 → 1:04:54.
+export function formatTimer(ms, { trimLeading = false } = {}) {
   const { h, m, s } = msToFields(ms, { ceil: true });
-  return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  if (!trimLeading) return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  if (h > 0) return `${h}:${pad2(m)}:${pad2(s)}`;
+  if (m > 0) return `${m}:${pad2(s)}`;
+  return `${s}`;
 }
 
 // "HH:MM:SS.CC" for the stopwatch — floors, with centiseconds (matches 00:04:19.06).

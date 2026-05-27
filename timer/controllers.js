@@ -2,6 +2,7 @@
 // page. State lives in chrome.storage.local (keyed by tool) so a running timer or
 // stopwatch survives the popup closing and stays in lock-step between the popup
 // and an open full-page tab. Pure formatting/maths live in lib.js.
+import { t } from "./i18n.js";
 import {
   ALERT_DEFAULTS,
   TIMER_MIN_MS,
@@ -20,6 +21,8 @@ const DEFAULTS = {
   tool: "clock",
   clockFormat: "24", // "24" | "12"
   clockSeconds: true,
+  clockDateFs: false, // keep the date visible under the clock in fullscreen
+  timerTrim: false, // hide leading zero groups on the countdown (4:54 vs 00:04:54)
   alerts: { ...ALERT_DEFAULTS },
   sw: { running: false, startTime: 0, elapsed: 0, laps: [] },
   tm: { status: "idle", endTime: 0, remaining: 0, duration: 0 }, // idle|running|paused|ended
@@ -30,6 +33,7 @@ let mode = "compact";
 let els = {};
 let audioCtx = null;
 let alertedFor = null; // endTime we've already chimed for, so we ring exactly once
+let selectedPreset = null; // seconds of the chosen preset chip; reset returns here (or 00)
 
 const $ = (id) => document.getElementById(id);
 // Swap a primary button's glyph to match its state (play / pause / stop / restart).
@@ -65,6 +69,33 @@ function renderClock() {
   const time = state.clockSeconds ? `${h}:${m}:${s}` : `${h}:${m}`;
   els.clockTime.textContent = ampm ? `${time} ${ampm}` : time;
   if (els.clockDate) els.clockDate.textContent = formatDate(now);
+}
+
+// Top-bar bell: a quick mute for the end-of-countdown sound (the same alerts.sound
+// the options page exposes). Muted → bell-slash. Lives on the popup and full page.
+function renderAlarm() {
+  const on = state.alerts.sound;
+  $("bell-on")?.classList.toggle("hidden", !on);
+  $("bell-off")?.classList.toggle("hidden", on);
+  const btn = $("alarm-toggle");
+  if (btn) {
+    const label = t(on ? "alarmMute" : "alarmUnmute");
+    if (label) {
+      btn.title = label;
+      btn.setAttribute("aria-label", label);
+    }
+  }
+}
+
+// The on-page clock settings (full page only) and the date's fullscreen visibility.
+const togglePill = (btn, on) => btn?.classList.toggle("is-on", !!on);
+function renderClockControls() {
+  $("clk-24")?.classList.toggle("is-active", state.clockFormat === "24");
+  $("clk-12")?.classList.toggle("is-active", state.clockFormat === "12");
+  togglePill($("clk-seconds"), state.clockSeconds);
+  togglePill($("clk-datefs"), state.clockDateFs);
+  // fs-hide drops an element in fullscreen; the date keeps it unless opted in.
+  els.clockDate?.classList.toggle("fs-hide", !state.clockDateFs);
 }
 
 // ---- stopwatch ------------------------------------------------------------
@@ -132,7 +163,7 @@ function renderTimer() {
   els.tmDisplay?.classList.toggle("hidden", idle);
 
   const ms = status === "running" ? remainingMs(state.tm.endTime) : status === "paused" ? state.tm.remaining : status === "ended" ? 0 : state.tm.duration;
-  els.tmTime.textContent = formatTimer(ms);
+  els.tmTime.textContent = formatTimer(ms, { trimLeading: state.timerTrim });
   els.tmDisplay?.classList.toggle("is-ended", status === "ended");
 
   if (els.tmStartLabel) {
@@ -140,7 +171,6 @@ function renderTimer() {
   }
   els.tmStart?.classList.toggle("is-danger", status === "running");
   setPrimaryIcon(els.tmStart, status === "running" ? "pause" : status === "ended" ? "restart" : "play");
-  els.tmReset?.classList.toggle("hidden", idle);
 }
 
 function bg(type, payload = {}) {
@@ -178,6 +208,9 @@ function tmStart() {
 function tmReset() {
   persist({ tm: { status: "idle", endTime: 0, remaining: 0, duration: 0 } });
   bg("timer:clear");
+  // back to the selected preset if one is chosen, otherwise all 00
+  if (selectedPreset) setInputsFromSeconds(selectedPreset);
+  else clearInputs();
   renderTimer();
 }
 
@@ -194,6 +227,17 @@ function setInputsFromSeconds(seconds) {
   if (els.tmH) els.tmH.value = Math.floor(total / 3600) || "";
   if (els.tmM) els.tmM.value = Math.floor((total % 3600) / 60) || "";
   if (els.tmS) els.tmS.value = Math.floor(total % 60) || "";
+}
+
+// Empty fields read as 00 — the first-load and no-preset reset state.
+function clearInputs() {
+  for (const f of [els.tmH, els.tmM, els.tmS]) if (f) f.value = "";
+}
+
+function highlightPresets() {
+  for (const chip of document.querySelectorAll(".tm-preset")) {
+    chip.classList.toggle("is-active", Number(chip.dataset.seconds) === selectedPreset);
+  }
 }
 
 // On-page end alerts. Sound is owned by the background's offscreen player so it
@@ -257,6 +301,7 @@ function selectTool(tool) {
   persist({ tool });
   showPanel(tool);
   renderClock();
+  renderClockControls();
   renderStopwatch();
   renderTimer();
 }
@@ -294,8 +339,40 @@ export async function initApp(opts = {}) {
   els.tmStart?.addEventListener("click", tmStart);
   els.tmReset?.addEventListener("click", tmReset);
   for (const chip of document.querySelectorAll(".tm-preset")) {
-    chip.addEventListener("click", () => setInputsFromSeconds(Number(chip.dataset.seconds)));
+    chip.addEventListener("click", () => {
+      selectedPreset = Number(chip.dataset.seconds);
+      setInputsFromSeconds(selectedPreset);
+      highlightPresets();
+    });
   }
+  // typing a custom time deselects the preset, so reset goes back to 00
+  for (const f of [els.tmH, els.tmM, els.tmS]) {
+    f?.addEventListener("input", () => {
+      selectedPreset = null;
+      highlightPresets();
+    });
+  }
+  // on-page clock settings (full page)
+  for (const b of document.querySelectorAll("[data-fmt]")) {
+    b.addEventListener("click", () => {
+      persist({ clockFormat: b.dataset.fmt });
+      renderClock();
+      renderClockControls();
+    });
+  }
+  $("clk-seconds")?.addEventListener("click", () => {
+    persist({ clockSeconds: !state.clockSeconds });
+    renderClock();
+    renderClockControls();
+  });
+  $("clk-datefs")?.addEventListener("click", () => {
+    persist({ clockDateFs: !state.clockDateFs });
+    renderClockControls();
+  });
+  $("alarm-toggle")?.addEventListener("click", () => {
+    persist({ alerts: { ...state.alerts, sound: !state.alerts.sound } });
+    renderAlarm();
+  });
 
   if (mode === "full") wireFullscreen();
 
@@ -306,12 +383,17 @@ export async function initApp(opts = {}) {
       if (key in state && newValue !== undefined) state[key] = newValue;
     }
     if ("tool" in changes) showPanel(state.tool);
+    renderClockControls();
+    renderAlarm();
     renderStopwatch();
     renderTimer();
     if (state.tool === "clock") renderClock();
   });
 
   showPanel(state.tool);
+  renderClockControls();
+  renderAlarm();
+  highlightPresets();
   requestAnimationFrame(tick);
 }
 

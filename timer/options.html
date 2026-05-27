@@ -61,6 +61,24 @@
           <input id="clock-seconds" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
         </label>
 
+        <!-- show date in fullscreen -->
+        <label class="opt-card flex cursor-pointer items-start justify-between gap-4">
+          <span>
+            <span class="opt-label" data-i18n="optClockDateFs">Show date in fullscreen</span>
+            <span class="opt-hint block" data-i18n="optClockDateFsHint">Keep the date visible under the clock when the full page is in fullscreen.</span>
+          </span>
+          <input id="clock-datefs" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+        </label>
+
+        <!-- timer: hide leading zeros -->
+        <label class="opt-card flex cursor-pointer items-start justify-between gap-4">
+          <span>
+            <span class="opt-label" data-i18n="optTimerTrim">Hide leading zeros</span>
+            <span class="opt-hint block" data-i18n="optTimerTrimHint">On the countdown, drop empty leading groups — show 4:54 instead of 00:04:54.</span>
+          </span>
+          <input id="timer-trim" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+        </label>
+
         <!-- end-of-countdown alerts -->
         <div class="opt-card">
           <div class="opt-label" data-i18n="optAlerts">When a countdown ends</div>

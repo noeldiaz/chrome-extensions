@@ -15,7 +15,8 @@
         <h1 data-i18n="appName" class="text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Timer</h1>
       </div>
 
-      <nav class="flex max-w-md flex-1 justify-center gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800">
+      <div class="flex flex-1 items-center justify-center gap-2">
+        <nav class="flex gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800">
         <button type="button" class="seg" data-tool="clock">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2" /></svg>
           <span data-i18n="toolClock">Clock</span>
@@ -28,14 +29,26 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12M6 21h12M8 3c0 3.5 8 4.5 8 9s-8 5.5-8 9M16 3c0 3.5-8 4.5-8 9s8 5.5 8 9" /></svg>
           <span data-i18n="toolTimer">Timer</span>
         </button>
-      </nav>
+        </nav>
+        <!-- matching toolbar group beside the tabs: fullscreen + alarm mute -->
+        <div class="flex gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800">
+          <button id="fullscreen" type="button" class="seg-icon" data-i18n-attr="title:fullscreen,aria-label:fullscreen" title="Fullscreen" aria-label="Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9V3.75H9M15 3.75h5.25V9M20.25 15v5.25H15M9 20.25H3.75V15" />
+            </svg>
+          </button>
+          <button id="alarm-toggle" type="button" class="seg-icon" title="Mute alarm sound" aria-label="Mute alarm sound">
+            <svg id="bell-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+            </svg>
+            <svg id="bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="hidden" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.143 17.082a24.248 24.248 0 0 0 3.844.148m-3.844-.148a23.856 23.856 0 0 1-5.455-1.31 8.964 8.964 0 0 0 2.3-5.542m3.155 6.852a3 3 0 0 0 5.667 1.97m1.965-2.277L21 21M4.5 4.5l15 15" />
+            </svg>
+          </button>
+        </div>
+      </div>
 
       <div class="flex items-center gap-1.5">
-        <button id="fullscreen" type="button" class="icon-btn" data-i18n-attr="title:fullscreen,aria-label:fullscreen" title="Fullscreen" aria-label="Fullscreen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9V3.75H9M15 3.75h5.25V9M20.25 15v5.25H15M9 20.25H3.75V15" />
-          </svg>
-        </button>
         <button id="theme-toggle" type="button" class="icon-btn" data-i18n-attr="title:themeToggle,aria-label:themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
           <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
@@ -63,7 +76,22 @@
         <!-- clock -->
         <section id="panel-clock" class="hidden text-center">
           <div id="clock-time" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
-          <div id="clock-date" class="fs-hide mt-4 text-lg text-slate-500 dark:text-slate-400"></div>
+          <div id="clock-date" class="mt-4 text-lg text-slate-500 dark:text-slate-400"></div>
+          <!-- on-page clock settings (hidden in fullscreen) -->
+          <div class="fs-hide mt-8 flex flex-wrap items-center justify-center gap-2">
+            <div class="inline-flex rounded-lg bg-slate-200 p-0.5 dark:bg-slate-800">
+              <button id="clk-24" type="button" class="miniseg" data-fmt="24" data-i18n="lblHour24">24h</button>
+              <button id="clk-12" type="button" class="miniseg" data-fmt="12" data-i18n="lblHour12">12h</button>
+            </div>
+            <button id="clk-seconds" type="button" class="pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l2.5 1.5" /></svg>
+              <span data-i18n="lblSeconds">Seconds</span>
+            </button>
+            <button id="clk-datefs" type="button" class="pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 9.5h17M8 3.5v3M16 3.5v3" /></svg>
+              <span data-i18n="lblDateFs">Date in fullscreen</span>
+            </button>
+          </div>
         </section>
 
         <!-- stopwatch -->
@@ -110,17 +138,17 @@
               </label>
             </div>
             <div class="mx-auto mt-6 flex max-w-lg flex-wrap justify-center gap-2">
-              <button type="button" class="tm-preset chip" data-seconds="300"><span data-i18n="presetMin">5 min</span></button>
+              <button type="button" class="tm-preset chip" data-seconds="300">5 min</button>
               <button type="button" class="tm-preset chip" data-seconds="600">10 min</button>
               <button type="button" class="tm-preset chip" data-seconds="1800">30 min</button>
-              <button type="button" class="tm-preset chip" data-seconds="3600"><span data-i18n="presetHour">1 Hour</span></button>
+              <button type="button" class="tm-preset chip" data-seconds="3600">1 Hour</button>
             </div>
           </div>
           <div id="tm-display" class="hidden">
             <div id="tm-time" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
           </div>
           <div class="fs-hide mt-10 flex items-center justify-center gap-3">
-            <button id="tm-reset" type="button" class="btn btn-soft hidden">
+            <button id="tm-reset" type="button" class="btn btn-soft">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 1 1 2.2 5.3M4.5 12V7.5M4.5 12H9" /></svg>
               <span data-i18n="reset">Reset</span>
             </button>

@@ -5,6 +5,8 @@
   },
 
   "themeToggle": { "message": "Toggle dark mode" },
+  "alarmMute": { "message": "Mute alarm sound" },
+  "alarmUnmute": { "message": "Unmute alarm sound" },
   "settings": { "message": "Settings" },
   "expand": { "message": "Open in a tab" },
   "fullscreen": { "message": "Fullscreen" },
@@ -55,6 +57,14 @@
   "opt12h": { "message": "12-hour — 2:05 PM" },
   "optClockSeconds": { "message": "Show seconds" },
   "optClockSecondsHint": { "message": "Display the running seconds on the clock." },
+  "optClockDateFs": { "message": "Show date in fullscreen" },
+  "optClockDateFsHint": { "message": "Keep the date visible under the clock when the full page is in fullscreen." },
+  "lblHour24": { "message": "24h" },
+  "lblHour12": { "message": "12h" },
+  "lblSeconds": { "message": "Seconds" },
+  "lblDateFs": { "message": "Date in fullscreen" },
+  "optTimerTrim": { "message": "Hide leading zeros" },
+  "optTimerTrimHint": { "message": "On the countdown, drop empty leading groups — show 4:54 instead of 00:04:54." },
 
   "optAlerts": { "message": "When a countdown ends" },
   "optAlertsHint": { "message": "Pick how Timer lets you know a countdown has finished." },

@@ -40,19 +40,25 @@ for (const btn of document.querySelectorAll("[data-otab]")) {
 }
 
 const seconds = document.getElementById("clock-seconds");
+const datefs = document.getElementById("clock-datefs");
+const trim = document.getElementById("timer-trim");
 const sound = document.getElementById("alert-sound");
 const flash = document.getElementById("alert-flash");
 const notify = document.getElementById("alert-notify");
 
 async function load() {
-  const { clockFormat, clockSeconds, alerts } = await chrome.storage.local.get({
+  const { clockFormat, clockSeconds, clockDateFs, timerTrim, alerts } = await chrome.storage.local.get({
     clockFormat: "24",
     clockSeconds: true,
+    clockDateFs: false,
+    timerTrim: false,
     alerts: { ...ALERT_DEFAULTS },
   });
   const a = { ...ALERT_DEFAULTS, ...alerts };
   for (const r of document.querySelectorAll('input[name="clockFormat"]')) r.checked = r.value === clockFormat;
   seconds.checked = clockSeconds;
+  datefs.checked = clockDateFs;
+  trim.checked = timerTrim;
   sound.checked = a.sound;
   flash.checked = a.flash;
   notify.checked = a.notify;
@@ -65,6 +71,8 @@ for (const r of document.querySelectorAll('input[name="clockFormat"]')) {
   r.addEventListener("change", () => r.checked && chrome.storage.local.set({ clockFormat: r.value }));
 }
 seconds.addEventListener("change", () => chrome.storage.local.set({ clockSeconds: seconds.checked }));
+datefs.addEventListener("change", () => chrome.storage.local.set({ clockDateFs: datefs.checked }));
+trim.addEventListener("change", () => chrome.storage.local.set({ timerTrim: trim.checked }));
 sound.addEventListener("change", saveAlerts);
 flash.addEventListener("change", saveAlerts);
 notify.addEventListener("change", saveAlerts);

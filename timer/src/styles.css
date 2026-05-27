@@ -49,6 +49,13 @@
   .seg svg {
     @apply h-4 w-4;
   }
+  /* icon-only buttons that share the segmented toolbar look (fullscreen, mute) */
+  .seg-icon {
+    @apply rounded-md p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-700 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200;
+  }
+  .seg-icon svg {
+    @apply h-4 w-4;
+  }
 
   /* action buttons under each tool */
   .btn {
@@ -71,6 +78,28 @@
   /* quick-fill chips on the timer setup (5/10/30 min, 1 hour) */
   .chip {
     @apply rounded-lg bg-slate-200 px-3 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-blue-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-blue-950 dark:hover:text-blue-300;
+  }
+  /* the currently selected preset — reset returns to it */
+  .chip.is-active {
+    @apply bg-blue-600 text-white hover:bg-blue-700 hover:text-white dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700;
+  }
+
+  /* on-page tool settings: a toggle chip (Seconds, Date in fullscreen, …) */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500;
+  }
+  .pill svg {
+    @apply h-4 w-4;
+  }
+  .pill.is-on {
+    @apply border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950 dark:text-blue-300;
+  }
+  /* small segmented control (e.g. 24h / 12h) */
+  .miniseg {
+    @apply rounded-md px-3 py-1 text-sm font-medium text-slate-500 transition hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-slate-400 dark:hover:text-slate-200;
+  }
+  .miniseg.is-active {
+    @apply bg-white text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-400;
   }
 
   /* the H : M : S number inputs */
@@ -150,6 +179,12 @@ body.fs .display {
   font-size: clamp(2.5rem, 12vw, 16rem);
   line-height: 1;
   white-space: nowrap;
+}
+/* the date scales with the viewport too, ~1/4 of the clock, so it stays legible
+   under the huge fullscreen readout instead of shrinking to its text-lg size */
+body.fs #clock-date {
+  font-size: clamp(1.25rem, 3vw, 4rem);
+  margin-top: clamp(0.5rem, 1.5vw, 2rem);
 }
 
 @media (prefers-reduced-motion: reduce) {

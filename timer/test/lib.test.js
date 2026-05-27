@@ -54,6 +54,15 @@ test("formatTimer renders HH:MM:SS and ceils", () => {
   assert.equal(formatTimer(HOUR + 2 * MINUTE + 3 * SECOND), "01:02:03");
 });
 
+test("formatTimer trims leading zero groups when asked", () => {
+  const t = { trimLeading: true };
+  assert.equal(formatTimer(4 * MINUTE + 54 * SECOND, t), "4:54");
+  assert.equal(formatTimer(9 * SECOND, t), "9");
+  assert.equal(formatTimer(0, t), "0");
+  assert.equal(formatTimer(HOUR + 4 * MINUTE + 54 * SECOND, t), "1:04:54");
+  assert.equal(formatTimer(10 * MINUTE, t), "10:00");
+});
+
 test("formatStopwatch renders HH:MM:SS.CC and floors", () => {
   assert.equal(formatStopwatch(0), "00:00:00.00");
   assert.equal(formatStopwatch(4 * MINUTE + 19 * SECOND + 60), "00:04:19.06");
