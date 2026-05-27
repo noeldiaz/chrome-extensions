@@ -4,6 +4,18 @@ All notable changes to Refresher are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] — 2026-05-26
+
+### Security
+
+- Hardened backup import (shared `backup.js`): the chosen file is now size-capped,
+  prototype-pollution keys (`__proto__`/`constructor`/`prototype`) are stripped
+  before any of it reaches `chrome.storage`, and the `local`/`sync` sections must
+  be plain objects. A malformed or hostile backup can no longer write arbitrary or
+  polluting keys into storage.
+- The background `arm`/`disarm` message handler now ignores any message whose
+  sender isn't this extension — defense-in-depth against a future content script.
+
 ## [1.0.0] — 2026-05-26
 
 First stable release — initial Chrome Web Store submission.
