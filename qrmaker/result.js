@@ -318,7 +318,9 @@ window.addEventListener("pagehide", stopCamera); // release the camera on close
 // --- result actions ---
 
 els.goto.addEventListener("click", () => {
-  if (decodedText) chrome.tabs.create({ url: decodedText }).catch(() => {});
+  // Re-check at the sink: the button is only hidden (not removed) for non-web
+  // payloads, so never hand a non-http(s) string to tabs.create.
+  if (decodedText && isShareableUrl(decodedText)) chrome.tabs.create({ url: decodedText }).catch(() => {});
 });
 els.copy.addEventListener("click", async () => {
   if (!decodedText) return;

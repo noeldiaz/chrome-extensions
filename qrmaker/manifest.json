@@ -7,6 +7,9 @@
   "minimum_chrome_version": "110",
   "permissions": ["activeTab", "storage", "clipboardWrite", "contextMenus", "scripting"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "background": {
     "service_worker": "background.js",
     "type": "module"

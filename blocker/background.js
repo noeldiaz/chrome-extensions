@@ -97,21 +97,25 @@ async function logBlocked(url) {
 // Backstop to the DNR layer: gate top-frame navigations from the service worker
 // too. We read fresh state each time (cheap storage get) so a just-woken worker
 // never lets a navigation slip through with a stale cache. This is also the only
-// gate for data: URLs — a bypass that lets arbitrary HTML/JS render with no prior
-// page load, and which DNR's http(s) rules don't match. (blob: is left alone: a
-// blob can only be created by a page that already loaded, i.e. an allowed one.)
-const BYPASS_SCHEME = /^data:/i;
+// gate for schemes DNR's http(s) rules can't match: data:/filesystem: render
+// arbitrary HTML/JS with no prior page load, so both are always blocked here; and
+// view-source: is judged by the URL it wraps, so a blocked page's source can't be
+// read via view-source:https://blocked/. (blob: is left alone: a blob can only be
+// created by a page that already loaded, i.e. an allowed one.)
+const BYPASS_SCHEME = /^(data|filesystem):/i;
+const VIEW_SOURCE = /^view-source:/i;
 
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0) return;
-  const url = details.url || "";
+  const orig = details.url || "";
+  const url = orig.replace(VIEW_SOURCE, ""); // unwrap view-source: to its underlying target
   const http = isHttpUrl(url);
   if (!http && !BYPASS_SCHEME.test(url)) return; // leave chrome://, file:, extension pages, about:
   const { blocking, allowed } = await state();
   if (!blocking) return;
   if (http ? shouldBlock(url, allowed, true) : true) {
     redirect(details.tabId);
-    await logBlocked(url);
+    await logBlocked(orig);
   }
 });
 

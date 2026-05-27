@@ -343,7 +343,8 @@ async function handleCapture(msg) {
   }
 }
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (sender.id !== chrome.runtime.id) return false; // only our own contexts may drive a capture
   if (msg?.type === "capture") {
     handleCapture(msg)
       .then(sendResponse)

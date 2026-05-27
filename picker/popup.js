@@ -606,7 +606,11 @@ async function saveFavs() {
 function renderFavs() {
   els.favWrap.classList.toggle("hidden", !favorites.length);
   els.favList.replaceChildren(
-    ...favorites.map((f) => {
+    // Re-validate at the render boundary: a malformed/hand-edited stored or synced
+    // entry must never reach style.background (or throw in fmtHex).
+    ...favorites
+      .filter((f) => normalizeHex(f?.hex))
+      .map((f) => {
       const row = document.createElement("div");
       row.className = "flex items-center gap-2";
 
@@ -614,7 +618,7 @@ function renderFavs() {
       sw.type = "button";
       sw.className =
         "h-6 w-6 shrink-0 rounded-md border border-slate-300 shadow-sm transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-slate-600";
-      sw.style.background = f.hex;
+      sw.style.background = normalizeHex(f.hex);
       sw.title = fmtHex(f.hex);
       sw.setAttribute("aria-label", `${t("favLoad")} ${fmtHex(f.hex)}`);
       sw.addEventListener("click", () => show(f.hex));
@@ -734,9 +738,12 @@ function recentSwatch(hex) {
 
 const RECENT_SHOWN = 6;
 function renderRecent(list) {
-  els.recentWrap.classList.toggle("hidden", !list.length);
-  const overflow = list.length > RECENT_SHOWN;
-  els.recent.replaceChildren(...(overflow ? list.slice(0, RECENT_SHOWN) : list).map(recentSwatch));
+  // Re-validate at the render boundary: drop anything that isn't a valid color
+  // before it reaches recentSwatch's style.background.
+  const clean = (Array.isArray(list) ? list : []).map(normalizeHex).filter(Boolean);
+  els.recentWrap.classList.toggle("hidden", !clean.length);
+  const overflow = clean.length > RECENT_SHOWN;
+  els.recent.replaceChildren(...(overflow ? clean.slice(0, RECENT_SHOWN) : clean).map(recentSwatch));
   if (overflow) {
     // "More" → open Settings on the Recent Colors tab (flag read by options.js)
     const more = document.createElement("button");

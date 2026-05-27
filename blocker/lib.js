@@ -4,9 +4,13 @@
 import { PSL_RULES, PSL_EXCEPTIONS } from "./psl-data.js";
 
 // Top-level navigations to these schemes are never blocked (the New Tab page,
-// settings, extension pages, local files, etc.). Only http/https is gated.
+// settings, extension pages, local files, etc.). Note: data:/filesystem: and the
+// view-source: wrapper are deliberately NOT here — the navigation gate in
+// background.js handles those itself (data:/filesystem: always blocked,
+// view-source: judged by the URL it wraps), so this list must not claim them as
+// always-safe. Only http/https is matched against the allowlist.
 export const PROTECTED_URL =
-  /^(chrome|edge|about|chrome-extension|moz-extension|chrome-search|chrome-untrusted|view-source|devtools|file|data):/i;
+  /^(chrome|edge|about|chrome-extension|moz-extension|chrome-search|chrome-untrusted|devtools|file):/i;
 
 // The public suffix of a hostname, per the Public Suffix List algorithm: the
 // longest matching rule wins, wildcard rules ("*.ck") match any single label,

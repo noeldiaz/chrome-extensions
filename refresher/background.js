@@ -109,7 +109,8 @@ async function removeTarget(tabId) {
   await updateBadge();
 }
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (sender.id !== chrome.runtime.id) return false; // only our own popup/options may arm/disarm
   (async () => {
     try {
       if (msg?.type === "arm") await arm(msg);

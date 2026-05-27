@@ -31,11 +31,15 @@ test("isHttpUrl matches only http/https", () => {
   assert.equal(isHttpUrl(undefined), false);
 });
 
-test("PROTECTED_URL flags non-web schemes", () => {
-  for (const u of ["chrome://x", "about:blank", "chrome-extension://id/p", "file:///x", "view-source:http://a"]) {
+test("PROTECTED_URL flags only never-gated schemes", () => {
+  for (const u of ["chrome://x", "about:blank", "chrome-extension://id/p", "file:///x", "devtools://x"]) {
     assert.equal(PROTECTED_URL.test(u), true, u);
   }
-  assert.equal(PROTECTED_URL.test("https://example.com"), false);
+  // http(s), and the data:/filesystem:/view-source: schemes the nav gate handles
+  // itself, are deliberately NOT treated as protected here.
+  for (const u of ["https://example.com", "data:text/html,x", "filesystem:https://a/b", "view-source:http://a"]) {
+    assert.equal(PROTECTED_URL.test(u), false, u);
+  }
 });
 
 test("hostFromUrl returns lowercased host for http(s) only", () => {

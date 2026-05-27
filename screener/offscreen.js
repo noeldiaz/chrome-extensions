@@ -4,7 +4,8 @@
 
 import { t } from "./i18n.js";
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (sender.id !== chrome.runtime.id) return false; // only our own contexts
   if (msg?.target !== "offscreen") return false;
   if (msg.type === "grabFrame") {
     grabFrame().then(

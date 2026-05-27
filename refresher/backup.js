@@ -10,6 +10,32 @@
 
 const SCHEMA = 1;
 
+// A chosen backup file is fully attacker-controlled JSON. Two generic guards run
+// on every import, before any of it can reach chrome.storage:
+//   - a size ceiling, so a pathologically large file can't wedge storage;
+//   - prototype-pollution key stripping, so "__proto__"/"constructor"/"prototype"
+//     keys (which JSON.parse faithfully reproduces as own properties) can't poison
+//     any object a present-or-future caller might later spread/merge.
+const MAX_BACKUP_BYTES = 32 * 1024 * 1024; // 32 MB — far above any real backup
+const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+const isPlainObject = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+
+// Recursively rebuild parsed JSON, dropping dangerous keys. Assigning a normal
+// key onto a fresh object is safe; the only hazard is the keys we skip here.
+function sanitize(value) {
+  if (Array.isArray(value)) return value.map(sanitize);
+  if (isPlainObject(value)) {
+    const clean = {};
+    for (const key of Object.keys(value)) {
+      if (DANGEROUS_KEYS.has(key)) continue;
+      clean[key] = sanitize(value[key]);
+    }
+    return clean;
+  }
+  return value;
+}
+
 // Gather everything into one plain, JSON-serializable object.
 export async function buildBackup(app, idb = null) {
   const [local, sync] = await Promise.all([
@@ -44,16 +70,20 @@ export async function downloadBackup(app, idb = null) {
 }
 
 // Parse + validate a chosen backup file's text. Throws an Error whose message is
-// an i18n key the caller can localize: "backupErrJson" (not JSON) or
-// "backupErrApp" (missing/foreign app tag).
+// an i18n key the caller can localize: "backupErrSize" (implausibly large),
+// "backupErrJson" (not JSON), "backupErrApp" (missing/foreign app tag or a
+// malformed section), or "backupErrVersion" (newer schema than this build).
 export function parseBackup(text, app) {
+  if (typeof text !== "string" || text.length > MAX_BACKUP_BYTES) {
+    throw new Error("backupErrSize");
+  }
   let data;
   try {
     data = JSON.parse(text);
   } catch {
     throw new Error("backupErrJson");
   }
-  if (!data || typeof data !== "object" || Array.isArray(data) || data.app !== app) {
+  if (!isPlainObject(data) || data.app !== app) {
     throw new Error("backupErrApp");
   }
   // Refuse a backup written by a newer schema than this build understands, rather
@@ -61,6 +91,12 @@ export function parseBackup(text, app) {
   if (typeof data.schema === "number" && data.schema > SCHEMA) {
     throw new Error("backupErrVersion");
   }
+  // Strip prototype-pollution keys before anything is restored, and confirm the
+  // restorable sections are plain objects — never arrays, null, or scalars.
+  data = sanitize(data);
+  if (data.local !== undefined && !isPlainObject(data.local)) throw new Error("backupErrApp");
+  if (data.sync !== undefined && !isPlainObject(data.sync)) throw new Error("backupErrApp");
+  if (data.idb !== undefined && !isPlainObject(data.idb)) throw new Error("backupErrApp");
   return data;
 }
 

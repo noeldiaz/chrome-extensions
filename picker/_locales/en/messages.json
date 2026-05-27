@@ -37,6 +37,7 @@
   "backupExported": { "message": "Backup downloaded." },
   "backupErrJson": { "message": "That file isn’t valid JSON." },
   "backupErrApp": { "message": "That file isn’t a Picker backup." },
+  "backupErrSize": { "message": "That file is too large to be a valid backup." },
   "backupErrVersion": { "message": "This backup was made by a newer version. Update the extension and try again." },
   "backupErr": {
     "message": "Backup failed: $error$",
