@@ -48,11 +48,14 @@ export function formatTimer(ms, { trimLeading = false } = {}) {
 }
 
 // "HH:MM:SS.CC" for the stopwatch — floors, with centiseconds (matches 00:04:19.06).
-export function formatStopwatch(ms) {
+// hundredths:false drops the ".CC" for a calmer, second-resolution readout.
+export function formatStopwatch(ms, { hundredths = true } = {}) {
   const clamped = Math.max(0, Math.floor(ms));
   const { h, m, s } = msToFields(clamped);
+  const base = `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  if (!hundredths) return base;
   const cs = Math.floor((clamped % SECOND) / 10);
-  return `${pad2(h)}:${pad2(m)}:${pad2(s)}.${pad2(cs)}`;
+  return `${base}.${pad2(cs)}`;
 }
 
 // Wall-clock parts for the clock tool. hour12 swaps 24h → 12h and returns a meridiem.

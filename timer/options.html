@@ -36,75 +36,93 @@
         <button class="tab-btn" data-otab="about" role="tab" aria-selected="false" data-i18n="tabAbout">About</button>
       </div>
 
-      <!-- settings panel -->
-      <section id="opanel-settings" class="space-y-4">
-        <!-- clock format -->
-        <div class="opt-card">
-          <div class="opt-label" data-i18n="optClockFormat">Time format</div>
-          <p class="opt-hint" data-i18n="optClockFormatHint">How the clock shows the time of day.</p>
-          <div class="mt-3 flex gap-2">
-            <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
-              <input type="radio" name="clockFormat" value="24" class="accent-blue-600" /><span data-i18n="opt24h">24-hour — 14:05</span>
-            </label>
-            <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
-              <input type="radio" name="clockFormat" value="12" class="accent-blue-600" /><span data-i18n="opt12h">12-hour — 2:05 PM</span>
-            </label>
+      <!-- settings panel: one card per tool -->
+      <section id="opanel-settings" class="space-y-6">
+        <!-- Clock -->
+        <div class="opt-card space-y-5">
+          <h2 class="opt-card-title" data-i18n="optClockCard">Clock Settings</h2>
+
+          <div>
+            <div class="opt-label" data-i18n="optClockFormat">Time format</div>
+            <p class="opt-hint" data-i18n="optClockFormatHint">How the clock shows the time of day.</p>
+            <div class="mt-3 flex gap-2">
+              <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+                <input type="radio" name="clockFormat" value="24" class="accent-blue-600" /><span data-i18n="opt24h">24-hour — 14:05</span>
+              </label>
+              <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+                <input type="radio" name="clockFormat" value="12" class="accent-blue-600" /><span data-i18n="opt12h">12-hour — 2:05 PM</span>
+              </label>
+            </div>
           </div>
+
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optClockSeconds">Show seconds</span>
+              <span class="opt-hint block" data-i18n="optClockSecondsHint">Display the running seconds on the clock.</span>
+            </span>
+            <input id="clock-seconds" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
+
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optClockDateFs">Show date in fullscreen</span>
+              <span class="opt-hint block" data-i18n="optClockDateFsHint">Keep the date visible under the clock when the full page is in fullscreen.</span>
+            </span>
+            <input id="clock-datefs" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
         </div>
 
-        <!-- show seconds -->
-        <label class="opt-card flex cursor-pointer items-start justify-between gap-4">
-          <span>
-            <span class="opt-label" data-i18n="optClockSeconds">Show seconds</span>
-            <span class="opt-hint block" data-i18n="optClockSecondsHint">Display the running seconds on the clock.</span>
-          </span>
-          <input id="clock-seconds" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-        </label>
+        <!-- Stopwatch -->
+        <div class="opt-card space-y-5">
+          <h2 class="opt-card-title" data-i18n="optStopwatchCard">Stopwatch Settings</h2>
 
-        <!-- show date in fullscreen -->
-        <label class="opt-card flex cursor-pointer items-start justify-between gap-4">
-          <span>
-            <span class="opt-label" data-i18n="optClockDateFs">Show date in fullscreen</span>
-            <span class="opt-hint block" data-i18n="optClockDateFsHint">Keep the date visible under the clock when the full page is in fullscreen.</span>
-          </span>
-          <input id="clock-datefs" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-        </label>
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optSwHundredths">Show hundredths</span>
+              <span class="opt-hint block" data-i18n="optSwHundredthsHint">Show the running hundredths of a second (the .06 in 00:04:19.06).</span>
+            </span>
+            <input id="sw-hundredths" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
+        </div>
 
-        <!-- timer: hide leading zeros -->
-        <label class="opt-card flex cursor-pointer items-start justify-between gap-4">
-          <span>
-            <span class="opt-label" data-i18n="optTimerTrim">Hide leading zeros</span>
-            <span class="opt-hint block" data-i18n="optTimerTrimHint">On the countdown, drop empty leading groups — show 4:54 instead of 00:04:54.</span>
-          </span>
-          <input id="timer-trim" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-        </label>
+        <!-- Timer -->
+        <div class="opt-card space-y-5">
+          <h2 class="opt-card-title" data-i18n="optTimerCard">Timer Settings</h2>
 
-        <!-- end-of-countdown alerts -->
-        <div class="opt-card">
-          <div class="opt-label" data-i18n="optAlerts">When a countdown ends</div>
-          <p class="opt-hint" data-i18n="optAlertsHint">Pick how Timer lets you know a countdown has finished.</p>
-          <div class="mt-3 space-y-3">
-            <label class="flex cursor-pointer items-start justify-between gap-4">
-              <span>
-                <span class="text-sm font-medium" data-i18n="optAlertSound">Play a sound</span>
-                <span class="opt-hint block" data-i18n="optAlertSoundHint">A short chime, played by whichever Timer window is open.</span>
-              </span>
-              <input id="alert-sound" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-            </label>
-            <label class="flex cursor-pointer items-start justify-between gap-4">
-              <span>
-                <span class="text-sm font-medium" data-i18n="optAlertFlash">Flash the screen</span>
-                <span class="opt-hint block" data-i18n="optAlertFlashHint">Pulse the open Timer window so it's noticeable when muted.</span>
-              </span>
-              <input id="alert-flash" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-            </label>
-            <label class="flex cursor-pointer items-start justify-between gap-4">
-              <span>
-                <span class="text-sm font-medium" data-i18n="optAlertNotify">Show a system notification</span>
-                <span class="opt-hint block" data-i18n="optAlertNotifyHint">Notify you even when no Timer window is open.</span>
-              </span>
-              <input id="alert-notify" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-            </label>
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optTimerTrim">Hide leading zeros</span>
+              <span class="opt-hint block" data-i18n="optTimerTrimHint">On the countdown, drop empty leading groups — show 4:54 instead of 00:04:54.</span>
+            </span>
+            <input id="timer-trim" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
+
+          <div>
+            <div class="opt-label" data-i18n="optAlerts">When a countdown ends</div>
+            <p class="opt-hint" data-i18n="optAlertsHint">Pick how Timer lets you know a countdown has finished.</p>
+            <div class="mt-3 space-y-3">
+              <label class="flex cursor-pointer items-start justify-between gap-4">
+                <span>
+                  <span class="text-sm font-medium" data-i18n="optAlertSound">Play a sound</span>
+                  <span class="opt-hint block" data-i18n="optAlertSoundHint">A short chime, played by whichever Timer window is open.</span>
+                </span>
+                <input id="alert-sound" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+              </label>
+              <label class="flex cursor-pointer items-start justify-between gap-4">
+                <span>
+                  <span class="text-sm font-medium" data-i18n="optAlertFlash">Flash the screen</span>
+                  <span class="opt-hint block" data-i18n="optAlertFlashHint">Pulse the open Timer window so it's noticeable when muted.</span>
+                </span>
+                <input id="alert-flash" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+              </label>
+              <label class="flex cursor-pointer items-start justify-between gap-4">
+                <span>
+                  <span class="text-sm font-medium" data-i18n="optAlertNotify">Show a system notification</span>
+                  <span class="opt-hint block" data-i18n="optAlertNotifyHint">Notify you even when no Timer window is open.</span>
+                </span>
+                <input id="alert-notify" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+              </label>
+            </div>
           </div>
         </div>
       </section>

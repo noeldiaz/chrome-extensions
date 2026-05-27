@@ -69,6 +69,13 @@ test("formatStopwatch renders HH:MM:SS.CC and floors", () => {
   assert.equal(formatStopwatch(HOUR + 990), "01:00:00.99");
 });
 
+test("formatStopwatch drops centiseconds when hundredths is off", () => {
+  const noCs = { hundredths: false };
+  assert.equal(formatStopwatch(0, noCs), "00:00:00");
+  assert.equal(formatStopwatch(4 * MINUTE + 19 * SECOND + 60, noCs), "00:04:19");
+  assert.equal(formatStopwatch(HOUR + 990, noCs), "01:00:00");
+});
+
 test("formatClock handles 24h and 12h", () => {
   const d = new Date(2026, 4, 27, 13, 5, 9);
   assert.deepEqual(formatClock(d), { h: "13", m: "05", s: "09", ampm: "" });

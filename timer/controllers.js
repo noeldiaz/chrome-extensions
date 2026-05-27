@@ -22,6 +22,7 @@ const DEFAULTS = {
   clockFormat: "24", // "24" | "12"
   clockSeconds: true,
   clockDateFs: false, // keep the date visible under the clock in fullscreen
+  swHundredths: true, // show the stopwatch's centiseconds (.CC)
   timerTrim: false, // hide leading zero groups on the countdown (4:54 vs 00:04:54)
   alerts: { ...ALERT_DEFAULTS },
   sw: { running: false, startTime: 0, elapsed: 0, laps: [] },
@@ -87,6 +88,22 @@ function renderAlarm() {
   }
 }
 
+// Top-bar flash toggle: the end-of-countdown screen flash (alerts.flash, the same
+// the options page exposes). Off → bolt-slash. Lives on the popup and full page.
+function renderFlash() {
+  const on = state.alerts.flash;
+  $("flash-on")?.classList.toggle("hidden", !on);
+  $("flash-off")?.classList.toggle("hidden", on);
+  const btn = $("flash-toggle");
+  if (btn) {
+    const label = t(on ? "flashDisable" : "flashEnable");
+    if (label) {
+      btn.title = label;
+      btn.setAttribute("aria-label", label);
+    }
+  }
+}
+
 // The on-page clock settings (full page only) and the date's fullscreen visibility.
 const togglePill = (btn, on) => btn?.classList.toggle("is-on", !!on);
 function renderClockControls() {
@@ -102,31 +119,34 @@ function renderClockControls() {
 function renderStopwatch() {
   if (!els.swTime) return;
   const { running, laps } = state.sw;
-  els.swTime.textContent = formatStopwatch(stopwatchElapsed(state.sw));
+  const cs = { hundredths: state.swHundredths };
+  els.swTime.textContent = formatStopwatch(stopwatchElapsed(state.sw), cs);
 
   if (els.swStartLabel) els.swStartLabel.textContent = running ? "Stop" : laps.length || stopwatchElapsed(state.sw) ? "Resume" : "Start";
   els.swStart?.classList.toggle("is-danger", running);
   setPrimaryIcon(els.swStart, running ? "stop" : "play");
 
   if (els.swSecondLabel) els.swSecondLabel.textContent = running ? "Lap" : "Reset";
+  setPrimaryIcon(els.swSecond, running ? "lap" : "reset");
   const idle = !running && stopwatchElapsed(state.sw) === 0 && laps.length === 0;
   if (els.swSecond) els.swSecond.disabled = idle;
 
   if (els.swLaps) {
     const rows = lapRows(laps);
+    const full = mode === "full"; // the tab page shows the lap list larger than the popup
     els.swLaps.replaceChildren();
     for (const r of rows) {
       const li = document.createElement("li");
-      li.className = "flex items-center justify-between gap-3 px-1 py-1 text-sm tabular-nums border-b border-slate-100 last:border-0 dark:border-slate-800";
+      li.className = `flex items-center justify-between gap-3 px-1 tabular-nums border-b border-slate-100 last:border-0 dark:border-slate-800 ${full ? "py-2 text-xl" : "py-1 text-sm"}`;
       const idx = document.createElement("span");
-      idx.className = "w-8 text-slate-400 dark:text-slate-500";
+      idx.className = `text-slate-400 dark:text-slate-500 ${full ? "w-12" : "w-8"}`;
       idx.textContent = String(r.index).padStart(2, "0");
       const split = document.createElement("span");
       split.className = "flex-1 text-center font-medium text-slate-800 dark:text-slate-100";
-      split.textContent = formatStopwatch(r.splitMs);
+      split.textContent = formatStopwatch(r.splitMs, cs);
       const total = document.createElement("span");
       total.className = "flex-1 text-right text-slate-400 dark:text-slate-500";
-      total.textContent = formatStopwatch(r.totalMs);
+      total.textContent = formatStopwatch(r.totalMs, cs);
       li.append(idx, split, total);
       els.swLaps.append(li);
     }
@@ -373,6 +393,10 @@ export async function initApp(opts = {}) {
     persist({ alerts: { ...state.alerts, sound: !state.alerts.sound } });
     renderAlarm();
   });
+  $("flash-toggle")?.addEventListener("click", () => {
+    persist({ alerts: { ...state.alerts, flash: !state.alerts.flash } });
+    renderFlash();
+  });
 
   if (mode === "full") wireFullscreen();
 
@@ -385,6 +409,7 @@ export async function initApp(opts = {}) {
     if ("tool" in changes) showPanel(state.tool);
     renderClockControls();
     renderAlarm();
+    renderFlash();
     renderStopwatch();
     renderTimer();
     if (state.tool === "clock") renderClock();
@@ -393,6 +418,7 @@ export async function initApp(opts = {}) {
   showPanel(state.tool);
   renderClockControls();
   renderAlarm();
+  renderFlash();
   highlightPresets();
   requestAnimationFrame(tick);
 }

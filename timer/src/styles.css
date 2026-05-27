@@ -25,7 +25,7 @@
 @layer components {
   /* round icon buttons in the header (settings, theme, expand, fullscreen) */
   .icon-btn {
-    @apply rounded p-1.5 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200;
+    @apply rounded p-1.5 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200;
   }
 
   /* the bottom tool switcher: Clock · Stopwatch · Timer */
@@ -49,12 +49,13 @@
   .seg svg {
     @apply h-4 w-4;
   }
-  /* icon-only buttons that share the segmented toolbar look (fullscreen, mute) */
+  /* icon-only buttons beside the tabs (fullscreen, mute) — white pills that sit in
+     the same grey trough as the tabs, so the surrounding grey matches to the pixel */
   .seg-icon {
-    @apply rounded-md p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-700 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200;
+    @apply rounded-md bg-white p-2 text-slate-500 shadow-sm transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:bg-slate-700 dark:text-slate-300 dark:hover:text-slate-100;
   }
   .seg-icon svg {
-    @apply h-4 w-4;
+    @apply h-5 w-5;
   }
 
   /* action buttons under each tool */
@@ -115,6 +116,10 @@
 
   .opt-card {
     @apply rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800;
+  }
+  /* per-tool grouping header inside a settings card (Clock Settings, …) */
+  .opt-card-title {
+    @apply border-b border-slate-200 pb-3 text-sm font-bold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:text-slate-400;
   }
   .opt-label {
     @apply text-sm font-semibold text-slate-800 dark:text-slate-100;

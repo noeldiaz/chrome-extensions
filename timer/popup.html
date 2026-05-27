@@ -27,6 +27,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.143 17.082a24.248 24.248 0 0 0 3.844.148m-3.844-.148a23.856 23.856 0 0 1-5.455-1.31 8.964 8.964 0 0 0 2.3-5.542m3.155 6.852a3 3 0 0 0 5.667 1.97m1.965-2.277L21 21M4.5 4.5l15 15" />
           </svg>
         </button>
+        <button id="flash-toggle" type="button" title="Disable screen flash" aria-label="Disable screen flash" class="icon-btn">
+          <svg id="flash-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+          </svg>
+          <svg id="flash-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="hidden h-5 w-5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.412 15.655 9.75 21.75l3.745-4.012M9.257 13.5H3.75l2.659-2.849m2.048-2.194L14.25 2.25 12 10.5h8.25l-4.707 5.043M8.457 8.457 3 3m5.457 5.457 7.086 7.086m0 0L21 21" />
+          </svg>
+        </button>
         <button id="theme-toggle" type="button" class="icon-btn" data-i18n-attr="title:themeToggle,aria-label:themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
           <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
@@ -65,8 +73,11 @@
         </div>
         <div class="mt-5 flex items-center justify-center gap-2">
           <button id="sw-second" type="button" class="btn btn-soft">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <svg data-ic="lap" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18M3 4h13l-2 4 2 4H3" />
+            </svg>
+            <svg data-ic="reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 1 1 2.2 5.3M4.5 12V7.5M4.5 12H9" />
             </svg>
             <span id="sw-second-label" data-i18n="reset">Reset</span>
           </button>

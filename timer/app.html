@@ -30,19 +30,30 @@
           <span data-i18n="toolTimer">Timer</span>
         </button>
         </nav>
-        <!-- matching toolbar group beside the tabs: fullscreen + alarm mute -->
+        <!-- alert toggles beside the tabs: alarm mute + screen flash -->
         <div class="flex gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800">
-          <button id="fullscreen" type="button" class="seg-icon" data-i18n-attr="title:fullscreen,aria-label:fullscreen" title="Fullscreen" aria-label="Fullscreen">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9V3.75H9M15 3.75h5.25V9M20.25 15v5.25H15M9 20.25H3.75V15" />
-            </svg>
-          </button>
           <button id="alarm-toggle" type="button" class="seg-icon" title="Mute alarm sound" aria-label="Mute alarm sound">
             <svg id="bell-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
             </svg>
             <svg id="bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="hidden" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9.143 17.082a24.248 24.248 0 0 0 3.844.148m-3.844-.148a23.856 23.856 0 0 1-5.455-1.31 8.964 8.964 0 0 0 2.3-5.542m3.155 6.852a3 3 0 0 0 5.667 1.97m1.965-2.277L21 21M4.5 4.5l15 15" />
+            </svg>
+          </button>
+          <button id="flash-toggle" type="button" class="seg-icon" title="Disable screen flash" aria-label="Disable screen flash">
+            <svg id="flash-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+            <svg id="flash-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="hidden" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.412 15.655 9.75 21.75l3.745-4.012M9.257 13.5H3.75l2.659-2.849m2.048-2.194L14.25 2.25 12 10.5h8.25l-4.707 5.043M8.457 8.457 3 3m5.457 5.457 7.086 7.086m0 0L21 21" />
+            </svg>
+          </button>
+        </div>
+        <!-- fullscreen on its own, to the right -->
+        <div class="flex gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800">
+          <button id="fullscreen" type="button" class="seg-icon" data-i18n-attr="title:fullscreen,aria-label:fullscreen" title="Fullscreen" aria-label="Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9V3.75H9M15 3.75h5.25V9M20.25 15v5.25H15M9 20.25H3.75V15" />
             </svg>
           </button>
         </div>
@@ -97,9 +108,9 @@
         <!-- stopwatch -->
         <section id="panel-stopwatch" class="hidden text-center">
           <div id="sw-time" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00.00</div>
-          <div id="sw-laps-wrap" class="fs-hide mx-auto mt-8 hidden max-w-md">
-            <div class="flex items-center justify-between gap-3 px-1 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              <span data-i18n="lapCol" class="w-10">Lap</span>
+          <div id="sw-laps-wrap" class="fs-hide mx-auto mt-8 hidden max-w-xl">
+            <div class="flex items-center justify-between gap-3 px-1 pb-1 text-sm font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <span data-i18n="lapCol" class="w-12">Lap</span>
               <span data-i18n="splitCol" class="flex-1 text-center">Split</span>
               <span data-i18n="totalCol" class="flex-1 text-right">Total</span>
             </div>
@@ -107,7 +118,8 @@
           </div>
           <div class="fs-hide mt-10 flex items-center justify-center gap-3">
             <button id="sw-second" type="button" class="btn btn-soft">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
+              <svg data-ic="lap" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
+              <svg data-ic="reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 1 1 2.2 5.3M4.5 12V7.5M4.5 12H9" /></svg>
               <span id="sw-second-label" data-i18n="reset">Reset</span>
             </button>
             <button id="sw-start" type="button" class="btn btn-primary">
