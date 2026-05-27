@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title data-i18n="titleOptions">Timer — Settings</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body class="invisible flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <header class="sticky top-0 z-10 border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+      <div class="mx-auto flex w-full max-w-xl items-center justify-between px-6 py-3">
+        <div class="flex items-center gap-2">
+          <img src="icons/icon32.png" alt="" class="h-5 w-5 shrink-0 self-center" />
+          <h1 data-i18n="h1Options" class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Timer — Settings</h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="theme-toggle" type="button" class="rounded p-1 text-slate-500 transition hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200" data-i18n-attr="title:themeToggle,aria-label:themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+            <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+            <svg id="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="hidden h-5 w-5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+            </svg>
+          </button>
+          <button id="winClose" type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            <span data-i18n="close">Close</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto w-full max-w-xl flex-1 p-6">
+      <!-- tabs -->
+      <div class="mb-5 flex gap-1 rounded-lg bg-slate-200 p-1 dark:bg-slate-800" role="tablist">
+        <button class="tab-btn is-active" data-otab="settings" role="tab" aria-selected="true" data-i18n="tabSettings">Settings</button>
+        <button class="tab-btn" data-otab="about" role="tab" aria-selected="false" data-i18n="tabAbout">About</button>
+      </div>
+
+      <!-- settings panel -->
+      <section id="opanel-settings" class="space-y-4">
+        <!-- clock format -->
+        <div class="opt-card">
+          <div class="opt-label" data-i18n="optClockFormat">Time format</div>
+          <p class="opt-hint" data-i18n="optClockFormatHint">How the clock shows the time of day.</p>
+          <div class="mt-3 flex gap-2">
+            <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+              <input type="radio" name="clockFormat" value="24" class="accent-blue-600" /><span data-i18n="opt24h">24-hour — 14:05</span>
+            </label>
+            <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+              <input type="radio" name="clockFormat" value="12" class="accent-blue-600" /><span data-i18n="opt12h">12-hour — 2:05 PM</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- show seconds -->
+        <label class="opt-card flex cursor-pointer items-start justify-between gap-4">
+          <span>
+            <span class="opt-label" data-i18n="optClockSeconds">Show seconds</span>
+            <span class="opt-hint block" data-i18n="optClockSecondsHint">Display the running seconds on the clock.</span>
+          </span>
+          <input id="clock-seconds" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+        </label>
+
+        <!-- end-of-countdown alerts -->
+        <div class="opt-card">
+          <div class="opt-label" data-i18n="optAlerts">When a countdown ends</div>
+          <p class="opt-hint" data-i18n="optAlertsHint">Pick how Timer lets you know a countdown has finished.</p>
+          <div class="mt-3 space-y-3">
+            <label class="flex cursor-pointer items-start justify-between gap-4">
+              <span>
+                <span class="text-sm font-medium" data-i18n="optAlertSound">Play a sound</span>
+                <span class="opt-hint block" data-i18n="optAlertSoundHint">A short chime, played by whichever Timer window is open.</span>
+              </span>
+              <input id="alert-sound" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+            </label>
+            <label class="flex cursor-pointer items-start justify-between gap-4">
+              <span>
+                <span class="text-sm font-medium" data-i18n="optAlertFlash">Flash the screen</span>
+                <span class="opt-hint block" data-i18n="optAlertFlashHint">Pulse the open Timer window so it's noticeable when muted.</span>
+              </span>
+              <input id="alert-flash" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+            </label>
+            <label class="flex cursor-pointer items-start justify-between gap-4">
+              <span>
+                <span class="text-sm font-medium" data-i18n="optAlertNotify">Show a system notification</span>
+                <span class="opt-hint block" data-i18n="optAlertNotifyHint">Notify you even when no Timer window is open.</span>
+              </span>
+              <input id="alert-notify" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- about panel -->
+      <section id="opanel-about" class="hidden">
+        <div class="opt-card flex flex-col items-center gap-3 py-8 text-center">
+          <img src="icons/icon128.png" alt="" class="h-16 w-16" />
+          <h2 data-i18n="appName" class="text-xl font-bold">Timer</h2>
+          <p data-i18n="appDesc" class="max-w-sm text-sm text-slate-500 dark:text-slate-400">A clean clock, stopwatch, and countdown timer.</p>
+          <p class="text-xs text-slate-400 dark:text-slate-500"><span data-i18n="version">Version</span> <span id="version">—</span></p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ROOT, "dist");
-const EXTENSIONS = ["qrmaker", "refresher", "screener", "picker", "blocker"];
+const EXTENSIONS = ["qrmaker", "refresher", "screener", "picker", "blocker", "timer"];
 
 // Modules kept canonical in shared/ and overlaid into each extension's output, so
 // a release is always built from the single source of truth (the committed

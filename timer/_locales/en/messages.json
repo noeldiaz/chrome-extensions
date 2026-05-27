@@ -1,0 +1,67 @@
+{
+  "appName": { "message": "Timer" },
+  "appDesc": {
+    "message": "A clean clock, stopwatch, and countdown timer — in the toolbar popup or full-screen in a tab."
+  },
+
+  "themeToggle": { "message": "Toggle dark mode" },
+  "settings": { "message": "Settings" },
+  "expand": { "message": "Open in a tab" },
+  "fullscreen": { "message": "Fullscreen" },
+  "exitFullscreen": { "message": "Exit fullscreen (Esc)" },
+  "close": { "message": "Close" },
+  "titleOptions": { "message": "Timer — Settings" },
+  "h1Options": { "message": "Timer — Settings" },
+
+  "toolClock": { "message": "Clock" },
+  "toolStopwatch": { "message": "Stopwatch" },
+  "toolTimer": { "message": "Timer" },
+
+  "start": { "message": "Start" },
+  "stop": { "message": "Stop" },
+  "pause": { "message": "Pause" },
+  "resume": { "message": "Resume" },
+  "reset": { "message": "Reset" },
+  "restart": { "message": "Restart" },
+  "lap": { "message": "Lap" },
+
+  "hours": { "message": "Hours" },
+  "minutes": { "message": "Minutes" },
+  "seconds": { "message": "Seconds" },
+  "presetMin": {
+    "message": "$n$ min",
+    "placeholders": { "n": { "content": "$1" } }
+  },
+  "presetHour": { "message": "1 Hour" },
+
+  "lapCol": { "message": "Lap" },
+  "splitCol": { "message": "Split" },
+  "totalCol": { "message": "Total" },
+
+  "notifyTitle": { "message": "Timer finished" },
+  "notifyBody": {
+    "message": "Your $duration$ countdown is up.",
+    "placeholders": { "duration": { "content": "$1" } }
+  },
+
+  "tabSettings": { "message": "Settings" },
+  "tabAbout": { "message": "About" },
+  "version": { "message": "Version" },
+
+  "optClock": { "message": "Clock" },
+  "optClockFormat": { "message": "Time format" },
+  "optClockFormatHint": { "message": "How the clock shows the time of day." },
+  "opt24h": { "message": "24-hour — 14:05" },
+  "opt12h": { "message": "12-hour — 2:05 PM" },
+  "optClockSeconds": { "message": "Show seconds" },
+  "optClockSecondsHint": { "message": "Display the running seconds on the clock." },
+
+  "optAlerts": { "message": "When a countdown ends" },
+  "optAlertsHint": { "message": "Pick how Timer lets you know a countdown has finished." },
+  "optAlertSound": { "message": "Play a sound" },
+  "optAlertSoundHint": { "message": "A short chime, played by whichever Timer window is open." },
+  "optAlertFlash": { "message": "Flash the screen" },
+  "optAlertFlashHint": { "message": "Pulse the open Timer window so it's noticeable when muted." },
+  "optAlertNotify": { "message": "Show a system notification" },
+  "optAlertNotifyHint": { "message": "Notify you even when no Timer window is open." }
+}
