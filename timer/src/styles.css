@@ -207,8 +207,9 @@ body.fs #clock-date {
   font-size: clamp(1.25rem, 3vw, 4rem);
   margin-top: clamp(0.5rem, 1.5vw, 2rem);
 }
-/* the analog face fills the viewport in fullscreen, like the digital readout does */
-body.fs #clock-analog {
+/* the analog clock + visual-timer dial fill the viewport in fullscreen */
+body.fs #clock-analog,
+body.fs #tm-dial {
   width: min(78vh, 78vw);
   height: min(78vh, 78vw);
 }

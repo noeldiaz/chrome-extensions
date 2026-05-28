@@ -110,6 +110,35 @@
         <div class="opt-card space-y-5">
           <h2 class="opt-card-title" data-i18n="optTimerCard">Timer Settings</h2>
 
+          <div>
+            <div class="opt-label" data-i18n="optTimerStyle">Timer face</div>
+            <p class="opt-hint" data-i18n="optTimerStyleHint">Show the countdown as digits or a visual dial that empties as time runs out.</p>
+            <div class="mt-3 flex gap-2">
+              <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+                <input type="radio" name="timerStyle" value="digital" class="accent-blue-600" /><span data-i18n="optStyleDigital">Digital</span>
+              </label>
+              <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+                <input type="radio" name="timerStyle" value="analog" class="accent-blue-600" /><span data-i18n="optStyleAnalog">Analog</span>
+              </label>
+            </div>
+          </div>
+
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optTimerNumerals">Show numbers (visual timer)</span>
+              <span class="opt-hint block" data-i18n="optTimerNumeralsHint">Print the time marks around the visual-timer dial.</span>
+            </span>
+            <input id="timer-numbers" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
+
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optTimerBadge">Show countdown on the icon</span>
+              <span class="opt-hint block" data-i18n="optTimerBadgeHint">Display the time left as a badge on the toolbar icon while a countdown runs.</span>
+            </span>
+            <input id="timer-badge" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
+
           <label class="flex cursor-pointer items-start justify-between gap-4">
             <span>
               <span class="opt-label" data-i18n="optTimerTrim">Hide leading zeros</span>

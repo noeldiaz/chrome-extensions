@@ -5,7 +5,7 @@
 // state to "ended", plays the chime via an offscreen document (so sound works with
 // nothing on screen), and fires the system notification. The on-page flash is the
 // page's job; the chime/notification are ours alone, which keeps them from doubling.
-import { ALERT_DEFAULTS, formatTimer } from "./lib.js";
+import { ALERT_DEFAULTS, formatTimer, formatBadge } from "./lib.js";
 
 const ALARM = "timerEnd";
 const NOTIFY_ID = "timerDone";
@@ -25,6 +25,55 @@ async function getAlerts() {
 async function scheduleEnd(endTime) {
   await chrome.alarms.clear(ALARM);
   if (endTime > Date.now()) await chrome.alarms.create(ALARM, { when: endTime });
+}
+
+// ---- toolbar badge: show the remaining time on the icon (opt-in) ----------
+// Mirrors Refresher: a 1s ticker repaints the badge while a countdown runs, plus a
+// keepalive ping so the MV3 worker doesn't sleep mid-countdown. Off → no timers.
+let badgeTimer = null;
+let keepAlive = null;
+
+function stopBadgeTimers() {
+  if (badgeTimer) {
+    clearInterval(badgeTimer);
+    badgeTimer = null;
+  }
+  if (keepAlive) {
+    clearInterval(keepAlive);
+    keepAlive = null;
+  }
+}
+
+async function setBadge(text) {
+  await chrome.action?.setBadgeText?.({ text });
+  if (text) {
+    // Colour setters are absent on some engines (Safari styles badges itself).
+    await chrome.action?.setBadgeBackgroundColor?.({ color: "#2563eb" });
+    await chrome.action?.setBadgeTextColor?.({ color: "#ffffff" });
+  }
+}
+
+async function tickBadge() {
+  const tm = await getTimer();
+  if (tm.status !== "running") {
+    stopBadgeTimers();
+    await setBadge("");
+    return;
+  }
+  await setBadge(formatBadge(tm.endTime - Date.now()));
+}
+
+async function refreshBadge() {
+  stopBadgeTimers();
+  const { timerBadge } = await chrome.storage.local.get({ timerBadge: false });
+  const tm = await getTimer();
+  if (timerBadge && tm.status === "running") {
+    await tickBadge();
+    badgeTimer = setInterval(tickBadge, 1000);
+    keepAlive = setInterval(() => chrome.runtime.getPlatformInfo(() => void chrome.runtime.lastError), 20000);
+  } else {
+    await setBadge("");
+  }
 }
 
 // Offscreen document is the only way an MV3 background can play audio. Absent on
@@ -75,6 +124,7 @@ async function endNow() {
   } finally {
     ending = false;
   }
+  await refreshBadge(); // ended → no longer running → clears the badge
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -97,13 +147,23 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === ALARM) endNow();
 });
 
+// The badge follows the timer's stored state and the opt-in toggle, from whichever
+// surface changed them (start/pause/reset in a page, the switch in options).
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && ("tm" in changes || "timerBadge" in changes)) refreshBadge();
+});
+
 // A running countdown must re-arm its alarm after the SW restarts or the browser
 // relaunches; if it already lapsed while we were gone, end it now.
 async function rehydrate() {
   const tm = await getTimer();
-  if (tm.status !== "running") return;
+  if (tm.status !== "running") {
+    await refreshBadge();
+    return;
+  }
   if (tm.endTime > Date.now()) await scheduleEnd(tm.endTime);
   else await endNow();
+  await refreshBadge();
 }
 
 chrome.runtime.onStartup.addListener(rehydrate);

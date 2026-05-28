@@ -14,8 +14,10 @@ import {
   formatTimer,
   hmsToMs,
   lapRows,
+  pad2,
   remainingMs,
   stopwatchElapsed,
+  timerTickStep,
 } from "./lib.js";
 
 const DEFAULTS = {
@@ -27,6 +29,9 @@ const DEFAULTS = {
   clockDate: true, // show the date line under the clock
   swHundredths: true, // show the stopwatch's centiseconds (.CC)
   timerTrim: false, // hide leading zero groups on the countdown (4:54 vs 00:04:54)
+  timerStyle: "digital", // "digital" | "analog" (visual-timer dial)
+  timerNumerals: true, // print the time marks around the visual-timer dial
+  timerBadge: false, // show the remaining time as a badge on the toolbar icon
   alerts: { ...ALERT_DEFAULTS },
   sw: { running: false, startTime: 0, elapsed: 0, laps: [] },
   tm: { status: "idle", endTime: 0, remaining: 0, duration: 0 }, // idle|running|paused|ended
@@ -247,15 +252,100 @@ function swSecond() {
 }
 
 // ---- timer ----------------------------------------------------------------
+// The "visual timer": a pie wedge that starts full (whole circle = the chosen
+// duration) and empties clockwise to nothing at zero, with a hand at its edge and
+// a tick/number scale sized to the total. Built once; ticks rebuilt when the
+// duration changes; wedge + hand repainted every frame.
+function buildTimerDial(svg) {
+  svg.setAttribute("viewBox", "0 0 100 100");
+  svg.append(svgEl("circle", { cx: 50, cy: 50, r: 48, "stroke-width": 1, class: "fill-white stroke-slate-200 dark:fill-slate-800 dark:stroke-slate-700" }));
+  els.tmWedge = svgEl("path", { d: "", "fill-opacity": 0.85, class: "fill-blue-500" });
+  svg.append(els.tmWedge);
+  els.tmTicks = svgEl("g", {});
+  svg.append(els.tmTicks);
+  els.tmHand = svgEl("line", { x1: 50, y1: 50, x2: 50, y2: 8, "stroke-width": 1.6, "stroke-linecap": "round", class: "stroke-slate-700 dark:stroke-slate-100" });
+  svg.append(els.tmHand);
+  svg.append(svgEl("circle", { cx: 50, cy: 50, r: 3.4, class: "fill-slate-800 dark:fill-slate-100" }));
+  els.tmDialFor = null;
+}
+
+function tickLabel(sec, major) {
+  const v = Math.round(sec);
+  if (major < 60) return String(v); // a seconds dial
+  if (v % 60 === 0) return String(v / 60); // whole minutes
+  return `${Math.floor(v / 60)}:${pad2(v % 60)}`;
+}
+
+function rebuildTimerTicks(totalSec) {
+  const { major, minor } = timerTickStep(totalSec);
+  els.tmTicks.replaceChildren();
+  els.tmNums = svgEl("g", { class: "fill-slate-500 dark:fill-slate-400", "font-size": 6, "font-weight": 600, "text-anchor": "middle", "font-family": "system-ui, sans-serif" });
+  for (let t = 0; t <= totalSec + 0.001; t += minor) {
+    const major0 = t % major;
+    const isMajor = major0 < 0.001 || major - major0 < 0.001;
+    const ang = ((t / totalSec) * 360 * Math.PI) / 180;
+    const r1 = 46;
+    const r2 = isMajor ? 40 : 43.5;
+    els.tmTicks.append(svgEl("line", {
+      x1: 50 + r1 * Math.sin(ang), y1: 50 - r1 * Math.cos(ang),
+      x2: 50 + r2 * Math.sin(ang), y2: 50 - r2 * Math.cos(ang),
+      "stroke-width": isMajor ? 1.4 : 0.6, "stroke-linecap": "round",
+      class: isMajor ? "stroke-slate-400 dark:stroke-slate-500" : "stroke-slate-300 dark:stroke-slate-600",
+    }));
+    if (isMajor && t > 0.001) {
+      const rN = 33;
+      const txt = svgEl("text", { x: 50 + rN * Math.sin(ang), y: 50 - rN * Math.cos(ang), "dominant-baseline": "central" });
+      txt.textContent = tickLabel(t, major);
+      els.tmNums.append(txt);
+    }
+  }
+  els.tmTicks.append(els.tmNums);
+  els.tmDialFor = totalSec;
+}
+
+// A pie slice from 12 o'clock, clockwise, covering `f` of the circle (0..1).
+function wedgePath(cx, cy, r, f) {
+  if (f <= 0) return "";
+  if (f >= 1) return `M${cx},${cy - r} A${r},${r} 0 1 1 ${cx - 0.01},${cy - r} Z`;
+  const ang = ((360 * f - 90) * Math.PI) / 180;
+  const x = cx + r * Math.cos(ang);
+  const y = cy + r * Math.sin(ang);
+  return `M${cx},${cy} L${cx},${cy - r} A${r},${r} 0 ${f > 0.5 ? 1 : 0} 1 ${x},${y} Z`;
+}
+
+function renderTimerDial(remaining, duration, status) {
+  if (!els.tmDial) return;
+  const total = Math.max(1, Math.round(duration / 1000));
+  if (els.tmDialFor !== total) rebuildTimerTicks(total);
+  els.tmNums?.classList.toggle("hidden", !state.timerNumerals);
+  const f = duration > 0 ? Math.max(0, Math.min(1, remaining / duration)) : 0;
+  els.tmWedge.setAttribute("d", wedgePath(50, 50, 44, f));
+  els.tmWedge.setAttribute("class", status === "ended" ? "fill-rose-500" : "fill-blue-500");
+  rotate(els.tmHand, 360 * f);
+}
+
+// face/numbers switches on the timer tab (full page), mirroring the clock's
+function renderTimerControls() {
+  const analog = state.timerStyle === "analog";
+  $("tm-digital")?.classList.toggle("is-active", !analog);
+  $("tm-analog")?.classList.toggle("is-active", analog);
+  $("tm-numbers")?.classList.toggle("hidden", !analog);
+  togglePill($("tm-numbers"), state.timerNumerals);
+}
+
 function renderTimer() {
-  if (!els.tmTime) return;
+  if (!els.tmTime && !els.tmDial) return;
   const { status } = state.tm;
   const idle = status === "idle";
   els.tmSetup?.classList.toggle("hidden", !idle);
   els.tmDisplay?.classList.toggle("hidden", idle);
 
   const ms = status === "running" ? remainingMs(state.tm.endTime) : status === "paused" ? state.tm.remaining : status === "ended" ? 0 : state.tm.duration;
-  els.tmTime.textContent = formatTimer(ms, { trimLeading: state.timerTrim });
+  const analog = state.timerStyle === "analog";
+  els.tmTime?.classList.toggle("hidden", analog);
+  els.tmDial?.classList.toggle("hidden", !analog);
+  if (analog) renderTimerDial(ms, state.tm.duration, status);
+  else if (els.tmTime) els.tmTime.textContent = formatTimer(ms, { trimLeading: state.timerTrim });
   els.tmDisplay?.classList.toggle("is-ended", status === "ended");
 
   if (els.tmStartLabel) {
@@ -414,6 +504,7 @@ export async function initApp(opts = {}) {
     swSecond: $("sw-second"),
     swSecondLabel: $("sw-second-label"),
     tmTime: $("tm-time"),
+    tmDial: $("tm-dial"),
     tmSetup: $("tm-setup"),
     tmDisplay: $("tm-display"),
     tmH: $("tm-h"),
@@ -447,6 +538,19 @@ export async function initApp(opts = {}) {
   }
   // on-page clock settings (full page)
   if (els.clockAnalog) buildAnalog(els.clockAnalog);
+  if (els.tmDial) buildTimerDial(els.tmDial);
+  for (const b of document.querySelectorAll("[data-tmstyle]")) {
+    b.addEventListener("click", () => {
+      persist({ timerStyle: b.dataset.tmstyle });
+      renderTimer();
+      renderTimerControls();
+    });
+  }
+  $("tm-numbers")?.addEventListener("click", () => {
+    persist({ timerNumerals: !state.timerNumerals });
+    renderTimer();
+    renderTimerControls();
+  });
   for (const b of document.querySelectorAll("[data-style]")) {
     b.addEventListener("click", () => {
       persist({ clockStyle: b.dataset.style });
@@ -497,6 +601,7 @@ export async function initApp(opts = {}) {
     renderAlarm();
     renderFlash();
     renderStopwatch();
+    renderTimerControls();
     renderTimer();
     if (state.tool === "clock") renderClock();
   });
@@ -506,6 +611,8 @@ export async function initApp(opts = {}) {
   renderClockControls();
   renderAlarm();
   renderFlash();
+  renderTimerControls();
+  renderTimer();
   highlightPresets();
   requestAnimationFrame(tick);
 }

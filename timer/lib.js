@@ -58,6 +58,31 @@ export function formatStopwatch(ms, { hundredths = true } = {}) {
   return `${base}.${pad2(cs)}`;
 }
 
+// Compact countdown text for the toolbar badge — at most a few chars:
+// "45s" under a minute, "4m" up to ~100 minutes, "2h" beyond.
+export function formatBadge(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  if (s >= 6000) return `${Math.floor(s / 3600)}h`;
+  if (s >= 60) return `${Math.ceil(s / 60)}m`;
+  return `${s}s`;
+}
+
+// Tick spacing (seconds) for the visual-timer dial: a "nice" major step that yields
+// ~4–8 labelled marks for the chosen total, with minor ticks at a fifth of it.
+export function timerTickStep(totalSec) {
+  const total = Math.max(1, Math.round(totalSec));
+  const cands = [5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 21600];
+  const target = total / 6;
+  let major = cands[cands.length - 1];
+  for (const c of cands) {
+    if (c >= target) {
+      major = c;
+      break;
+    }
+  }
+  return { major, minor: major >= 5 ? major / 5 : major };
+}
+
 // Wall-clock parts for the clock tool. hour12 swaps 24h → 12h and returns a meridiem.
 export function formatClock(date, { hour12 = false } = {}) {
   let h = date.getHours();

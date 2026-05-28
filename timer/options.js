@@ -44,28 +44,36 @@ const numbers = document.getElementById("clock-numbers");
 const dateLine = document.getElementById("clock-date");
 const hundredths = document.getElementById("sw-hundredths");
 const trim = document.getElementById("timer-trim");
+const timerNumbers = document.getElementById("timer-numbers");
+const timerBadge = document.getElementById("timer-badge");
 const sound = document.getElementById("alert-sound");
 const flash = document.getElementById("alert-flash");
 const notify = document.getElementById("alert-notify");
 
 async function load() {
-  const { clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate, swHundredths, timerTrim, alerts } = await chrome.storage.local.get({
+  const { clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate, swHundredths, timerStyle, timerNumerals, timerBadge: badge, timerTrim, alerts } = await chrome.storage.local.get({
     clockStyle: "digital",
     clockFormat: "24",
     clockSeconds: true,
     clockNumerals: true,
     clockDate: true,
     swHundredths: true,
+    timerStyle: "digital",
+    timerNumerals: true,
+    timerBadge: false,
     timerTrim: false,
     alerts: { ...ALERT_DEFAULTS },
   });
   const a = { ...ALERT_DEFAULTS, ...alerts };
   for (const r of document.querySelectorAll('input[name="clockStyle"]')) r.checked = r.value === clockStyle;
   for (const r of document.querySelectorAll('input[name="clockFormat"]')) r.checked = r.value === clockFormat;
+  for (const r of document.querySelectorAll('input[name="timerStyle"]')) r.checked = r.value === timerStyle;
   seconds.checked = clockSeconds;
   numbers.checked = clockNumerals;
   dateLine.checked = clockDate;
   hundredths.checked = swHundredths;
+  timerNumbers.checked = timerNumerals;
+  timerBadge.checked = badge;
   trim.checked = timerTrim;
   sound.checked = a.sound;
   flash.checked = a.flash;
@@ -81,10 +89,15 @@ for (const r of document.querySelectorAll('input[name="clockStyle"]')) {
 for (const r of document.querySelectorAll('input[name="clockFormat"]')) {
   r.addEventListener("change", () => r.checked && chrome.storage.local.set({ clockFormat: r.value }));
 }
+for (const r of document.querySelectorAll('input[name="timerStyle"]')) {
+  r.addEventListener("change", () => r.checked && chrome.storage.local.set({ timerStyle: r.value }));
+}
 seconds.addEventListener("change", () => chrome.storage.local.set({ clockSeconds: seconds.checked }));
 numbers.addEventListener("change", () => chrome.storage.local.set({ clockNumerals: numbers.checked }));
 dateLine.addEventListener("change", () => chrome.storage.local.set({ clockDate: dateLine.checked }));
 hundredths.addEventListener("change", () => chrome.storage.local.set({ swHundredths: hundredths.checked }));
+timerNumbers.addEventListener("change", () => chrome.storage.local.set({ timerNumerals: timerNumbers.checked }));
+timerBadge.addEventListener("change", () => chrome.storage.local.set({ timerBadge: timerBadge.checked }));
 trim.addEventListener("change", () => chrome.storage.local.set({ timerTrim: trim.checked }));
 sound.addEventListener("change", saveAlerts);
 flash.addEventListener("change", saveAlerts);

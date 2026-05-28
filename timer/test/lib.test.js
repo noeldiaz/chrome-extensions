@@ -13,6 +13,8 @@ import {
   formatStopwatch,
   formatClock,
   clockHandAngles,
+  formatBadge,
+  timerTickStep,
   remainingMs,
   stopwatchElapsed,
   lapRows,
@@ -95,6 +97,20 @@ test("clockHandAngles maps time to degrees, hands creeping", () => {
   assert.equal(a.hour, 195);
   // second hand sweeps with milliseconds: 15.5s → 93°
   assert.equal(clockHandAngles(new Date(2026, 4, 27, 0, 0, 15, 500)).second, 93);
+});
+
+test("formatBadge picks a compact unit", () => {
+  assert.equal(formatBadge(0), "0s");
+  assert.equal(formatBadge(45 * SECOND), "45s");
+  assert.equal(formatBadge(4 * MINUTE), "4m");
+  assert.equal(formatBadge(90 * MINUTE), "90m");
+  assert.equal(formatBadge(2 * HOUR), "2h");
+});
+
+test("timerTickStep yields nice major/minor spacing", () => {
+  assert.deepEqual(timerTickStep(20 * MINUTE / SECOND), { major: 300, minor: 60 });
+  assert.deepEqual(timerTickStep(60), { major: 10, minor: 2 });
+  assert.deepEqual(timerTickStep(10 * 60), { major: 120, minor: 24 });
 });
 
 test("remainingMs never goes negative", () => {

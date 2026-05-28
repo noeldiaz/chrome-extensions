@@ -81,6 +81,12 @@
   "lblDate": { "message": "Date" },
   "optTimerTrim": { "message": "Hide leading zeros" },
   "optTimerTrimHint": { "message": "On the countdown, drop empty leading groups — show 4:54 instead of 00:04:54." },
+  "optTimerStyle": { "message": "Timer face" },
+  "optTimerStyleHint": { "message": "Show the countdown as digits or a visual dial that empties as time runs out." },
+  "optTimerNumerals": { "message": "Show numbers (visual timer)" },
+  "optTimerNumeralsHint": { "message": "Print the time marks around the visual-timer dial." },
+  "optTimerBadge": { "message": "Show countdown on the icon" },
+  "optTimerBadgeHint": { "message": "Display the time left as a badge on the toolbar icon while a countdown runs." },
 
   "optAlerts": { "message": "When a countdown ends" },
   "optAlertsHint": { "message": "Pick how Timer lets you know a countdown has finished." },
