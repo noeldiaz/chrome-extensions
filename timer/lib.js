@@ -74,6 +74,15 @@ export function formatClock(date, { hour12 = false } = {}) {
   };
 }
 
+// Analog clock hand angles in degrees clockwise from 12 o'clock. The hour and
+// minute hands creep between marks; the second hand sweeps with the milliseconds.
+export function clockHandAngles(date) {
+  const s = date.getSeconds() + date.getMilliseconds() / 1000;
+  const m = date.getMinutes() + s / 60;
+  const h = (date.getHours() % 12) + m / 60;
+  return { hour: h * 30, minute: m * 6, second: s * 6 };
+}
+
 // Long date line under the clock, e.g. "Wednesday, May 27".
 export function formatDate(date) {
   return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });

@@ -87,21 +87,40 @@
         <!-- clock -->
         <section id="panel-clock" class="hidden text-center">
           <div id="clock-time" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
+          <svg id="clock-analog" class="mx-auto hidden h-72 w-72" aria-hidden="true"></svg>
           <div id="clock-date" class="mt-4 text-lg text-slate-500 dark:text-slate-400"></div>
           <!-- on-page clock settings (hidden in fullscreen) -->
-          <div class="fs-hide mt-8 flex flex-wrap items-center justify-center gap-2">
-            <div class="inline-flex rounded-lg bg-slate-200 p-0.5 dark:bg-slate-800">
-              <button id="clk-24" type="button" class="miniseg" data-fmt="24" data-i18n="lblHour24">24h</button>
-              <button id="clk-12" type="button" class="miniseg" data-fmt="12" data-i18n="lblHour12">12h</button>
+          <div class="fs-hide mt-8 flex flex-col items-center gap-3">
+            <!-- face + time-format switches -->
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <div class="seg-group">
+                <button id="clk-digital" type="button" class="miniseg" data-style="digital" data-i18n-attr="title:lblDigital,aria-label:lblDigital" title="Digital" aria-label="Digital">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4" aria-hidden="true"><rect x="6.25" y="7" width="11.5" height="10" rx="2.5" /><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 7V4h5v3M9.5 17v3h5v-3" /><path stroke-linecap="round" d="M12 11.2v.01M12 12.9v.01" /></svg>
+                </button>
+                <button id="clk-analog" type="button" class="miniseg" data-style="analog" data-i18n-attr="title:lblAnalog,aria-label:lblAnalog" title="Analog" aria-label="Analog">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2" /></svg>
+                </button>
+              </div>
+              <div id="clk-format" class="seg-group">
+                <button id="clk-24" type="button" class="miniseg" data-fmt="24" data-i18n="lblHour24">24h</button>
+                <button id="clk-12" type="button" class="miniseg" data-fmt="12" data-i18n="lblHour12">12h</button>
+              </div>
             </div>
-            <button id="clk-seconds" type="button" class="pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l2.5 1.5" /></svg>
-              <span data-i18n="lblSeconds">Seconds</span>
-            </button>
-            <button id="clk-datefs" type="button" class="pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 9.5h17M8 3.5v3M16 3.5v3" /></svg>
-              <span data-i18n="lblDateFs">Date in fullscreen</span>
-            </button>
+            <!-- toggles -->
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <button id="clk-seconds" type="button" class="pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l2.5 1.5" /></svg>
+                <span data-i18n="lblSeconds">Seconds</span>
+              </button>
+              <button id="clk-numbers" type="button" class="pill hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9" /><text x="12" y="12.5" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="700" fill="currentColor" stroke="none">12</text></svg>
+                <span data-i18n="lblNumbers">Numbers</span>
+              </button>
+              <button id="clk-date" type="button" class="pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 9.5h17M8 3.5v3M16 3.5v3" /></svg>
+                <span data-i18n="lblDate">Date</span>
+              </button>
+            </div>
           </div>
         </section>
 

@@ -43,6 +43,19 @@
           <h2 class="opt-card-title" data-i18n="optClockCard">Clock Settings</h2>
 
           <div>
+            <div class="opt-label" data-i18n="optClockStyle">Clock face</div>
+            <p class="opt-hint" data-i18n="optClockStyleHint">Show the time as digits or as an analog dial with hands.</p>
+            <div class="mt-3 flex gap-2">
+              <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+                <input type="radio" name="clockStyle" value="digital" class="accent-blue-600" /><span data-i18n="optStyleDigital">Digital</span>
+              </label>
+              <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:border-slate-600 dark:has-[:checked]:bg-blue-950">
+                <input type="radio" name="clockStyle" value="analog" class="accent-blue-600" /><span data-i18n="optStyleAnalog">Analog</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
             <div class="opt-label" data-i18n="optClockFormat">Time format</div>
             <p class="opt-hint" data-i18n="optClockFormatHint">How the clock shows the time of day.</p>
             <div class="mt-3 flex gap-2">
@@ -65,10 +78,18 @@
 
           <label class="flex cursor-pointer items-start justify-between gap-4">
             <span>
-              <span class="opt-label" data-i18n="optClockDateFs">Show date in fullscreen</span>
-              <span class="opt-hint block" data-i18n="optClockDateFsHint">Keep the date visible under the clock when the full page is in fullscreen.</span>
+              <span class="opt-label" data-i18n="optClockNumerals">Show numbers (analog)</span>
+              <span class="opt-hint block" data-i18n="optClockNumeralsHint">Print 1–12 around the analog dial.</span>
             </span>
-            <input id="clock-datefs" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+            <input id="clock-numbers" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
+
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optClockDate">Show date</span>
+              <span class="opt-hint block" data-i18n="optClockDateHint">Show the date line under the clock.</span>
+            </span>
+            <input id="clock-date" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
           </label>
         </div>
 

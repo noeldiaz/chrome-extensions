@@ -12,6 +12,7 @@ import {
   formatTimer,
   formatStopwatch,
   formatClock,
+  clockHandAngles,
   remainingMs,
   stopwatchElapsed,
   lapRows,
@@ -82,6 +83,18 @@ test("formatClock handles 24h and 12h", () => {
   assert.deepEqual(formatClock(d, { hour12: true }), { h: "1", m: "05", s: "09", ampm: "PM" });
   const midnight = new Date(2026, 4, 27, 0, 0, 0);
   assert.deepEqual(formatClock(midnight, { hour12: true }), { h: "12", m: "00", s: "00", ampm: "AM" });
+});
+
+test("clockHandAngles maps time to degrees, hands creeping", () => {
+  assert.deepEqual(clockHandAngles(new Date(2026, 4, 27, 0, 0, 0, 0)), { hour: 0, minute: 0, second: 0 });
+  // 3:00:00 → hour hand at 90°, others at 0
+  assert.deepEqual(clockHandAngles(new Date(2026, 4, 27, 3, 0, 0, 0)), { hour: 90, minute: 0, second: 0 });
+  // 6:30:00 → minute at 180°, hour halfway between 6 and 7 (195°)
+  const a = clockHandAngles(new Date(2026, 4, 27, 6, 30, 0, 0));
+  assert.equal(a.minute, 180);
+  assert.equal(a.hour, 195);
+  // second hand sweeps with milliseconds: 15.5s → 93°
+  assert.equal(clockHandAngles(new Date(2026, 4, 27, 0, 0, 15, 500)).second, 93);
 });
 
 test("remainingMs never goes negative", () => {

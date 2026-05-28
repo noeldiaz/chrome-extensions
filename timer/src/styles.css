@@ -30,7 +30,7 @@
 
   /* the bottom tool switcher: Clock · Stopwatch · Timer */
   .tab {
-    @apply flex flex-1 items-center justify-center gap-1.5 border-t-2 border-transparent py-2.5 text-sm font-medium text-slate-500 transition hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400 dark:text-slate-400 dark:hover:text-slate-200;
+    @apply flex flex-1 items-center justify-center gap-1.5 border-t-2 border-transparent py-2.5 text-sm font-medium text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 dark:text-slate-400 dark:hover:text-slate-200;
   }
   .tab.is-active {
     @apply border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400;
@@ -41,7 +41,7 @@
 
   /* full-page tool switcher: a segmented control with a white active fill */
   .seg {
-    @apply flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-500 transition hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-slate-400 dark:hover:text-slate-200;
+    @apply flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:text-slate-400 dark:hover:text-slate-200;
   }
   .seg.is-active {
     @apply bg-white text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-400;
@@ -95,9 +95,14 @@
   .pill.is-on {
     @apply border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950 dark:text-blue-300;
   }
+  /* grey trough wrapping a small segmented control (face switch, 24h/12h).
+     A component (not a raw utility) so a `hidden` utility can still hide it. */
+  .seg-group {
+    @apply inline-flex rounded-lg bg-slate-200 p-0.5 dark:bg-slate-800;
+  }
   /* small segmented control (e.g. 24h / 12h) */
   .miniseg {
-    @apply rounded-md px-3 py-1 text-sm font-medium text-slate-500 transition hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-slate-400 dark:hover:text-slate-200;
+    @apply inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:text-slate-400 dark:hover:text-slate-200;
   }
   .miniseg.is-active {
     @apply bg-white text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-400;
@@ -190,6 +195,11 @@ body.fs .display {
 body.fs #clock-date {
   font-size: clamp(1.25rem, 3vw, 4rem);
   margin-top: clamp(0.5rem, 1.5vw, 2rem);
+}
+/* the analog face fills the viewport in fullscreen, like the digital readout does */
+body.fs #clock-analog {
+  width: min(78vh, 78vw);
+  height: min(78vh, 78vw);
 }
 
 @media (prefers-reduced-motion: reduce) {

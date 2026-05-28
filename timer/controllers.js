@@ -7,6 +7,7 @@ import {
   ALERT_DEFAULTS,
   TIMER_MIN_MS,
   clampTimerMs,
+  clockHandAngles,
   formatClock,
   formatDate,
   formatStopwatch,
@@ -19,9 +20,11 @@ import {
 
 const DEFAULTS = {
   tool: "clock",
+  clockStyle: "digital", // "digital" | "analog"
+  clockNumerals: true, // print 1–12 around the analog dial
   clockFormat: "24", // "24" | "12"
   clockSeconds: true,
-  clockDateFs: false, // keep the date visible under the clock in fullscreen
+  clockDate: true, // show the date line under the clock
   swHundredths: true, // show the stopwatch's centiseconds (.CC)
   timerTrim: false, // hide leading zero groups on the countdown (4:54 vs 00:04:54)
   alerts: { ...ALERT_DEFAULTS },
@@ -63,12 +66,75 @@ const persist = (patch) => {
 };
 
 // ---- clock ----------------------------------------------------------------
+const SVGNS = "http://www.w3.org/2000/svg";
+const svgEl = (name, attrs) => {
+  const el = document.createElementNS(SVGNS, name);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  return el;
+};
+
+// Build the analog face once: a ring, 60 ticks (every 5th bold), three hands and
+// a hub. Hands point to 12 and are rotated each frame. Tailwind stroke/fill class
+// strings are spelled out literally here so the CSS scan emits them.
+function buildAnalog(svg) {
+  svg.setAttribute("viewBox", "0 0 100 100");
+  svg.append(svgEl("circle", { cx: 50, cy: 50, r: 48, "stroke-width": 1, class: "fill-white stroke-slate-200 dark:fill-slate-800 dark:stroke-slate-700" }));
+  for (let i = 0; i < 60; i++) {
+    const major = i % 5 === 0;
+    const a = (i * 6 * Math.PI) / 180;
+    const r1 = 46;
+    const r2 = major ? 39 : 43;
+    svg.append(svgEl("line", {
+      x1: 50 + r1 * Math.sin(a), y1: 50 - r1 * Math.cos(a),
+      x2: 50 + r2 * Math.sin(a), y2: 50 - r2 * Math.cos(a),
+      "stroke-width": major ? 1.6 : 0.7,
+      "stroke-linecap": "round",
+      class: major ? "stroke-slate-400 dark:stroke-slate-500" : "stroke-slate-300 dark:stroke-slate-600",
+    }));
+  }
+  // 1–12 numerals as one group, toggled together
+  const nums = svgEl("g", { class: "fill-slate-700 dark:fill-slate-200", "font-size": 8, "font-weight": 600, "text-anchor": "middle", "font-family": "system-ui, sans-serif" });
+  for (let n = 1; n <= 12; n++) {
+    const a = (n * 30 * Math.PI) / 180;
+    const r = 33;
+    const txt = svgEl("text", { x: 50 + r * Math.sin(a), y: 50 - r * Math.cos(a), "dominant-baseline": "central" });
+    txt.textContent = String(n);
+    nums.append(txt);
+  }
+  svg.append(nums);
+  els.analogNums = nums;
+  els.handHour = svgEl("line", { x1: 50, y1: 56, x2: 50, y2: 27, "stroke-width": 3.4, "stroke-linecap": "round", class: "stroke-slate-800 dark:stroke-slate-100" });
+  els.handMin = svgEl("line", { x1: 50, y1: 58, x2: 50, y2: 17, "stroke-width": 2.4, "stroke-linecap": "round", class: "stroke-slate-700 dark:stroke-slate-200" });
+  els.handSec = svgEl("line", { x1: 50, y1: 62, x2: 50, y2: 13, "stroke-width": 1, "stroke-linecap": "round", class: "stroke-blue-500" });
+  svg.append(els.handHour, els.handMin, els.handSec);
+  svg.append(svgEl("circle", { cx: 50, cy: 50, r: 2.4, class: "fill-slate-800 dark:fill-slate-100" }));
+  svg.append(svgEl("circle", { cx: 50, cy: 50, r: 1.1, class: "fill-blue-500" }));
+}
+
+const rotate = (el, deg) => el?.setAttribute("transform", `rotate(${deg} 50 50)`);
+
+function renderAnalog(now) {
+  els.analogNums?.classList.toggle("hidden", !state.clockNumerals);
+  const { hour, minute, second } = clockHandAngles(now);
+  rotate(els.handHour, hour);
+  rotate(els.handMin, minute);
+  els.handSec?.classList.toggle("hidden", !state.clockSeconds);
+  if (state.clockSeconds) rotate(els.handSec, second);
+}
+
 function renderClock() {
-  if (!els.clockTime) return;
+  if (!els.clockTime && !els.clockAnalog) return;
   const now = new Date();
-  const { h, m, s, ampm } = formatClock(now, { hour12: state.clockFormat === "12" });
-  const time = state.clockSeconds ? `${h}:${m}:${s}` : `${h}:${m}`;
-  els.clockTime.textContent = ampm ? `${time} ${ampm}` : time;
+  const analog = state.clockStyle === "analog";
+  els.clockTime?.classList.toggle("hidden", analog);
+  els.clockAnalog?.classList.toggle("hidden", !analog);
+  if (analog) {
+    renderAnalog(now);
+  } else if (els.clockTime) {
+    const { h, m, s, ampm } = formatClock(now, { hour12: state.clockFormat === "12" });
+    const time = state.clockSeconds ? `${h}:${m}:${s}` : `${h}:${m}`;
+    els.clockTime.textContent = ampm ? `${time} ${ampm}` : time;
+  }
   if (els.clockDate) els.clockDate.textContent = formatDate(now);
 }
 
@@ -107,12 +173,18 @@ function renderFlash() {
 // The on-page clock settings (full page only) and the date's fullscreen visibility.
 const togglePill = (btn, on) => btn?.classList.toggle("is-on", !!on);
 function renderClockControls() {
+  const analog = state.clockStyle === "analog";
+  $("clk-digital")?.classList.toggle("is-active", !analog);
+  $("clk-analog")?.classList.toggle("is-active", analog);
+  // the 24/12 choice only affects the digital readout; the numerals only the dial
+  $("clk-format")?.classList.toggle("hidden", analog);
+  $("clk-numbers")?.classList.toggle("hidden", !analog);
   $("clk-24")?.classList.toggle("is-active", state.clockFormat === "24");
   $("clk-12")?.classList.toggle("is-active", state.clockFormat === "12");
   togglePill($("clk-seconds"), state.clockSeconds);
-  togglePill($("clk-datefs"), state.clockDateFs);
-  // fs-hide drops an element in fullscreen; the date keeps it unless opted in.
-  els.clockDate?.classList.toggle("fs-hide", !state.clockDateFs);
+  togglePill($("clk-numbers"), state.clockNumerals);
+  togglePill($("clk-date"), state.clockDate);
+  els.clockDate?.classList.toggle("hidden", !state.clockDate);
 }
 
 // ---- stopwatch ------------------------------------------------------------
@@ -333,6 +405,7 @@ export async function initApp(opts = {}) {
   els = {
     clockTime: $("clock-time"),
     clockDate: $("clock-date"),
+    clockAnalog: $("clock-analog"),
     swTime: $("sw-time"),
     swLaps: $("sw-laps"),
     swLapsWrap: $("sw-laps-wrap"),
@@ -373,6 +446,14 @@ export async function initApp(opts = {}) {
     });
   }
   // on-page clock settings (full page)
+  if (els.clockAnalog) buildAnalog(els.clockAnalog);
+  for (const b of document.querySelectorAll("[data-style]")) {
+    b.addEventListener("click", () => {
+      persist({ clockStyle: b.dataset.style });
+      renderClock();
+      renderClockControls();
+    });
+  }
   for (const b of document.querySelectorAll("[data-fmt]")) {
     b.addEventListener("click", () => {
       persist({ clockFormat: b.dataset.fmt });
@@ -385,8 +466,13 @@ export async function initApp(opts = {}) {
     renderClock();
     renderClockControls();
   });
-  $("clk-datefs")?.addEventListener("click", () => {
-    persist({ clockDateFs: !state.clockDateFs });
+  $("clk-numbers")?.addEventListener("click", () => {
+    persist({ clockNumerals: !state.clockNumerals });
+    renderClock();
+    renderClockControls();
+  });
+  $("clk-date")?.addEventListener("click", () => {
+    persist({ clockDate: !state.clockDate });
     renderClockControls();
   });
   $("alarm-toggle")?.addEventListener("click", () => {
@@ -416,6 +502,7 @@ export async function initApp(opts = {}) {
   });
 
   showPanel(state.tool);
+  renderClock();
   renderClockControls();
   renderAlarm();
   renderFlash();
