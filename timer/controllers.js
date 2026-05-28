@@ -620,15 +620,13 @@ function makeIcon(kind) {
     svg.setAttribute("stroke-width", "1.8");
     svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M5 19h11l-1-1.5V11a5 5 0 0 0-7.5-4.3M5 5l14 14M10 21a2 2 0 0 0 4 0" }));
   } else if (kind === "link-off") {
-    // A broken chain — two half-links pulled apart on the diagonal with a
-    // clean gap in the middle. Same arc geometry as link-on so the toggle
-    // reads as "the bond between the halves." No spark strokes — they look
-    // like random tails at this size.
+    // Same chain as link-on with a single diagonal slash through the middle
+    // — the universal "this link is broken" mark.
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "1.8");
-    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-1.5 1.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757" }));
-    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M19.94 5.378l1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-1.5 1.5" }));
+    svg.setAttribute("stroke-width", "1.9");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" }));
+    svg.append(svgEl("path", { "stroke-linecap": "round", d: "M4 4 L20 20" }));
   } else if (kind === "link-on") {
     // A continuous chain — two oval links joined on the diagonal.
     svg.setAttribute("fill", "none");
