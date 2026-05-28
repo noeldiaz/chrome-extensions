@@ -611,8 +611,55 @@ function makeIcon(kind) {
     for (const [cx, cy] of [[9, 6], [9, 12], [9, 18], [15, 6], [15, 12], [15, 18]]) {
       svg.append(svgEl("circle", { cx: String(cx), cy: String(cy), r: "1.4" }));
     }
+  } else if (kind === "bell-on") {
+    svg.setAttribute("fill", "currentColor");
+    svg.append(svgEl("path", { d: "M12 2a2 2 0 0 0-2 2v.5C7.2 5.3 5 7.9 5 11v4l-1.7 2.6a1 1 0 0 0 .8 1.4h15.8a1 1 0 0 0 .8-1.4L19 15v-4c0-3.1-2.2-5.7-5-6.5V4a2 2 0 0 0-2-2zM10 21a2 2 0 0 0 4 0h-4z" }));
+  } else if (kind === "bell-off") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M5 19h11l-1-1.5V11a5 5 0 0 0-7.5-4.3M5 5l14 14M10 21a2 2 0 0 0 4 0" }));
+  } else if (kind === "link-off") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M9.5 14.5l5-5M8 8.5l-2.1 2.1a3.5 3.5 0 0 0 5 5L13 13.5M11 15.5l2.1-2.1a3.5 3.5 0 0 0-5-5L6 10.5" }));
+  } else if (kind === "link-on") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M10 14L14 10M8.5 8.5L7 10a3.5 3.5 0 0 0 5 5l1.5-1.5M10.5 15.5L12 14a3.5 3.5 0 0 0-5-5L5.5 10.5" }));
   }
   return svg;
+}
+
+// Chain helpers — adjacency-based. A "chain" is a contiguous slice of timers
+// where each member's linkedNext = true bonds it to the row below.
+function chainSliceFor(id) {
+  const list = state.timers || [];
+  const idx = list.findIndex((x) => x.id === id);
+  if (idx < 0) return { start: -1, end: -1 };
+  let start = idx;
+  while (start > 0 && list[start - 1]?.linkedNext) start--;
+  let end = idx;
+  while (end < list.length - 1 && list[end]?.linkedNext) end++;
+  return { start, end };
+}
+
+function chainIdsFor(id) {
+  const { start, end } = chainSliceFor(id);
+  if (start < 0) return [id];
+  return (state.timers || []).slice(start, end + 1).map((x) => x.id);
+}
+
+function toggleSilent(id) {
+  const timers = (state.timers || []).map((x) => (x.id === id ? { ...x, silent: !x.silent } : x));
+  persist({ timers });
+}
+
+function toggleLinkedNext(id) {
+  const timers = (state.timers || []).map((x) => (x.id === id ? { ...x, linkedNext: !x.linkedNext } : x));
+  persist({ timers });
 }
 
 function clearMtInputs() {
@@ -713,17 +760,21 @@ function multiToggle(id) {
 }
 
 // Drag-and-drop reorder. Persists the new order; alarms/endTimes are untouched
-// so a running timer keeps ticking in its new slot.
+// so a running timer keeps ticking in its new slot. When the dragged row is
+// part of a chain, the whole chain slice moves as one block so the links stay
+// intact (and a drop inside the source chain is refused upstream).
 function multiReorder(srcId, destId, dropAfter) {
   if (srcId === destId) return;
   const list = state.timers || [];
-  const src = list.find((x) => x.id === srcId);
-  if (!src) return;
-  const without = list.filter((x) => x.id !== srcId);
+  const srcChainIds = new Set(chainIdsFor(srcId));
+  if (srcChainIds.has(destId)) return; // dropping inside the source chain — no-op
+  const moving = list.filter((x) => srcChainIds.has(x.id));
+  if (!moving.length) return;
+  const without = list.filter((x) => !srcChainIds.has(x.id));
   const destIdx = without.findIndex((x) => x.id === destId);
   if (destIdx < 0) return;
   const insertAt = destIdx + (dropAfter ? 1 : 0);
-  const next = [...without.slice(0, insertAt), src, ...without.slice(insertAt)];
+  const next = [...without.slice(0, insertAt), ...moving, ...without.slice(insertAt)];
   persist({ timers: next });
 }
 
@@ -745,9 +796,16 @@ function renderMultiTimers() {
     els.mtList.append(empty);
     return;
   }
-  for (const tim of state.timers) {
+  const list = state.timers;
+  for (let i = 0; i < list.length; i++) {
+    const tim = list[i];
+    const isLast = i === list.length - 1;
+    const linkedDown = !!tim.linkedNext && !isLast;
+    const linkedUp = i > 0 && !!list[i - 1].linkedNext;
     const row = document.createElement("div");
     row.className = "flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800";
+    if (linkedUp) row.classList.add("mt-chain-up");
+    if (linkedDown) row.classList.add("mt-chain-down");
     row.dataset.mtid = tim.id;
 
     // Drag handle — the row only becomes draggable while the grip is held,
@@ -790,6 +848,34 @@ function renderMultiTimers() {
     }
     primary.addEventListener("click", () => multiToggle(tim.id));
 
+    // Per-row alert toggle. When silent, the bg skips chime + notification
+    // for this timer's end — useful as the middle steps in a chain so only
+    // the last bell-on row in a workout sequence actually rings.
+    const bellBtn = document.createElement("button");
+    bellBtn.type = "button";
+    bellBtn.className = "icon-btn !p-2";
+    const bellTitle = tim.silent ? t("multiUnsilence") : t("multiSilence");
+    bellBtn.title = bellTitle;
+    bellBtn.setAttribute("aria-label", bellTitle);
+    bellBtn.append(makeIcon(tim.silent ? "bell-off" : "bell-on"));
+    if (!tim.silent) bellBtn.classList.add("text-blue-600", "dark:text-blue-400");
+    bellBtn.addEventListener("click", () => toggleSilent(tim.id));
+
+    // Chain to the next row. Hidden on the last row (nothing to chain to).
+    // When on, the bg auto-starts the next idle row when this one ends.
+    let linkBtn = null;
+    if (!isLast) {
+      linkBtn = document.createElement("button");
+      linkBtn.type = "button";
+      linkBtn.className = "icon-btn !p-2";
+      const linkTitle = linkedDown ? t("multiUnlink") : t("multiLink");
+      linkBtn.title = linkTitle;
+      linkBtn.setAttribute("aria-label", linkTitle);
+      linkBtn.append(makeIcon(linkedDown ? "link-on" : "link-off"));
+      if (linkedDown) linkBtn.classList.add("text-blue-600", "dark:text-blue-400");
+      linkBtn.addEventListener("click", () => toggleLinkedNext(tim.id));
+    }
+
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "icon-btn !p-2";
@@ -798,7 +884,9 @@ function renderMultiTimers() {
     removeBtn.append(makeIcon("close"));
     removeBtn.addEventListener("click", () => multiRemove(tim.id));
 
-    ctrl.append(primary, removeBtn);
+    ctrl.append(primary, bellBtn);
+    if (linkBtn) ctrl.append(linkBtn);
+    ctrl.append(removeBtn);
     row.append(grip, lbl, time, ctrl);
 
     // Native HTML5 drag-and-drop: dragstart carries the id; dragover decides
@@ -806,18 +894,21 @@ function renderMultiTimers() {
     // pointer is over. A faint top/bottom border previews the insertion line.
     row.addEventListener("dragstart", (e) => {
       mtDragId = tim.id;
-      row.classList.add("opacity-40");
+      // Fade every row in the source chain so a chained drag reads as one block.
+      for (const id of chainIdsFor(tim.id)) mtRows.get(id)?.row.classList.add("opacity-40");
       try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", tim.id); }
       catch { /* dataTransfer may be unavailable in tests */ }
     });
     row.addEventListener("dragend", () => {
+      if (mtDragId) for (const id of chainIdsFor(mtDragId)) mtRows.get(id)?.row.classList.remove("opacity-40");
       mtDragId = null;
       row.draggable = false;
-      row.classList.remove("opacity-40");
       clearMtDropHints();
     });
     row.addEventListener("dragover", (e) => {
       if (!mtDragId || mtDragId === tim.id) return;
+      // Refuse hover inside the source chain — multiReorder would no-op anyway.
+      if (new Set(chainIdsFor(mtDragId)).has(tim.id)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       const rect = row.getBoundingClientRect();
@@ -919,15 +1010,15 @@ function tick() {
   // it doesn't double-end if both surfaces fire at the same moment.
   if (state.timers && state.timers.length > 0) {
     const now = Date.now();
-    let anyEnded = false;
+    let anyAudible = false;
     for (const tim of state.timers) {
       if (tim.status === "running" && remainingMs(tim.endTime, now) <= 0 && multiAlerted.get(tim.id) !== tim.endTime) {
         multiAlerted.set(tim.id, tim.endTime);
         bg("multi:ended", { id: tim.id });
-        anyEnded = true;
+        if (!tim.silent) anyAudible = true;
       }
     }
-    if (anyEnded) {
+    if (anyAudible) {
       fireAlerts(); // one flash + chime per frame even if several end together
       announce(t("notifyTitle"));
     }

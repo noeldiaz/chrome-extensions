@@ -272,7 +272,23 @@ async function endMultiNow(id) {
     await chrome.alarms.clear(MULTI_ALARM_PREFIX + id);
     const updated = timers.slice();
     updated[idx] = { ...tim, status: "ended", remaining: 0 };
+
+    // Chain auto-advance: if this timer's linkedNext is on and the next row
+    // is still idle (untouched by the user), start the next one immediately
+    // with its full duration. Skipping non-idle next rows preserves whatever
+    // manual state the user set.
+    const next = timers[idx + 1];
+    let chainedEndTime = 0;
+    if (tim.linkedNext && next && next.status === "idle") {
+      chainedEndTime = Date.now() + (next.duration || 0);
+      updated[idx + 1] = { ...next, status: "running", endTime: chainedEndTime, remaining: next.duration || 0 };
+    }
     await chrome.storage.local.set({ timers: updated });
+    if (chainedEndTime) await scheduleMulti(next.id, chainedEndTime);
+
+    // Per-row mute: when this timer's bell is off, skip chime + notification.
+    // Common with chains so only the last bell-on row in a sequence rings.
+    if (tim.silent) return;
 
     const alerts = await getAlerts();
     // Debounce the chime so two timers ending within 1.5s don't overlap. Each

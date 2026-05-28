@@ -28,6 +28,10 @@
   "multiEmpty": { "message": "No timers yet. Set a duration above and Add." },
   "multiRemove": { "message": "Remove timer" },
   "multiReorder": { "message": "Drag to reorder" },
+  "multiSilence": { "message": "Mute this timer" },
+  "multiUnsilence": { "message": "Unmute this timer" },
+  "multiLink": { "message": "Chain to the next timer" },
+  "multiUnlink": { "message": "Break chain to the next timer" },
   "multiNotifyBodyLabeled": {
     "message": "$label$ is up.",
     "placeholders": { "label": { "content": "$1" } }
