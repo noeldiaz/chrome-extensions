@@ -999,10 +999,28 @@ function openManageCollections() {
 function renderLoadedName() {
   const el = els.mtLoadedName;
   if (!el) return;
+  el.replaceChildren();
   const name = state.timerCollectionLoaded;
-  const visible = !!name && (state.timers || []).length > 0;
-  el.textContent = visible ? name : "";
-  el.classList.toggle("hidden", !visible);
+  const hasTimers = (state.timers || []).length > 0;
+  // The row exists whenever there are timers — Reset always sits here so
+  // the master action is reachable with or without a loaded collection.
+  el.classList.toggle("hidden", !hasTimers);
+  if (!hasTimers) return;
+  el.classList.add("flex", "items-center", "justify-center", "gap-3");
+  if (name) {
+    const title = document.createElement("span");
+    title.textContent = name;
+    el.append(title);
+  }
+  const reset = document.createElement("button");
+  reset.type = "button";
+  // Stays visible in fullscreen so a workout can be reset without exiting.
+  reset.className = "icon-btn !p-1.5";
+  reset.title = t("mtResetAll");
+  reset.setAttribute("aria-label", t("mtResetAll"));
+  reset.append(makeIcon("restart"));
+  reset.addEventListener("click", multiResetAll);
+  el.append(reset);
 }
 
 function renderCollectionBar() {
@@ -1012,38 +1030,13 @@ function renderCollectionBar() {
   const hasTimers = (state.timers || []).length > 0;
   const collections = state.timerCollections || [];
 
-  // Row 1 (top): collection controls — Load / Save / Save as… / Manage.
-  // Row 2 (bottom): destructive list-wide actions — Reset / Clear all.
-  // Both rows centered.
-  const actions = document.createElement("div");
-  actions.className = "flex items-center justify-center gap-2";
-
+  // Single centered row: collection controls + Clear all on the far right.
+  // Reset lives outside the card next to the collection title (see
+  // renderLoadedName) so the master "stop everything" action is always
+  // beside the loaded-group label.
   const collectionRow = document.createElement("div");
   collectionRow.className = "flex items-center justify-center gap-2";
-  // (collection select + buttons get pushed into collectionRow below)
   const right = collectionRow;
-
-  if (hasTimers) {
-    const reset = document.createElement("button");
-    reset.type = "button";
-    reset.className = "btn btn-soft";
-    reset.append(makeIcon("restart"));
-    const lbl = document.createElement("span");
-    lbl.textContent = t("mtResetAll");
-    reset.append(lbl);
-    reset.addEventListener("click", multiResetAll);
-    actions.append(reset);
-
-    const clearAll = document.createElement("button");
-    clearAll.type = "button";
-    clearAll.className = "btn btn-soft hover:!bg-red-100 hover:!text-red-700 dark:hover:!bg-red-950 dark:hover:!text-red-300";
-    clearAll.append(makeIcon("trash"));
-    const clbl = document.createElement("span");
-    clbl.textContent = t("mtClearAll");
-    clearAll.append(clbl);
-    clearAll.addEventListener("click", multiClearAll);
-    actions.append(clearAll);
-  }
 
   const loaded = state.timerCollectionLoaded;
   const loadedExists = !!loaded && collections.some((c) => c.name === loaded);
@@ -1115,9 +1108,19 @@ function renderCollectionBar() {
     right.append(manage);
   }
 
-  // Top row first (collections), then bottom row (Reset / Clear all).
+  // Clear all — icon-only, far right of the row. Red on hover.
+  if (hasTimers) {
+    const clearAll = document.createElement("button");
+    clearAll.type = "button";
+    clearAll.className = "btn btn-soft !px-2.5 hover:!bg-red-100 hover:!text-red-700 dark:hover:!bg-red-950 dark:hover:!text-red-300";
+    clearAll.title = t("mtClearAll");
+    clearAll.setAttribute("aria-label", t("mtClearAll"));
+    clearAll.append(makeIcon("trash"));
+    clearAll.addEventListener("click", multiClearAll);
+    right.append(clearAll);
+  }
+
   if (collectionRow.childElementCount) bar.append(collectionRow);
-  if (actions.childElementCount) bar.append(actions);
   // Hide the whole card when there's nothing to put inside it.
   bar.classList.toggle("hidden", bar.childElementCount === 0);
 }
