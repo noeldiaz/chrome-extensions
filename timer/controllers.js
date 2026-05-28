@@ -1127,7 +1127,17 @@ function multiRestart(id) {
   updateWakeLock();
 }
 
-function multiRemove(id) {
+async function multiRemove(id) {
+  const tim = (state.timers || []).find((x) => x.id === id);
+  if (!tim) return;
+  const label = (tim.label || "").trim();
+  const ok = await confirmModal({
+    title: t("mtRemoveTitle"),
+    body: label ? t("mtRemoveBodyLabeled", label) : t("mtRemoveBody"),
+    confirmLabel: t("multiRemove"),
+    danger: true,
+  });
+  if (!ok) return;
   const timers = (state.timers || []).filter((x) => x.id !== id);
   persist({ timers });
   bg("multi:clear", { id });

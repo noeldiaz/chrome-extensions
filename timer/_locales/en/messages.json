@@ -27,6 +27,12 @@
   "multiLabelPlaceholder": { "message": "Name this timer (optional)" },
   "multiEmpty": { "message": "No timers yet. Set a duration above and Add." },
   "multiRemove": { "message": "Remove timer" },
+  "mtRemoveTitle": { "message": "Remove this timer?" },
+  "mtRemoveBody": { "message": "This timer will be permanently removed from the list." },
+  "mtRemoveBodyLabeled": {
+    "message": "\"$name$\" will be permanently removed from the list.",
+    "placeholders": { "name": { "content": "$1" } }
+  },
   "multiReorder": { "message": "Drag to reorder" },
   "multiSilence": { "message": "Mute this timer" },
   "multiUnsilence": { "message": "Unmute this timer" },
