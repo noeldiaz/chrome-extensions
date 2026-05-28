@@ -1007,9 +1007,17 @@ function renderCollectionBar() {
   const hasTimers = (state.timers || []).length > 0;
   const collections = state.timerCollections || [];
 
-  // ---- left: Reset all (only if at least one timer exists) ----
-  const left = document.createElement("div");
-  left.className = "flex items-center gap-2";
+  // Row 1 (top): collection controls — Load / Save / Save as… / Manage.
+  // Row 2 (bottom): destructive list-wide actions — Reset / Clear all.
+  // Both rows centered.
+  const actions = document.createElement("div");
+  actions.className = "flex items-center justify-center gap-2";
+
+  const collectionRow = document.createElement("div");
+  collectionRow.className = "flex items-center justify-center gap-2";
+  // (collection select + buttons get pushed into collectionRow below)
+  const right = collectionRow;
+
   if (hasTimers) {
     const reset = document.createElement("button");
     reset.type = "button";
@@ -1019,7 +1027,7 @@ function renderCollectionBar() {
     lbl.textContent = t("mtResetAll");
     reset.append(lbl);
     reset.addEventListener("click", multiResetAll);
-    left.append(reset);
+    actions.append(reset);
 
     const clearAll = document.createElement("button");
     clearAll.type = "button";
@@ -1029,12 +1037,8 @@ function renderCollectionBar() {
     clbl.textContent = t("mtClearAll");
     clearAll.append(clbl);
     clearAll.addEventListener("click", multiClearAll);
-    left.append(clearAll);
+    actions.append(clearAll);
   }
-
-  // ---- right: Load select + Save + Manage ----
-  const right = document.createElement("div");
-  right.className = "ml-auto flex items-center gap-2";
 
   const loaded = state.timerCollectionLoaded;
   const loadedExists = !!loaded && collections.some((c) => c.name === loaded);
@@ -1105,7 +1109,9 @@ function renderCollectionBar() {
     right.append(manage);
   }
 
-  bar.append(left, right);
+  // Top row first (collections), then bottom row (Reset / Clear all).
+  if (collectionRow.childElementCount) bar.append(collectionRow);
+  if (actions.childElementCount) bar.append(actions);
 }
 
 function toggleSilent(id) {
