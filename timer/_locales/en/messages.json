@@ -35,6 +35,36 @@
   "editTime": { "message": "Edit duration" },
   "editSave": { "message": "Save" },
   "editCancel": { "message": "Cancel" },
+
+  "mtResetAll": { "message": "Reset all" },
+  "mtResetAllTitle": { "message": "Reset every timer?" },
+  "mtResetAllBody": { "message": "Every timer in this list will return to its full configured duration and stop running." },
+  "mtSaveCollection": { "message": "Save as…" },
+  "mtSaveCollectionTitle": { "message": "Save this group as a collection" },
+  "mtCollectionNamePh": { "message": "Collection name" },
+  "mtLoadPlaceholder": { "message": "Load collection…" },
+  "mtLoadTitle": { "message": "Replace the current timers?" },
+  "mtLoadBody": {
+    "message": "Loading \"$name$\" will discard the timers currently on this list. This can't be undone.",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "mtLoadConfirm": { "message": "Load" },
+  "mtOverwriteTitle": { "message": "Replace the existing collection?" },
+  "mtOverwriteBody": {
+    "message": "A collection named \"$name$\" already exists. Overwrite it with the current timers?",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "mtOverwrite": { "message": "Overwrite" },
+  "mtManage": { "message": "Manage" },
+  "mtManageTitle": { "message": "Manage collections" },
+  "mtNoCollections": { "message": "You haven't saved any collections yet." },
+  "mtDeleteCollection": { "message": "Delete" },
+  "mtDeleteCollectionTitle": { "message": "Delete this collection?" },
+  "mtDeleteCollectionBody": {
+    "message": "\"$name$\" will be permanently removed from your saved collections.",
+    "placeholders": { "name": { "content": "$1" } }
+  },
+  "mtClose": { "message": "Close" },
   "multiNotifyBodyLabeled": {
     "message": "$label$ is up.",
     "placeholders": { "label": { "content": "$1" } }

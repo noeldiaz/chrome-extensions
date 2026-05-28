@@ -259,8 +259,9 @@
             </div>
           </div>
           </div>
-          <!-- divider between the setup card and the timer list -->
-          <hr class="fs-hide my-6 border-t border-slate-200 dark:border-slate-700" />
+          <!-- collection bar — Reset all / Save / Load / Manage. Hidden in
+               fullscreen with the rest of the chrome. controllers.js fills it. -->
+          <div id="mt-bar" class="fs-hide my-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4 dark:border-slate-700"></div>
           <!-- the running list (each row built by controllers.js renderMultiTimers) -->
           <div id="mt-list" class="space-y-2"></div>
         </section>

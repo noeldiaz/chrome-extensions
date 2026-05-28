@@ -51,6 +51,8 @@ const DEFAULTS = {
   // multi-timer list (full-page-only "Timers" tab; separate from `tm`).
   // Each item: { id, label, status, endTime, remaining, duration }.
   timers: [],
+  // Named snapshots of a timer group — { name, items:[{label,duration,silent,linkedNext}] }
+  timerCollections: [],
 };
 
 // Cap on concurrent multi-timers — keeps the list scannable.
@@ -700,6 +702,314 @@ function multiSaveEdit(id, ms) {
   persist({ timers });
 }
 
+// ---- minimal modals (confirm + prompt + list-manage) ----------------------
+// Promise-based, dismissed by Esc/click-outside. The workspace convention is
+// to confirm any destructive action; these stay self-contained here so this
+// extension doesn't pull in the shared dialog.js.
+function openModal(buildCard) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm";
+    const card = document.createElement("div");
+    card.className = "w-full max-w-sm rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-800";
+    card.setAttribute("role", "dialog");
+    card.setAttribute("aria-modal", "true");
+    const prev = document.activeElement;
+    function close(result) {
+      document.removeEventListener("keydown", onKey);
+      overlay.remove();
+      if (prev && typeof prev.focus === "function") prev.focus();
+      resolve(result);
+    }
+    function onKey(e) { if (e.key === "Escape") close(null); }
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(null); });
+    document.addEventListener("keydown", onKey);
+    buildCard(card, close);
+    overlay.append(card);
+    document.body.append(overlay);
+  });
+}
+
+function confirmModal({ title, body, confirmLabel, cancelLabel, danger = true }) {
+  return openModal((card, close) => {
+    const h = document.createElement("div");
+    h.className = "text-sm font-semibold text-slate-800 dark:text-slate-100";
+    h.textContent = title || "";
+    const p = document.createElement("p");
+    p.className = "mt-1.5 text-xs text-slate-500 dark:text-slate-400";
+    p.textContent = body || "";
+    const row = document.createElement("div");
+    row.className = "mt-4 flex justify-end gap-2";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
+    cancel.textContent = cancelLabel || t("editCancel");
+    cancel.addEventListener("click", () => close(false));
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = danger
+      ? "rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+      : "rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400";
+    ok.textContent = confirmLabel || "OK";
+    ok.addEventListener("click", () => close(true));
+    row.append(cancel, ok);
+    card.append(h, p, row);
+    setTimeout(() => ok.focus(), 0);
+  });
+}
+
+function promptModal({ title, placeholder = "", initial = "", confirmLabel, cancelLabel }) {
+  return openModal((card, close) => {
+    const h = document.createElement("div");
+    h.className = "text-sm font-semibold text-slate-800 dark:text-slate-100";
+    h.textContent = title || "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = initial;
+    input.placeholder = placeholder;
+    input.maxLength = 60;
+    input.className = "mt-3 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100";
+    const row = document.createElement("div");
+    row.className = "mt-4 flex justify-end gap-2";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
+    cancel.textContent = cancelLabel || t("editCancel");
+    cancel.addEventListener("click", () => close(null));
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400";
+    ok.textContent = confirmLabel || t("editSave");
+    const submit = () => {
+      const v = input.value.trim();
+      if (!v) return;
+      close(v);
+    };
+    ok.addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+    row.append(cancel, ok);
+    card.append(h, input, row);
+    setTimeout(() => input.focus(), 0);
+  });
+}
+
+// ---- collections (named snapshots of the timer group) ---------------------
+function collectionItemsFromState() {
+  return (state.timers || []).map((x) => ({
+    label: x.label || "",
+    duration: x.duration || 0,
+    silent: !!x.silent,
+    linkedNext: !!x.linkedNext,
+  }));
+}
+
+async function multiResetAll() {
+  if (!state.timers?.length) return;
+  const ok = await confirmModal({
+    title: t("mtResetAllTitle"),
+    body: t("mtResetAllBody"),
+    confirmLabel: t("mtResetAll"),
+    danger: true,
+  });
+  if (!ok) return;
+  const timers = state.timers.map((x) => ({ ...x, status: "idle", endTime: 0, remaining: x.duration }));
+  for (const x of state.timers) bg("multi:clear", { id: x.id });
+  multiAlerted.clear();
+  persist({ timers });
+  updateWakeLock();
+}
+
+async function saveCurrentCollection() {
+  if (!state.timers?.length) return;
+  const name = await promptModal({
+    title: t("mtSaveCollectionTitle"),
+    placeholder: t("mtCollectionNamePh"),
+  });
+  if (!name) return;
+  const list = Array.isArray(state.timerCollections) ? state.timerCollections : [];
+  const existing = list.findIndex((c) => c.name === name);
+  if (existing >= 0) {
+    const ok = await confirmModal({
+      title: t("mtOverwriteTitle"),
+      body: t("mtOverwriteBody", name),
+      confirmLabel: t("mtOverwrite"),
+    });
+    if (!ok) return;
+  }
+  const entry = { name, items: collectionItemsFromState() };
+  const next = existing >= 0
+    ? list.map((c, i) => (i === existing ? entry : c))
+    : [...list, entry];
+  next.sort((a, b) => a.name.localeCompare(b.name));
+  persist({ timerCollections: next });
+}
+
+async function loadCollection(name) {
+  const list = state.timerCollections || [];
+  const c = list.find((x) => x.name === name);
+  if (!c) return;
+  if (state.timers?.length) {
+    const ok = await confirmModal({
+      title: t("mtLoadTitle"),
+      body: t("mtLoadBody", name),
+      confirmLabel: t("mtLoadConfirm"),
+      danger: true,
+    });
+    if (!ok) return;
+  }
+  // Clear running alarms for any current rows before they get replaced.
+  for (const x of state.timers || []) bg("multi:clear", { id: x.id });
+  multiAlerted.clear();
+  const timers = (c.items || []).slice(0, MULTI_CAP).map((it) => ({
+    id: newMultiId(),
+    label: it.label || "",
+    status: "idle",
+    endTime: 0,
+    remaining: it.duration || 0,
+    duration: it.duration || 0,
+    silent: !!it.silent,
+    linkedNext: !!it.linkedNext,
+  }));
+  persist({ timers });
+  updateWakeLock();
+}
+
+async function deleteCollection(name) {
+  const ok = await confirmModal({
+    title: t("mtDeleteCollectionTitle"),
+    body: t("mtDeleteCollectionBody", name),
+    confirmLabel: t("mtDeleteCollection"),
+    danger: true,
+  });
+  if (!ok) return;
+  const next = (state.timerCollections || []).filter((c) => c.name !== name);
+  persist({ timerCollections: next });
+}
+
+function openManageCollections() {
+  openModal((card, close) => {
+    const h = document.createElement("div");
+    h.className = "text-sm font-semibold text-slate-800 dark:text-slate-100";
+    h.textContent = t("mtManageTitle");
+    card.append(h);
+    const list = state.timerCollections || [];
+    if (!list.length) {
+      const empty = document.createElement("p");
+      empty.className = "mt-3 text-xs text-slate-500 dark:text-slate-400";
+      empty.textContent = t("mtNoCollections");
+      card.append(empty);
+    } else {
+      const ul = document.createElement("ul");
+      ul.className = "mt-3 max-h-64 divide-y divide-slate-200 overflow-y-auto rounded-lg border border-slate-200 dark:divide-slate-700 dark:border-slate-700";
+      for (const c of list) {
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between gap-2 px-3 py-2 text-sm text-slate-800 dark:text-slate-100";
+        const name = document.createElement("span");
+        name.textContent = `${c.name} (${(c.items || []).length})`;
+        name.className = "truncate";
+        const rm = document.createElement("button");
+        rm.type = "button";
+        rm.className = "icon-btn !p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400";
+        rm.title = t("mtDeleteCollection");
+        rm.setAttribute("aria-label", `${t("mtDeleteCollection")}: ${c.name}`);
+        rm.append(makeIcon("close"));
+        rm.addEventListener("click", async () => {
+          close(null);
+          await deleteCollection(c.name);
+          openManageCollections(); // re-open with the new list
+        });
+        li.append(name, rm);
+        ul.append(li);
+      }
+      card.append(ul);
+    }
+    const row = document.createElement("div");
+    row.className = "mt-4 flex justify-end";
+    const done = document.createElement("button");
+    done.type = "button";
+    done.className = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
+    done.textContent = t("mtClose");
+    done.addEventListener("click", () => close(null));
+    row.append(done);
+    card.append(row);
+    setTimeout(() => done.focus(), 0);
+  });
+}
+
+function renderCollectionBar() {
+  const bar = els.mtBar;
+  if (!bar) return;
+  bar.replaceChildren();
+  const hasTimers = (state.timers || []).length > 0;
+  const collections = state.timerCollections || [];
+
+  // ---- left: Reset all (only if at least one timer exists) ----
+  const left = document.createElement("div");
+  left.className = "flex items-center gap-2";
+  if (hasTimers) {
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "btn btn-soft";
+    reset.append(makeIcon("restart"));
+    const lbl = document.createElement("span");
+    lbl.textContent = t("mtResetAll");
+    reset.append(lbl);
+    reset.addEventListener("click", multiResetAll);
+    left.append(reset);
+  }
+
+  // ---- right: Load select + Save + Manage ----
+  const right = document.createElement("div");
+  right.className = "ml-auto flex items-center gap-2";
+
+  if (collections.length) {
+    const select = document.createElement("select");
+    select.className = "h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = t("mtLoadPlaceholder");
+    select.append(placeholder);
+    for (const c of collections) {
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      opt.textContent = `${c.name} (${(c.items || []).length})`;
+      select.append(opt);
+    }
+    select.addEventListener("change", () => {
+      const name = select.value;
+      select.value = "";
+      if (name) loadCollection(name);
+    });
+    right.append(select);
+  }
+
+  if (hasTimers) {
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "btn btn-soft";
+    save.append(makeIcon("check"));
+    const lbl = document.createElement("span");
+    lbl.textContent = t("mtSaveCollection");
+    save.append(lbl);
+    save.addEventListener("click", saveCurrentCollection);
+    right.append(save);
+  }
+
+  if (collections.length) {
+    const manage = document.createElement("button");
+    manage.type = "button";
+    manage.className = "btn btn-soft";
+    manage.append(makeIcon("pencil"));
+    const lbl = document.createElement("span");
+    lbl.textContent = t("mtManage");
+    manage.append(lbl);
+    manage.addEventListener("click", openManageCollections);
+    right.append(manage);
+  }
+
+  bar.append(left, right);
+}
+
 function toggleSilent(id) {
   const timers = (state.timers || []).map((x) => (x.id === id ? { ...x, silent: !x.silent } : x));
   persist({ timers });
@@ -1233,6 +1543,7 @@ export async function initApp(opts = {}) {
     mtLabel: $("mt-label"),
     mtAdd: $("mt-add"),
     mtList: $("mt-list"),
+    mtBar: $("mt-bar"),
     srStatus: $("sr-status"),
   };
 
@@ -1357,7 +1668,11 @@ export async function initApp(opts = {}) {
     renderTimerControls();
     renderTimer();
     if ("timerPresets" in changes) renderPresets(); // edited in the options page
-    if ("timers" in changes) renderMultiTimers(); // add/remove/rename in either surface
+    if ("timers" in changes) {
+      renderMultiTimers(); // add/remove/rename in either surface
+      renderCollectionBar(); // Reset/Save visibility depends on the list being non-empty
+    }
+    if ("timerCollections" in changes) renderCollectionBar();
     if (state.tool === "clock") renderClock();
     updateWakeLock(); // a countdown started/paused/ended in the other surface
   });
@@ -1375,6 +1690,7 @@ export async function initApp(opts = {}) {
   renderTimer();
   highlightPresets();
   renderMultiTimers();
+  renderCollectionBar();
   updateWakeLock(); // a countdown may already be running when this surface opens
   requestAnimationFrame(tick);
 }

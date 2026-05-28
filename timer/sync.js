@@ -21,5 +21,6 @@ export const SYNC_KEYS = [
   "alerts",
   "chime",
   "chimeVolume",
+  "timerCollections",
 ];
 export const { isSyncOn, syncGet, syncSet, syncRemove, setSyncEnabled } = createSync(SYNC_KEYS);
