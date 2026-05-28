@@ -205,6 +205,13 @@
             <div class="mt-3 space-y-3">
               <label class="flex cursor-pointer items-start justify-between gap-4">
                 <span>
+                  <span class="text-sm font-medium" data-i18n="optAlertFlash">Flash the screen</span>
+                  <span class="opt-hint block" data-i18n="optAlertFlashHint">Pulse the open Timer window so it's noticeable when muted.</span>
+                </span>
+                <input id="alert-flash" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+              </label>
+              <label class="flex cursor-pointer items-start justify-between gap-4">
+                <span>
                   <span class="text-sm font-medium" data-i18n="optAlertSound">Play a sound</span>
                   <span class="opt-hint block" data-i18n="optAlertSoundHint">A short chime, played by whichever Timer window is open.</span>
                 </span>
@@ -231,13 +238,6 @@
                   <input id="chime-volume" type="range" min="0" max="100" step="5" class="mt-1 block w-full accent-blue-600" />
                 </div>
               </div>
-              <label class="flex cursor-pointer items-start justify-between gap-4">
-                <span>
-                  <span class="text-sm font-medium" data-i18n="optAlertFlash">Flash the screen</span>
-                  <span class="opt-hint block" data-i18n="optAlertFlashHint">Pulse the open Timer window so it's noticeable when muted.</span>
-                </span>
-                <input id="alert-flash" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-              </label>
             </div>
           </div>
         </div>
