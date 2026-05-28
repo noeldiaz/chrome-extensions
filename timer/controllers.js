@@ -1325,7 +1325,9 @@ function renderMultiTimers() {
     lbl.type = "text";
     lbl.value = tim.label || "";
     lbl.maxLength = 60;
-    lbl.placeholder = t("multiLabelPlaceholder");
+    // Leave the placeholder blank — an unlabeled row should render as just
+    // an empty input, not greyed prompt text. The setup form above still
+    // uses the "(optional)" placeholder for clarity.
     lbl.className = "min-w-0 flex-1 bg-transparent text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500";
     lbl.addEventListener("change", () => {
       const v = lbl.value.slice(0, 60);
