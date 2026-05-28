@@ -1050,7 +1050,7 @@ function renderCollectionBar() {
 
   if (collections.length) {
     const select = document.createElement("select");
-    select.className = "h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+    select.className = "h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
     // Placeholder only shown when nothing is loaded — otherwise the loaded
     // name is the visible selection.
     if (!loadedExists) {
