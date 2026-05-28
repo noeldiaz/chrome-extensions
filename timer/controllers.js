@@ -608,32 +608,8 @@ function makeIcon(kind) {
   return svg;
 }
 
-function setMtInputsFromSeconds(sec) {
-  const total = clampTimerMs(sec * 1000) / 1000;
-  if (els.mtH) els.mtH.value = Math.floor(total / 3600) || "";
-  if (els.mtM) els.mtM.value = Math.floor((total % 3600) / 60) || "";
-  if (els.mtS) els.mtS.value = Math.floor(total % 60) || "";
-}
-
 function clearMtInputs() {
   for (const f of [els.mtH, els.mtM, els.mtS, els.mtLabel]) if (f) f.value = "";
-}
-
-function renderMtPresets() {
-  if (!els.mtPresets) return;
-  els.mtPresets.replaceChildren();
-  const list = Array.isArray(state.timerPresets) ? state.timerPresets : DEFAULTS.timerPresets;
-  for (const sec of list) {
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "chip";
-    chip.textContent = presetLabel(sec);
-    chip.addEventListener("click", () => {
-      setMtInputsFromSeconds(sec);
-      els.mtH?.focus();
-    });
-    els.mtPresets.append(chip);
-  }
 }
 
 function multiAdd() {
@@ -909,7 +885,6 @@ export async function initApp(opts = {}) {
     mtS: $("mt-s"),
     mtLabel: $("mt-label"),
     mtAdd: $("mt-add"),
-    mtPresets: $("mt-presets"),
     mtList: $("mt-list"),
     srStatus: $("sr-status"),
   };
@@ -1034,10 +1009,7 @@ export async function initApp(opts = {}) {
     renderStopwatch();
     renderTimerControls();
     renderTimer();
-    if ("timerPresets" in changes) {
-      renderPresets(); // edited in the options page
-      renderMtPresets(); // the multi-timer chip row reuses the same list
-    }
+    if ("timerPresets" in changes) renderPresets(); // edited in the options page
     if ("timers" in changes) renderMultiTimers(); // add/remove/rename in either surface
     if (state.tool === "clock") renderClock();
     updateWakeLock(); // a countdown started/paused/ended in the other surface
@@ -1055,7 +1027,6 @@ export async function initApp(opts = {}) {
   renderTimerControls();
   renderTimer();
   highlightPresets();
-  renderMtPresets();
   renderMultiTimers();
   updateWakeLock(); // a countdown may already be running when this surface opens
   requestAnimationFrame(tick);

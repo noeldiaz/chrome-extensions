@@ -226,35 +226,36 @@
 
         <!-- multiple concurrent timers (full page only) -->
         <section id="panel-timers" class="hidden">
-          <!-- setup: duration + label + Add -->
+          <!-- setup: duration + label + Add (Add aligns with the input row via an invisible caption spacer) -->
           <div class="flex items-end gap-2">
-            <label class="flex-1">
+            <label class="w-24 shrink-0">
               <input id="mt-h" type="number" min="0" max="99" inputmode="numeric" placeholder="00" class="timefield !text-2xl !py-3" aria-label="Hours" />
               <span data-i18n="hours" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Hours</span>
             </label>
             <span class="pb-7 text-2xl font-bold text-slate-300 dark:text-slate-600">:</span>
-            <label class="flex-1">
+            <label class="w-24 shrink-0">
               <input id="mt-m" type="number" min="0" max="59" inputmode="numeric" placeholder="00" class="timefield !text-2xl !py-3" aria-label="Minutes" />
               <span data-i18n="minutes" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Minutes</span>
             </label>
             <span class="pb-7 text-2xl font-bold text-slate-300 dark:text-slate-600">:</span>
-            <label class="flex-1">
+            <label class="w-24 shrink-0">
               <input id="mt-s" type="number" min="0" max="59" inputmode="numeric" placeholder="00" class="timefield !text-2xl !py-3" aria-label="Seconds" />
               <span data-i18n="seconds" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Seconds</span>
             </label>
-            <label class="flex-[2]">
+            <label class="min-w-0 flex-1">
               <input id="mt-label" type="text" maxlength="60" placeholder="Name this timer (optional)" data-i18n-attr="placeholder:multiLabelPlaceholder" class="timefield !text-base !py-3 !text-left !px-3" aria-label="Label" />
               <span data-i18n="multiLabel" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Label</span>
             </label>
-            <button id="mt-add" type="button" class="btn btn-primary pb-3 pt-3">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-              </svg>
-              <span data-i18n="multiAdd">Add</span>
-            </button>
+            <div class="flex shrink-0 flex-col">
+              <button id="mt-add" type="button" class="btn btn-primary py-3">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                </svg>
+                <span data-i18n="multiAdd">Add</span>
+              </button>
+              <span aria-hidden="true" class="invisible mt-1 block text-[10px] font-semibold uppercase tracking-wider">·</span>
+            </div>
           </div>
-          <!-- preset chips fill the H/M/S inputs above; built from state.timerPresets -->
-          <div id="mt-presets" class="mx-auto mt-4 flex max-w-lg flex-wrap justify-center gap-2"></div>
           <!-- the running list (each row built by controllers.js renderMultiTimers) -->
           <div id="mt-list" class="mt-8 space-y-2"></div>
         </section>
