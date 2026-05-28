@@ -1117,6 +1117,8 @@ function renderCollectionBar() {
   // Top row first (collections), then bottom row (Reset / Clear all).
   if (collectionRow.childElementCount) bar.append(collectionRow);
   if (actions.childElementCount) bar.append(actions);
+  // Hide the whole card when there's nothing to put inside it.
+  bar.classList.toggle("hidden", bar.childElementCount === 0);
 }
 
 function toggleSilent(id) {
