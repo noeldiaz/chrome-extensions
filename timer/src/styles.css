@@ -151,23 +151,16 @@
   /* Chain rendering: adjacent linked rows merge — drop the shared corner
      radius and the gap between them so the chain reads as one tall card,
      while keeping each row interactive on its own. */
+  /* Linked rows merge — bottom of the upper row gets a bold blue divider
+     (same blue as the active link icon) that connects to the row below,
+     and the rounded corners between them collapse so the chain reads as
+     one block. */
   .mt-chain-down {
-    @apply !rounded-b-none !border-b-0;
+    @apply !rounded-b-none !border-b-2 !border-b-blue-500;
   }
   .mt-chain-up {
-    @apply !mt-0 !rounded-t-none;
+    @apply !mt-0 !rounded-t-none !border-t-0;
   }
-  /* A thin divider preserves row separation inside a chain. */
-  .mt-chain-up::before {
-    content: "";
-    position: absolute;
-    left: 1rem;
-    right: 1rem;
-    top: 0;
-    height: 1px;
-    @apply bg-slate-200 dark:bg-slate-700;
-  }
-  .mt-chain-up { position: relative; }
 }
 
 /* The full-page stage uses place-items-center so Clock/Stopwatch/Timer sit

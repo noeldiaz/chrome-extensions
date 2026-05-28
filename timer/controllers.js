@@ -1494,7 +1494,7 @@ function renderMultiTimers() {
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
-    removeBtn.className = "fs-hide icon-btn !p-2 !text-red-500 hover:!bg-red-100 hover:!text-red-700 dark:!text-red-400 dark:hover:!bg-red-950 dark:hover:!text-red-300";
+    removeBtn.className = "fs-hide icon-btn !p-2 hover:!bg-red-100 hover:!text-red-700 dark:hover:!bg-red-950 dark:hover:!text-red-300";
     removeBtn.title = t("multiRemove");
     removeBtn.setAttribute("aria-label", t("multiRemove"));
     removeBtn.append(makeIcon("close"));
