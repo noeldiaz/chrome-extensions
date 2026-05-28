@@ -53,6 +53,9 @@ const DEFAULTS = {
   timers: [],
   // Named snapshots of a timer group — { name, items:[{label,duration,silent,linkedNext}] }
   timerCollections: [],
+  // Name of the most recently loaded/saved collection — labels the current
+  // group on the page. Local-only; not synced (the timers list itself isn't).
+  timerCollectionLoaded: null,
 };
 
 // Cap on concurrent multi-timers — keeps the list scannable.
@@ -846,7 +849,7 @@ async function saveCurrentCollection() {
     ? list.map((c, i) => (i === existing ? entry : c))
     : [...list, entry];
   next.sort((a, b) => a.name.localeCompare(b.name));
-  persist({ timerCollections: next });
+  persist({ timerCollections: next, timerCollectionLoaded: name });
 }
 
 async function loadCollection(name) {
@@ -875,7 +878,7 @@ async function loadCollection(name) {
     silent: !!it.silent,
     linkedNext: !!it.linkedNext,
   }));
-  persist({ timers });
+  persist({ timers, timerCollectionLoaded: name });
   updateWakeLock();
 }
 
@@ -888,7 +891,9 @@ async function deleteCollection(name) {
   });
   if (!ok) return;
   const next = (state.timerCollections || []).filter((c) => c.name !== name);
-  persist({ timerCollections: next });
+  const patch = { timerCollections: next };
+  if (state.timerCollectionLoaded === name) patch.timerCollectionLoaded = null;
+  persist(patch);
 }
 
 function openManageCollections() {
@@ -939,6 +944,15 @@ function openManageCollections() {
     card.append(row);
     setTimeout(() => done.focus(), 0);
   });
+}
+
+function renderLoadedName() {
+  const el = els.mtLoadedName;
+  if (!el) return;
+  const name = state.timerCollectionLoaded;
+  const visible = !!name && (state.timers || []).length > 0;
+  el.textContent = visible ? name : "";
+  el.classList.toggle("hidden", !visible);
 }
 
 function renderCollectionBar() {
@@ -1579,6 +1593,7 @@ export async function initApp(opts = {}) {
     mtAdd: $("mt-add"),
     mtList: $("mt-list"),
     mtBar: $("mt-bar"),
+    mtLoadedName: $("mt-loaded-name"),
     srStatus: $("sr-status"),
   };
 
@@ -1706,8 +1721,10 @@ export async function initApp(opts = {}) {
     if ("timers" in changes) {
       renderMultiTimers(); // add/remove/rename in either surface
       renderCollectionBar(); // Reset/Save visibility depends on the list being non-empty
+      renderLoadedName(); // hide the loaded-name label if the list emptied
     }
     if ("timerCollections" in changes) renderCollectionBar();
+    if ("timerCollectionLoaded" in changes) renderLoadedName();
     if (state.tool === "clock") renderClock();
     updateWakeLock(); // a countdown started/paused/ended in the other surface
   });
@@ -1726,6 +1743,7 @@ export async function initApp(opts = {}) {
   highlightPresets();
   renderMultiTimers();
   renderCollectionBar();
+  renderLoadedName();
   updateWakeLock(); // a countdown may already be running when this surface opens
   requestAnimationFrame(tick);
 }
