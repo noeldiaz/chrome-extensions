@@ -337,6 +337,9 @@ async function snoozeMulti(originalId, minutes) {
     endTime,
     remaining: ms,
     duration: ms,
+    // Snooze inherits the original row's bell state — if you muted that timer,
+    // its +1/+5 snooze stays muted too. Falls back to silent (off by default).
+    silent: original?.silent !== undefined ? original.silent : true,
   };
   await chrome.storage.local.set({ timers: [...timers, newT] });
   await scheduleMulti(id, endTime);

@@ -726,7 +726,8 @@ function multiAdd() {
   const label = String(els.mtLabel?.value || "").trim().slice(0, 60);
   const id = newMultiId();
   // Add as idle — the user clicks ▶ to actually start the countdown.
-  const newT = { id, label, status: "idle", endTime: 0, remaining: ms, duration: ms };
+  // Bell defaults OFF so a new timer is silent unless the user opts in.
+  const newT = { id, label, status: "idle", endTime: 0, remaining: ms, duration: ms, silent: true };
   persist({ timers: [...(state.timers || []), newT] });
   clearMtInputs();
   els.mtH?.focus();
