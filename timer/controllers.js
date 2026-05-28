@@ -1314,7 +1314,7 @@ function renderMultiTimers() {
     const grip = document.createElement("button");
     grip.type = "button";
     grip.tabIndex = -1;
-    grip.className = "cursor-grab text-slate-300 hover:text-slate-500 focus:outline-none dark:text-slate-600 dark:hover:text-slate-300";
+    grip.className = "fs-hide cursor-grab text-slate-300 hover:text-slate-500 focus:outline-none dark:text-slate-600 dark:hover:text-slate-300";
     grip.title = t("multiReorder");
     grip.setAttribute("aria-label", t("multiReorder"));
     grip.append(makeIcon("grip"));
@@ -1434,7 +1434,7 @@ function renderMultiTimers() {
     // rewrite the endTime. Pause / let it end first, then edit.
     const editBtn = document.createElement("button");
     editBtn.type = "button";
-    editBtn.className = "icon-btn !p-2";
+    editBtn.className = "fs-hide icon-btn !p-2";
     if (tim.status === "running") {
       editBtn.disabled = true;
       editBtn.classList.add("opacity-30", "cursor-not-allowed");
@@ -1479,7 +1479,7 @@ function renderMultiTimers() {
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
-    removeBtn.className = "icon-btn !p-2";
+    removeBtn.className = "fs-hide icon-btn !p-2";
     removeBtn.title = t("multiRemove");
     removeBtn.setAttribute("aria-label", t("multiRemove"));
     removeBtn.append(makeIcon("close"));
