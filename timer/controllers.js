@@ -732,17 +732,38 @@ function multiAdd() {
   els.mtH?.focus();
 }
 
+// Within a chain, only one member runs at a time. Starting or resuming a
+// timer that lives in a chain resets every other running/paused member of
+// the same chain back to idle (ended members are left as-is — they're a
+// completed step, not an active one).
+function chainSiblingsToReset(id) {
+  const chain = new Set(chainIdsFor(id));
+  chain.delete(id);
+  if (!chain.size) return new Set();
+  const active = new Set();
+  for (const x of state.timers || []) {
+    if (chain.has(x.id) && (x.status === "running" || x.status === "paused")) active.add(x.id);
+  }
+  return active;
+}
+
 function multiStart(id) {
   const now = Date.now();
+  const toReset = chainSiblingsToReset(id);
   let endTime = 0;
   const timers = (state.timers || []).map((x) => {
     if (x.id === id && x.status === "idle") {
       endTime = now + x.duration;
       return { ...x, status: "running", endTime, remaining: x.duration };
     }
+    if (toReset.has(x.id)) {
+      multiAlerted.delete(x.id);
+      return { ...x, status: "idle", endTime: 0, remaining: x.duration };
+    }
     return x;
   });
   persist({ timers });
+  for (const cid of toReset) bg("multi:clear", { id: cid });
   if (endTime) bg("multi:start", { id, endTime });
   updateWakeLock();
 }
@@ -761,15 +782,21 @@ function multiPause(id) {
 
 function multiResume(id) {
   const now = Date.now();
+  const toReset = chainSiblingsToReset(id);
   let endTime = 0;
   const timers = (state.timers || []).map((x) => {
     if (x.id === id && x.status === "paused") {
       endTime = now + x.remaining;
       return { ...x, status: "running", endTime };
     }
+    if (toReset.has(x.id)) {
+      multiAlerted.delete(x.id);
+      return { ...x, status: "idle", endTime: 0, remaining: x.duration };
+    }
     return x;
   });
   persist({ timers });
+  for (const cid of toReset) bg("multi:clear", { id: cid });
   if (endTime) bg("multi:start", { id, endTime });
   updateWakeLock();
 }
