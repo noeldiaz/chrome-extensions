@@ -17,6 +17,9 @@ export const SYNC_KEYS = [
   "timerTrim",
   "timerBadge",
   "timerOvertime",
+  "timerPresets",
   "alerts",
+  "chime",
+  "chimeVolume",
 ];
 export const { isSyncOn, syncGet, syncSet, syncRemove, setSyncEnabled } = createSync(SYNC_KEYS);

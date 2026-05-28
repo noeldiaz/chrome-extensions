@@ -1,7 +1,8 @@
 import { localize, t } from "./i18n.js";
 import { initTheme } from "./theme.js";
-import { ALERT_DEFAULTS } from "./lib.js";
+import { ALERT_DEFAULTS, TIMER_PRESETS, hmsToMs } from "./lib.js";
 import { isSyncOn, setSyncEnabled, syncGet, syncSet } from "./sync.js";
+import { playChime, CHIME_DEFAULT, VOLUME_DEFAULT } from "./chimes.js";
 
 localize();
 initTheme({
@@ -58,9 +59,26 @@ const timerBadge = document.getElementById("timer-badge");
 const sound = document.getElementById("alert-sound");
 const flash = document.getElementById("alert-flash");
 const notify = document.getElementById("alert-notify");
+const chimeSelect = document.getElementById("chime-select");
+const chimeVolume = document.getElementById("chime-volume");
+const chimePreview = document.getElementById("chime-preview");
+const presetsList = document.getElementById("presets-list");
+const presetH = document.getElementById("preset-h");
+const presetM = document.getElementById("preset-m");
+const presetS = document.getElementById("preset-s");
+const presetAdd = document.getElementById("preset-add");
+const presetError = document.getElementById("preset-error");
+const PRESET_CAP = 8;
+let presets = []; // mirrors state.timerPresets — edited in place, then persisted
 
 async function load() {
-  const { clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate, swHundredths, swTrim: swTrimVal, timerStyle, timerNumerals, timerBadge: badge, timerTrim, timerOvertime, alerts } = await syncGet({
+  const {
+    clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate,
+    swHundredths, swTrim: swTrimVal,
+    timerStyle, timerNumerals, timerBadge: badge, timerTrim, timerOvertime, timerPresets,
+    chime, chimeVolume: vol,
+    alerts,
+  } = await syncGet({
     clockStyle: "digital",
     clockFormat: "24",
     clockSeconds: true,
@@ -73,6 +91,9 @@ async function load() {
     timerBadge: false,
     timerTrim: false,
     timerOvertime: false,
+    timerPresets: [...TIMER_PRESETS],
+    chime: CHIME_DEFAULT,
+    chimeVolume: VOLUME_DEFAULT,
     alerts: { ...ALERT_DEFAULTS },
   });
   const a = { ...ALERT_DEFAULTS, ...alerts };
@@ -91,6 +112,10 @@ async function load() {
   sound.checked = a.sound;
   flash.checked = a.flash;
   notify.checked = a.notify;
+  chimeSelect.value = chime;
+  chimeVolume.value = String(Math.round(vol * 100));
+  presets = Array.isArray(timerPresets) && timerPresets.length ? [...timerPresets] : [...TIMER_PRESETS];
+  renderPresets();
 }
 
 const saveAlerts = () =>
@@ -117,6 +142,126 @@ overtime.addEventListener("change", () => syncSet({ timerOvertime: overtime.chec
 sound.addEventListener("change", saveAlerts);
 flash.addEventListener("change", saveAlerts);
 notify.addEventListener("change", saveAlerts);
+
+// ---- chime + volume -------------------------------------------------------
+// Preview plays through a one-shot AudioContext (the click counts as the user
+// gesture some engines require). Its volume tracks the slider live, so dragging
+// while previewing reflects the new level on the next click.
+let previewCtx = null;
+chimeSelect.addEventListener("change", () => syncSet({ chime: chimeSelect.value }));
+chimeVolume.addEventListener("change", () => {
+  const v = Math.max(0, Math.min(1, (Number(chimeVolume.value) || 0) / 100));
+  syncSet({ chimeVolume: v });
+});
+chimePreview.addEventListener("click", () => {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    previewCtx ||= new Ctx();
+    previewCtx.resume?.();
+    const v = Math.max(0, Math.min(1, (Number(chimeVolume.value) || 0) / 100));
+    playChime(previewCtx, { chime: chimeSelect.value, volume: v });
+  } catch {
+    /* preview unavailable — the chime still rings at countdown end */
+  }
+});
+
+// ---- quick presets editor -------------------------------------------------
+function presetText(sec) {
+  if (sec >= 3600 && sec % 3600 === 0) {
+    const h = sec / 3600;
+    return h === 1 ? t("presetHour") : `${h} h`;
+  }
+  if (sec >= 60 && sec % 60 === 0) return t("presetMin", String(sec / 60));
+  // arbitrary durations — show MM:SS / H:MM:SS
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function showError(key) {
+  presetError.textContent = key ? t(key) : "";
+  presetError.classList.toggle("hidden", !key);
+}
+
+function renderPresets() {
+  presetsList.replaceChildren();
+  for (const sec of presets) {
+    const li = document.createElement("li");
+    li.className = "flex items-center gap-1 rounded-full bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-100";
+    const label = document.createElement("span");
+    label.textContent = presetText(sec);
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "rounded-full p-0.5 text-slate-500 hover:bg-slate-300 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-white";
+    rm.title = t("presetRemove");
+    rm.setAttribute("aria-label", `${t("presetRemove")}: ${presetText(sec)}`);
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("class", "h-3.5 w-3.5");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+    path.setAttribute("d", "M6 18 18 6M6 6l12 12");
+    svg.append(path);
+    rm.append(svg);
+    rm.addEventListener("click", () => removePreset(sec));
+    li.append(label, rm);
+    presetsList.append(li);
+  }
+}
+
+function persistPresets() {
+  syncSet({ timerPresets: [...presets] });
+}
+
+function removePreset(sec) {
+  presets = presets.filter((p) => p !== sec);
+  showError(null);
+  renderPresets();
+  persistPresets();
+}
+
+function addPreset() {
+  const ms = hmsToMs({
+    h: Number(presetH.value) || 0,
+    m: Number(presetM.value) || 0,
+    s: Number(presetS.value) || 0,
+  });
+  const sec = Math.floor(ms / 1000);
+  if (sec <= 0) return; // empty input — silent
+  if (presets.length >= PRESET_CAP) {
+    showError("presetTooMany");
+    return;
+  }
+  if (presets.includes(sec)) {
+    showError("presetDuplicate");
+    return;
+  }
+  presets = [...presets, sec].sort((a, b) => a - b);
+  presetH.value = presetM.value = presetS.value = "";
+  showError(null);
+  renderPresets();
+  persistPresets();
+  presetH.focus();
+}
+
+presetAdd.addEventListener("click", addPreset);
+for (const f of [presetH, presetM, presetS]) {
+  f.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addPreset();
+    }
+  });
+}
 
 // Sync across devices (opt-in). Toggling migrates the synced preferences, then we
 // reload so the page reflects the now-active storage area.

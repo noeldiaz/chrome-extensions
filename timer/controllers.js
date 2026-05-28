@@ -4,9 +4,11 @@
 // and an open full-page tab. Pure formatting/maths live in lib.js.
 import { t } from "./i18n.js";
 import { SYNC_KEYS, syncGet, syncSet } from "./sync.js";
+import { playChime, CHIME_DEFAULT, VOLUME_DEFAULT } from "./chimes.js";
 import {
   ALERT_DEFAULTS,
   TIMER_MIN_MS,
+  TIMER_PRESETS,
   clampTimerMs,
   clockHandAngles,
   formatClock,
@@ -40,6 +42,9 @@ const DEFAULTS = {
   timerBadge: false, // show the remaining time as a badge on the toolbar icon
   timerOvertime: false, // after zero, keep counting up in red (+0:15) instead of stopping
   timerLast: 0, // last-used countdown length (s); prefilled on open — local, not synced
+  timerPresets: [...TIMER_PRESETS], // user-editable quick-fill chips (seconds)
+  chime: CHIME_DEFAULT, // end-of-countdown sound — see chimes.js
+  chimeVolume: VOLUME_DEFAULT, // 0..1
   alerts: { ...ALERT_DEFAULTS },
   sw: { running: false, startTime: 0, elapsed: 0, laps: [] },
   tm: { status: "idle", endTime: 0, remaining: 0, duration: 0 }, // idle|running|paused|ended
@@ -518,6 +523,45 @@ function highlightPresets() {
   }
 }
 
+// Label for a preset chip — terse in the popup ("5", "1h"), verbose on the full
+// page ("5 min", "1 Hour"). Falls back to a digits-style readout for off-grid
+// durations a user typed in (e.g. 7:30).
+function presetLabel(sec) {
+  const compact = mode !== "full";
+  if (sec >= 3600 && sec % 3600 === 0) {
+    const h = sec / 3600;
+    return compact ? `${h}h` : h === 1 ? t("presetHour") : `${h} h`;
+  }
+  if (sec >= 60 && sec % 60 === 0) {
+    const m = sec / 60;
+    return compact ? String(m) : t("presetMin", String(m));
+  }
+  return formatTimer(sec * 1000, { trimLeading: true });
+}
+
+// Build the quick-fill chip row from state.timerPresets. Re-runs whenever the
+// list changes (here or in another surface), so the popup and the full page
+// stay in lock-step with the user's edits in the options page.
+function renderPresets() {
+  if (!els.tmPresets) return;
+  els.tmPresets.replaceChildren();
+  const list = Array.isArray(state.timerPresets) ? state.timerPresets : DEFAULTS.timerPresets;
+  for (const sec of list) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "tm-preset chip";
+    chip.dataset.seconds = String(sec);
+    chip.textContent = presetLabel(sec);
+    chip.addEventListener("click", () => {
+      selectedPreset = sec;
+      setInputsFromSeconds(sec);
+      highlightPresets();
+    });
+    els.tmPresets.append(chip);
+  }
+  highlightPresets();
+}
+
 // On-page end alerts. Sound is owned by the background's offscreen player so it
 // rings even with every window closed; we only chime here as the fallback on
 // engines without an offscreen document (Safari/Firefox). The flash is page-side.
@@ -541,20 +585,7 @@ function primeAudio() {
 
 function beep() {
   if (!audioCtx) return;
-  const now = audioCtx.currentTime;
-  // three short rising blips
-  [0, 0.22, 0.44].forEach((t, i) => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 660 + i * 220;
-    gain.gain.setValueAtTime(0.0001, now + t);
-    gain.gain.exponentialRampToValueAtTime(0.25, now + t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.18);
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start(now + t);
-    osc.stop(now + t + 0.2);
-  });
+  playChime(audioCtx, { chime: state.chime, volume: state.chimeVolume });
 }
 
 // ---- shared tick + wiring -------------------------------------------------
@@ -612,6 +643,7 @@ export async function initApp(opts = {}) {
     tmStart: $("tm-start"),
     tmStartLabel: $("tm-start-label"),
     tmReset: $("tm-reset"),
+    tmPresets: $("tm-presets"),
     srStatus: $("sr-status"),
   };
 
@@ -626,13 +658,7 @@ export async function initApp(opts = {}) {
   });
   els.tmStart?.addEventListener("click", tmStart);
   els.tmReset?.addEventListener("click", tmReset);
-  for (const chip of document.querySelectorAll(".tm-preset")) {
-    chip.addEventListener("click", () => {
-      selectedPreset = Number(chip.dataset.seconds);
-      setInputsFromSeconds(selectedPreset);
-      highlightPresets();
-    });
-  }
+  renderPresets(); // builds the quick-fill chips from state.timerPresets and wires their clicks
   // typing a custom time deselects the preset, so reset goes back to 00
   for (const f of [els.tmH, els.tmM, els.tmS]) {
     f?.addEventListener("input", () => {
@@ -730,6 +756,7 @@ export async function initApp(opts = {}) {
     renderStopwatch();
     renderTimerControls();
     renderTimer();
+    if ("timerPresets" in changes) renderPresets(); // edited in the options page
     if (state.tool === "clock") renderClock();
     updateWakeLock(); // a countdown started/paused/ended in the other surface
   });

@@ -47,6 +47,8 @@
     "message": "Your $duration$ countdown is up.",
     "placeholders": { "duration": { "content": "$1" } }
   },
+  "snooze1Min": { "message": "+1 min" },
+  "snooze5Min": { "message": "+5 min" },
 
   "tabGeneral": { "message": "General" },
   "tabAbout": { "message": "About" },
@@ -100,11 +102,28 @@
   "optTimerBadgeHint": { "message": "Display the time left as a badge on the toolbar icon while a countdown runs." },
   "optTimerOvertime": { "message": "Count up after zero" },
   "optTimerOvertimeHint": { "message": "When a countdown reaches zero, keep counting up in red (+0:15) instead of stopping." },
+  "optPresets": { "message": "Quick presets" },
+  "optPresetsHint": { "message": "Edit the shortcut chips on the countdown setup. Up to 8." },
+  "presetAdd": { "message": "Add" },
+  "presetRemove": { "message": "Remove preset" },
+  "presetDuplicate": { "message": "That preset already exists." },
+  "presetTooMany": { "message": "Up to 8 presets." },
+  "optShortcut": { "message": "Keyboard shortcut" },
+  "optShortcutHint": {
+    "message": "Alt+T toggles the active countdown from any tab — start your last duration, or pause/resume what's running. Customise at chrome://extensions/shortcuts."
+  },
 
   "optAlerts": { "message": "When a countdown ends" },
   "optAlertsHint": { "message": "Pick how Timer lets you know a countdown has finished." },
   "optAlertSound": { "message": "Play a sound" },
   "optAlertSoundHint": { "message": "A short chime, played by whichever Timer window is open." },
+  "optChime": { "message": "Chime sound" },
+  "optChimeHint": { "message": "Pick the end-of-countdown sound." },
+  "optChimeVolume": { "message": "Volume" },
+  "optChimePreview": { "message": "Preview" },
+  "chimeClassic": { "message": "Classic" },
+  "chimeBell": { "message": "Bell" },
+  "chimeDing": { "message": "Ding" },
   "optAlertFlash": { "message": "Flash the screen" },
   "optAlertFlashHint": { "message": "Pulse the open Timer window so it's noticeable when muted." },
   "optAlertNotify": { "message": "Show a system notification" },

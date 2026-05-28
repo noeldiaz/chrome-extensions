@@ -125,12 +125,8 @@
               <span data-i18n="seconds" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Seconds</span>
             </label>
           </div>
-          <div class="mt-4 grid grid-cols-4 gap-1.5">
-            <button type="button" class="tm-preset chip" data-seconds="300">5</button>
-            <button type="button" class="tm-preset chip" data-seconds="600">10</button>
-            <button type="button" class="tm-preset chip" data-seconds="1800">30</button>
-            <button type="button" class="tm-preset chip" data-seconds="3600">1h</button>
-          </div>
+          <!-- chips built from state.timerPresets at render time (controllers.js) -->
+          <div id="tm-presets" class="mt-4 grid grid-cols-4 gap-1.5"></div>
         </div>
         <div id="tm-display" class="hidden text-center">
           <div id="tm-time" role="timer" class="display text-5xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>

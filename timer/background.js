@@ -5,8 +5,9 @@
 // state to "ended", plays the chime via an offscreen document (so sound works with
 // nothing on screen), and fires the system notification. The on-page flash is the
 // page's job; the chime/notification are ours alone, which keeps them from doubling.
-import { ALERT_DEFAULTS, formatTimer, formatBadge } from "./lib.js";
+import { ALERT_DEFAULTS, SECOND, TIMER_MAX_MS, formatTimer, formatBadge } from "./lib.js";
 import { syncGet } from "./sync.js";
+import { CHIME_DEFAULT, VOLUME_DEFAULT } from "./chimes.js";
 
 const ALARM = "timerEnd";
 const NOTIFY_ID = "timerDone";
@@ -80,16 +81,21 @@ async function refreshBadge() {
 
 // Offscreen document is the only way an MV3 background can play audio. Absent on
 // Safari/Firefox builds (the manifest's offscreen permission/files are stripped) —
-// there the page chimes instead, so we just no-op.
-async function playChime() {
+// there the page chimes instead, so we just no-op. The chime + volume travel via
+// the URL query on first load and via a message on reuse.
+async function playChime(chime, volume) {
   if (!chrome.offscreen) return;
   try {
     if (await chrome.offscreen.hasDocument()) {
-      chrome.runtime.sendMessage({ target: "offscreen", type: "beep" }, () => void chrome.runtime.lastError);
+      chrome.runtime.sendMessage(
+        { target: "offscreen", type: "beep", chime, volume },
+        () => void chrome.runtime.lastError,
+      );
       return;
     }
+    const q = new URLSearchParams({ chime: String(chime), volume: String(volume) }).toString();
     await chrome.offscreen.createDocument({
-      url: "offscreen.html",
+      url: `offscreen.html?${q}`,
       reasons: ["AUDIO_PLAYBACK"],
       justification: "Play the end-of-countdown chime.",
     });
@@ -112,7 +118,10 @@ async function endNow() {
     await chrome.storage.local.set({ tm: { ...tm, status: "ended", remaining: 0 } });
 
     const alerts = await getAlerts();
-    if (alerts.sound) await playChime();
+    if (alerts.sound) {
+      const { chime, chimeVolume } = await syncGet({ chime: CHIME_DEFAULT, chimeVolume: VOLUME_DEFAULT });
+      await playChime(chime, chimeVolume);
+    }
     if (alerts.notify && chrome.notifications) {
       chrome.notifications.create(NOTIFY_ID, {
         type: "basic",
@@ -121,6 +130,12 @@ async function endNow() {
         message: chrome.i18n.getMessage("notifyBody", [formatTimer(tm.duration || 0)]) || "Your countdown is up.",
         priority: 2,
         requireInteraction: true,
+        // Snooze: +1/+5 min restart from the notification. Engines that ignore
+        // the buttons key (Safari) just show a button-less notification.
+        buttons: [
+          { title: chrome.i18n.getMessage("snooze1Min") || "+1 min" },
+          { title: chrome.i18n.getMessage("snooze5Min") || "+5 min" },
+        ],
       });
     }
   } finally {
@@ -159,6 +174,58 @@ chrome.storage.onChanged.addListener((changes, area) => {
     (area === "sync" && "timerBadge" in changes)
   ) {
     refreshBadge();
+  }
+});
+
+// Start (or restart) a countdown from the background — used by the keyboard
+// shortcut and the notification snooze buttons. Mirrors the page-side patch shape
+// so the popup/full page pick the new state up via storage.onChanged.
+async function startCountdown(durationMs) {
+  const ms = Math.max(SECOND, Math.min(TIMER_MAX_MS, Math.floor(Number(durationMs) || 0)));
+  if (ms < SECOND) return;
+  const endTime = Date.now() + ms;
+  await chrome.storage.local.set({
+    tm: { status: "running", endTime, remaining: ms, duration: ms },
+    timerLast: Math.round(ms / 1000),
+  });
+  await scheduleEnd(endTime);
+}
+
+// Keyboard shortcut: toggle the active countdown from any tab. Running → pause,
+// paused → resume, ended → restart same duration, idle → start the last-used
+// duration (if there is one). No-op when idle and nothing has ever been run.
+async function toggleTimer() {
+  const tm = await getTimer();
+  const now = Date.now();
+  if (tm.status === "running") {
+    await chrome.storage.local.set({
+      tm: { ...tm, status: "paused", remaining: Math.max(0, tm.endTime - now) },
+    });
+    await chrome.alarms.clear(ALARM);
+  } else if (tm.status === "paused") {
+    const endTime = now + tm.remaining;
+    await chrome.storage.local.set({ tm: { ...tm, status: "running", endTime } });
+    await scheduleEnd(endTime);
+  } else if (tm.status === "ended" && tm.duration > 0) {
+    await startCountdown(tm.duration);
+  } else {
+    const { timerLast } = await chrome.storage.local.get({ timerLast: 0 });
+    if (timerLast > 0) await startCountdown(timerLast * 1000);
+  }
+}
+
+chrome.commands?.onCommand?.addListener((cmd) => {
+  if (cmd === "toggle-timer") toggleTimer();
+});
+
+// Snooze from the system notification: +1 min on button 0, +5 min on button 1.
+// Clear the notification once we've armed the next countdown.
+chrome.notifications?.onButtonClicked?.addListener((id, idx) => {
+  if (id !== NOTIFY_ID) return;
+  const minutes = idx === 0 ? 1 : idx === 1 ? 5 : 0;
+  if (minutes > 0) {
+    startCountdown(minutes * 60 * SECOND);
+    chrome.notifications.clear(NOTIFY_ID);
   }
 });
 

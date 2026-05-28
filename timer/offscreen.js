@@ -1,29 +1,28 @@
 // Plays the end-of-countdown chime on behalf of the background (an MV3 service
-// worker can't use Web Audio). The same three rising blips the open page plays.
+// worker can't use Web Audio). The chime + volume come from the background — via
+// the URL query on first load (createDocument) and via a message on reuse.
 // Created with the AUDIO_PLAYBACK reason, so it may play without a user gesture.
-function chime() {
+import { playChime, CHIME_DEFAULT, VOLUME_DEFAULT } from "./chimes.js";
+
+function play({ chime = CHIME_DEFAULT, volume = VOLUME_DEFAULT } = {}) {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx) return;
   const ctx = new Ctx();
-  const now = ctx.currentTime;
-  [0, 0.22, 0.44].forEach((t, i) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 660 + i * 220;
-    gain.gain.setValueAtTime(0.0001, now + t);
-    gain.gain.exponentialRampToValueAtTime(0.25, now + t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.18);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(now + t);
-    osc.stop(now + t + 0.2);
-  });
-  setTimeout(() => ctx.close().catch(() => {}), 1500);
+  const dur = playChime(ctx, { chime, volume });
+  setTimeout(() => ctx.close().catch(() => {}), Math.ceil((dur + 0.4) * 1000));
 }
 
-// Play immediately on load (the background creates this doc to ring once)...
-chime();
-// ...and again on demand if the doc is reused before it's torn down.
+// Play immediately on load — the background creates this doc to ring once, and
+// passes the choice via ?chime=...&volume=... so the very first play matches.
+const params = new URLSearchParams(location.search);
+play({
+  chime: params.get("chime") || CHIME_DEFAULT,
+  volume: params.get("volume") != null ? Number(params.get("volume")) : VOLUME_DEFAULT,
+});
+
+// If the doc is reused before it's torn down, ring again with the new choice.
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg?.target === "offscreen" && msg.type === "beep") chime();
+  if (msg?.target === "offscreen" && msg.type === "beep") {
+    play({ chime: msg.chime, volume: msg.volume });
+  }
 });
