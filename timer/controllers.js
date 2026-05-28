@@ -606,6 +606,11 @@ function makeIcon(kind) {
     svg.setAttribute("stroke", "currentColor");
     svg.setAttribute("stroke-width", "1.6");
     svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M4.5 12a7.5 7.5 0 1 1 2.2 5.3M4.5 12V7.5M4.5 12H9" }));
+  } else if (kind === "plus") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M12 5v14M5 12h14" }));
   } else if (kind === "trash") {
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
@@ -1089,7 +1094,7 @@ function renderCollectionBar() {
     const save = document.createElement("button");
     save.type = "button";
     save.className = "btn btn-soft";
-    save.append(makeIcon("check"));
+    save.append(makeIcon("plus"));
     const lbl = document.createElement("span");
     lbl.textContent = t("mtSaveCollection");
     save.append(lbl);

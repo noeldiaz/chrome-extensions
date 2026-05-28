@@ -49,7 +49,7 @@
   "mtClearAllBody": { "message": "Every timer on this list will be removed. This can't be undone." },
   "mtResetAllTitle": { "message": "Reset every timer?" },
   "mtResetAllBody": { "message": "Every timer in this list will return to its full configured duration and stop running." },
-  "mtSaveCollection": { "message": "Save as…" },
+  "mtSaveCollection": { "message": "New" },
   "mtSaveCollectionTitle": { "message": "Save this group as a collection" },
   "mtCollectionNamePh": { "message": "Collection name" },
   "mtLoadPlaceholder": { "message": "Load collection…" },
