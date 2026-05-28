@@ -48,7 +48,15 @@ const DEFAULTS = {
   alerts: { ...ALERT_DEFAULTS },
   sw: { running: false, startTime: 0, elapsed: 0, laps: [] },
   tm: { status: "idle", endTime: 0, remaining: 0, duration: 0 }, // idle|running|paused|ended
+  // multi-timer list (full-page-only "Timers" tab; separate from `tm`).
+  // Each item: { id, label, status, endTime, remaining, duration }.
+  timers: [],
 };
+
+// Cap on concurrent multi-timers — keeps the list scannable.
+const MULTI_CAP = 8;
+// Tools known across surfaces; "timers" only exists on the full page.
+const ALL_TOOLS = ["clock", "stopwatch", "timer", "timers"];
 
 let state = structuredClone(DEFAULTS);
 let mode = "compact";
@@ -59,6 +67,9 @@ let selectedPreset = null; // seconds of the chosen preset chip; reset returns h
 let baseTitle = ""; // the page's plain title; the full page prefixes a running countdown
 let lastTitle = ""; // last value written to document.title, so we only set it when it changes
 let wakeLock = null; // Screen Wake Lock sentinel (full page only), held while a countdown runs
+let activeTool = "clock"; // the tool actually shown — usually state.tool, but the popup clamps "timers" → "timer"
+const multiAlerted = new Map(); // id → endTime we've chimed for, so each multi-timer rings exactly once
+const mtRows = new Map(); // id → { row, lbl, time, primary } — references for per-frame updates without rebuilding
 // Honour the OS "reduce motion" setting: the analog second hand ticks per second
 // instead of sweeping, and the visual-timer dial steps once a second.
 const reduceMotionMQ = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
@@ -80,12 +91,16 @@ const setPrimaryIcon = (btn, which) => {
   if (!btn) return;
   for (const ic of btn.querySelectorAll("[data-ic]")) ic.classList.toggle("hidden", ic.dataset.ic !== which);
 };
+// In the popup, "timers" isn't a real tab — clamp to the single-Timer panel so
+// a state.tool set from the full page degrades gracefully.
+const safeTool = (name) => (mode === "full" || name !== "timers") ? name : "timer";
 const showPanel = (name) => {
-  for (const tool of ["clock", "stopwatch", "timer"]) {
-    $(`panel-${tool}`)?.classList.toggle("hidden", tool !== name);
+  activeTool = safeTool(name);
+  for (const tool of ALL_TOOLS) {
+    $(`panel-${tool}`)?.classList.toggle("hidden", tool !== activeTool);
   }
   for (const btn of document.querySelectorAll("[data-tool]")) {
-    btn.classList.toggle("is-active", btn.dataset.tool === name);
+    btn.classList.toggle("is-active", btn.dataset.tool === activeTool);
   }
 };
 
@@ -433,7 +448,9 @@ function updateTitle() {
 // that deny it just no-op — the countdown still runs.
 async function updateWakeLock() {
   if (mode !== "full" || !navigator.wakeLock) return;
-  const want = state.tm.status === "running" && document.visibilityState === "visible";
+  const tmRunning = state.tm.status === "running";
+  const anyMulti = (state.timers || []).some((x) => x.status === "running");
+  const want = (tmRunning || anyMulti) && document.visibilityState === "visible";
   try {
     if (want && !wakeLock) {
       wakeLock = await navigator.wakeLock.request("screen");
@@ -562,6 +579,229 @@ function renderPresets() {
   highlightPresets();
 }
 
+// ---- multi-timer (full page "Timers" tab) ---------------------------------
+// Lives entirely beside the single-timer state — `state.timers` is a separate
+// list, with its own alarms ("multiEnd:<id>") and notifications in the bg.
+
+const newMultiId = () => `mt${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+
+// Same icon family as the existing single-timer primary, used in each row.
+function makeIcon(kind) {
+  const svg = svgEl("svg", { viewBox: "0 0 24 24", class: "h-5 w-5", "aria-hidden": "true" });
+  if (kind === "play") {
+    svg.setAttribute("fill", "currentColor");
+    svg.append(svgEl("path", { d: "M6 4l14 8-14 8V4z" }));
+  } else if (kind === "pause") {
+    svg.setAttribute("fill", "currentColor");
+    svg.append(svgEl("path", { d: "M7 5h3v14H7zM14 5h3v14h-3z" }));
+  } else if (kind === "restart") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.6");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M4.5 12a7.5 7.5 0 1 1 2.2 5.3M4.5 12V7.5M4.5 12H9" }));
+  } else if (kind === "close") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M6 18 18 6M6 6l12 12" }));
+  }
+  return svg;
+}
+
+function setMtInputsFromSeconds(sec) {
+  const total = clampTimerMs(sec * 1000) / 1000;
+  if (els.mtH) els.mtH.value = Math.floor(total / 3600) || "";
+  if (els.mtM) els.mtM.value = Math.floor((total % 3600) / 60) || "";
+  if (els.mtS) els.mtS.value = Math.floor(total % 60) || "";
+}
+
+function clearMtInputs() {
+  for (const f of [els.mtH, els.mtM, els.mtS, els.mtLabel]) if (f) f.value = "";
+}
+
+function renderMtPresets() {
+  if (!els.mtPresets) return;
+  els.mtPresets.replaceChildren();
+  const list = Array.isArray(state.timerPresets) ? state.timerPresets : DEFAULTS.timerPresets;
+  for (const sec of list) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.textContent = presetLabel(sec);
+    chip.addEventListener("click", () => {
+      setMtInputsFromSeconds(sec);
+      els.mtH?.focus();
+    });
+    els.mtPresets.append(chip);
+  }
+}
+
+function multiAdd() {
+  if (!els.mtList) return;
+  const ms = hmsToMs({
+    h: Number(els.mtH?.value) || 0,
+    m: Number(els.mtM?.value) || 0,
+    s: Number(els.mtS?.value) || 0,
+  });
+  if (ms < TIMER_MIN_MS) return;
+  if ((state.timers || []).length >= MULTI_CAP) return; // silent cap — list is already full
+  const label = String(els.mtLabel?.value || "").trim().slice(0, 60);
+  const id = newMultiId();
+  const newT = { id, label, status: "running", endTime: Date.now() + ms, remaining: ms, duration: ms };
+  persist({ timers: [...(state.timers || []), newT] });
+  bg("multi:start", { id, endTime: newT.endTime });
+  clearMtInputs();
+  els.mtH?.focus();
+  updateWakeLock();
+}
+
+function multiPause(id) {
+  const now = Date.now();
+  const timers = (state.timers || []).map((x) =>
+    x.id === id && x.status === "running"
+      ? { ...x, status: "paused", remaining: Math.max(0, x.endTime - now) }
+      : x,
+  );
+  persist({ timers });
+  bg("multi:clear", { id });
+  updateWakeLock();
+}
+
+function multiResume(id) {
+  const now = Date.now();
+  let endTime = 0;
+  const timers = (state.timers || []).map((x) => {
+    if (x.id === id && x.status === "paused") {
+      endTime = now + x.remaining;
+      return { ...x, status: "running", endTime };
+    }
+    return x;
+  });
+  persist({ timers });
+  if (endTime) bg("multi:start", { id, endTime });
+  updateWakeLock();
+}
+
+function multiRestart(id) {
+  const now = Date.now();
+  let endTime = 0;
+  const timers = (state.timers || []).map((x) => {
+    if (x.id === id && (x.status === "ended" || x.status === "paused")) {
+      endTime = now + x.duration;
+      multiAlerted.delete(id); // let the next end re-fire
+      return { ...x, status: "running", endTime, remaining: x.duration };
+    }
+    return x;
+  });
+  persist({ timers });
+  if (endTime) bg("multi:start", { id, endTime });
+  updateWakeLock();
+}
+
+function multiRemove(id) {
+  const timers = (state.timers || []).filter((x) => x.id !== id);
+  persist({ timers });
+  bg("multi:clear", { id });
+  multiAlerted.delete(id);
+  updateWakeLock();
+}
+
+function multiToggle(id) {
+  const tim = (state.timers || []).find((x) => x.id === id);
+  if (!tim) return;
+  if (tim.status === "running") multiPause(id);
+  else if (tim.status === "paused") multiResume(id);
+  else if (tim.status === "ended") multiRestart(id);
+}
+
+// Build the list of timer rows. Called on add/remove/replace; per-frame text
+// updates go through tickMultiTimers without rebuilding so the label inputs
+// keep focus while the user types.
+function renderMultiTimers() {
+  if (!els.mtList) return;
+  els.mtList.replaceChildren();
+  mtRows.clear();
+  if (!state.timers || state.timers.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "py-8 text-center text-sm text-slate-400 dark:text-slate-500";
+    empty.textContent = t("multiEmpty");
+    els.mtList.append(empty);
+    return;
+  }
+  for (const tim of state.timers) {
+    const row = document.createElement("div");
+    row.className = "flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800";
+
+    const lbl = document.createElement("input");
+    lbl.type = "text";
+    lbl.value = tim.label || "";
+    lbl.maxLength = 60;
+    lbl.placeholder = t("multiLabelPlaceholder");
+    lbl.className = "min-w-0 flex-1 bg-transparent text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500";
+    lbl.addEventListener("change", () => {
+      const v = lbl.value.slice(0, 60);
+      const timers = (state.timers || []).map((x) => (x.id === tim.id ? { ...x, label: v } : x));
+      persist({ timers });
+    });
+
+    const time = document.createElement("div");
+    time.className = "display text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-50";
+
+    const ctrl = document.createElement("div");
+    ctrl.className = "flex items-center gap-1";
+    const primary = document.createElement("button");
+    primary.type = "button";
+    primary.className = "icon-btn !p-2";
+    for (const kind of ["play", "pause", "restart"]) {
+      const ic = makeIcon(kind);
+      ic.dataset.ic = kind;
+      ic.classList.add("hidden");
+      primary.append(ic);
+    }
+    primary.addEventListener("click", () => multiToggle(tim.id));
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "icon-btn !p-2";
+    removeBtn.title = t("multiRemove");
+    removeBtn.setAttribute("aria-label", t("multiRemove"));
+    removeBtn.append(makeIcon("close"));
+    removeBtn.addEventListener("click", () => multiRemove(tim.id));
+
+    ctrl.append(primary, removeBtn);
+    row.append(lbl, time, ctrl);
+    els.mtList.append(row);
+    mtRows.set(tim.id, { row, lbl, time, primary });
+  }
+  tickMultiTimers(); // paint initial text + icons
+}
+
+function tickMultiTimers() {
+  if (!mtRows.size) return;
+  const now = Date.now();
+  for (const tim of state.timers || []) {
+    const r = mtRows.get(tim.id);
+    if (!r) continue;
+    const ms = tim.status === "running"
+      ? remainingMs(tim.endTime, now)
+      : tim.status === "paused"
+        ? tim.remaining
+        : tim.status === "ended"
+          ? 0
+          : tim.duration;
+    r.time.textContent = formatTimer(ms, { trimLeading: state.timerTrim });
+    const ended = tim.status === "ended";
+    r.time.classList.toggle("text-rose-600", ended);
+    r.time.classList.toggle("dark:text-rose-400", ended);
+    r.time.classList.toggle("text-slate-900", !ended);
+    r.time.classList.toggle("dark:text-slate-50", !ended);
+    r.row.classList.toggle("border-rose-300", ended);
+    r.row.classList.toggle("dark:border-rose-700", ended);
+    const which = ended ? "restart" : tim.status === "running" ? "pause" : "play";
+    setPrimaryIcon(r.primary, which);
+  }
+}
+
 // On-page end alerts. Sound is owned by the background's offscreen player so it
 // rings even with every window closed; we only chime here as the fallback on
 // engines without an offscreen document (Safari/Firefox). The flash is page-side.
@@ -590,9 +830,10 @@ function beep() {
 
 // ---- shared tick + wiring -------------------------------------------------
 function tick() {
-  if (state.tool === "clock") renderClock();
-  else if (state.tool === "stopwatch" && state.sw.running) renderStopwatch();
-  else if (state.tool === "timer") renderTimer();
+  if (activeTool === "clock") renderClock();
+  else if (activeTool === "stopwatch" && state.sw.running) renderStopwatch();
+  else if (activeTool === "timer") renderTimer();
+  else if (activeTool === "timers") tickMultiTimers();
   updateTitle();
 
   // End detection runs regardless of the visible tab so an open surface reacts.
@@ -604,6 +845,24 @@ function tick() {
     fireAlerts();
     announce(t("notifyTitle"));
     renderTimer();
+  }
+
+  // Same pattern for each running multi-timer. The bg deduplicates by status so
+  // it doesn't double-end if both surfaces fire at the same moment.
+  if (state.timers && state.timers.length > 0) {
+    const now = Date.now();
+    let anyEnded = false;
+    for (const tim of state.timers) {
+      if (tim.status === "running" && remainingMs(tim.endTime, now) <= 0 && multiAlerted.get(tim.id) !== tim.endTime) {
+        multiAlerted.set(tim.id, tim.endTime);
+        bg("multi:ended", { id: tim.id });
+        anyEnded = true;
+      }
+    }
+    if (anyEnded) {
+      fireAlerts(); // one flash + chime per frame even if several end together
+      announce(t("notifyTitle"));
+    }
   }
   requestAnimationFrame(tick);
 }
@@ -644,6 +903,14 @@ export async function initApp(opts = {}) {
     tmStartLabel: $("tm-start-label"),
     tmReset: $("tm-reset"),
     tmPresets: $("tm-presets"),
+    // multi-timer (full page only — null in popup)
+    mtH: $("mt-h"),
+    mtM: $("mt-m"),
+    mtS: $("mt-s"),
+    mtLabel: $("mt-label"),
+    mtAdd: $("mt-add"),
+    mtPresets: $("mt-presets"),
+    mtList: $("mt-list"),
     srStatus: $("sr-status"),
   };
 
@@ -730,6 +997,17 @@ export async function initApp(opts = {}) {
     renderFlash();
   });
 
+  // multi-timer panel wiring (full page only)
+  els.mtAdd?.addEventListener("click", multiAdd);
+  for (const f of [els.mtH, els.mtM, els.mtS, els.mtLabel]) {
+    f?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        multiAdd();
+      }
+    });
+  }
+
   // track live OS "reduce motion" changes; the running tick re-renders with it
   reduceMotionMQ?.addEventListener?.("change", (e) => {
     reduceMotion = e.matches;
@@ -756,7 +1034,11 @@ export async function initApp(opts = {}) {
     renderStopwatch();
     renderTimerControls();
     renderTimer();
-    if ("timerPresets" in changes) renderPresets(); // edited in the options page
+    if ("timerPresets" in changes) {
+      renderPresets(); // edited in the options page
+      renderMtPresets(); // the multi-timer chip row reuses the same list
+    }
+    if ("timers" in changes) renderMultiTimers(); // add/remove/rename in either surface
     if (state.tool === "clock") renderClock();
     updateWakeLock(); // a countdown started/paused/ended in the other surface
   });
@@ -773,6 +1055,8 @@ export async function initApp(opts = {}) {
   renderTimerControls();
   renderTimer();
   highlightPresets();
+  renderMtPresets();
+  renderMultiTimers();
   updateWakeLock(); // a countdown may already be running when this surface opens
   requestAnimationFrame(tick);
 }

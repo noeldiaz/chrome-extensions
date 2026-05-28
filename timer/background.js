@@ -11,6 +11,10 @@ import { CHIME_DEFAULT, VOLUME_DEFAULT } from "./chimes.js";
 
 const ALARM = "timerEnd";
 const NOTIFY_ID = "timerDone";
+// Separate namespace so multi-timer alarms and notifications never collide
+// with the single-timer (tm) ones; the id of the timer is appended.
+const MULTI_ALARM_PREFIX = "multiEnd:";
+const MULTI_NOTIFY_PREFIX = "multiDone:";
 
 const TM_DEFAULT = { status: "idle", endTime: 0, remaining: 0, duration: 0 };
 
@@ -152,6 +156,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (msg?.type === "timer:start") await scheduleEnd(Number(msg.endTime) || 0);
       else if (msg?.type === "timer:clear") await chrome.alarms.clear(ALARM);
       else if (msg?.type === "timer:ended") await endNow();
+      else if (msg?.type === "multi:start") await scheduleMulti(String(msg.id), Number(msg.endTime) || 0);
+      else if (msg?.type === "multi:clear") await chrome.alarms.clear(MULTI_ALARM_PREFIX + String(msg.id));
+      else if (msg?.type === "multi:ended") await endMultiNow(String(msg.id));
       sendResponse({ ok: true });
     } catch {
       sendResponse({ ok: false });
@@ -162,6 +169,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === ALARM) endNow();
+  else if (alarm.name.startsWith(MULTI_ALARM_PREFIX)) endMultiNow(alarm.name.slice(MULTI_ALARM_PREFIX.length));
 });
 
 // The badge follows the timer's stored state and the opt-in toggle, from whichever
@@ -219,26 +227,120 @@ chrome.commands?.onCommand?.addListener((cmd) => {
 });
 
 // Snooze from the system notification: +1 min on button 0, +5 min on button 1.
-// Clear the notification once we've armed the next countdown.
+// Clear the notification once we've armed the next countdown. Multi-timer
+// notifications carry their own prefix + id so the snooze restarts that timer.
 chrome.notifications?.onButtonClicked?.addListener((id, idx) => {
-  if (id !== NOTIFY_ID) return;
   const minutes = idx === 0 ? 1 : idx === 1 ? 5 : 0;
-  if (minutes > 0) {
+  if (minutes <= 0) return;
+  if (id === NOTIFY_ID) {
     startCountdown(minutes * 60 * SECOND);
     chrome.notifications.clear(NOTIFY_ID);
+  } else if (id.startsWith(MULTI_NOTIFY_PREFIX)) {
+    snoozeMulti(id.slice(MULTI_NOTIFY_PREFIX.length), minutes);
+    chrome.notifications.clear(id);
   }
 });
+
+// ---- multi-timer (the full-page "Timers" tab) -----------------------------
+// Same alarm + offscreen-chime + notification pattern as the single timer (tm),
+// just keyed by each timer's id and stored on a separate `timers` list.
+async function getTimers() {
+  const { timers } = await chrome.storage.local.get({ timers: [] });
+  return Array.isArray(timers) ? timers : [];
+}
+
+async function scheduleMulti(id, endTime) {
+  const name = MULTI_ALARM_PREFIX + id;
+  await chrome.alarms.clear(name);
+  if (endTime > Date.now()) await chrome.alarms.create(name, { when: endTime });
+}
+
+const newMultiId = () => `mt${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+
+let multiChimeAt = 0; // last time we played the chime, for the 1.5s debounce window
+const multiEnding = new Set(); // per-id guard so concurrent ends don't double-fire
+
+async function endMultiNow(id) {
+  if (!id || multiEnding.has(id)) return;
+  multiEnding.add(id);
+  try {
+    const timers = await getTimers();
+    const idx = timers.findIndex((x) => x.id === id);
+    if (idx === -1) return;
+    const tim = timers[idx];
+    if (tim.status !== "running") return; // already paused/ended/removed
+    await chrome.alarms.clear(MULTI_ALARM_PREFIX + id);
+    const updated = timers.slice();
+    updated[idx] = { ...tim, status: "ended", remaining: 0 };
+    await chrome.storage.local.set({ timers: updated });
+
+    const alerts = await getAlerts();
+    // Debounce the chime so two timers ending within 1.5s don't overlap. Each
+    // still gets its own notification (idx-distinct) and its row flips in the UI.
+    if (alerts.sound && Date.now() - multiChimeAt > 1500) {
+      multiChimeAt = Date.now();
+      const { chime, chimeVolume } = await syncGet({ chime: CHIME_DEFAULT, chimeVolume: VOLUME_DEFAULT });
+      await playChime(chime, chimeVolume);
+    }
+    if (alerts.notify && chrome.notifications) {
+      const labeled = tim.label && tim.label.trim().length > 0;
+      chrome.notifications.create(MULTI_NOTIFY_PREFIX + id, {
+        type: "basic",
+        iconUrl: "icons/icon128.png",
+        title: chrome.i18n.getMessage("notifyTitle") || "Timer finished",
+        message: labeled
+          ? chrome.i18n.getMessage("multiNotifyBodyLabeled", [tim.label]) || `${tim.label} is up.`
+          : chrome.i18n.getMessage("notifyBody", [formatTimer(tim.duration || 0)]) || "Your countdown is up.",
+        priority: 2,
+        requireInteraction: true,
+        buttons: [
+          { title: chrome.i18n.getMessage("snooze1Min") || "+1 min" },
+          { title: chrome.i18n.getMessage("snooze5Min") || "+5 min" },
+        ],
+      });
+    }
+  } finally {
+    multiEnding.delete(id);
+  }
+}
+
+// Snooze: append a new running timer of the chosen length, carrying over the
+// original label so it's clear which one rang. Fresh id; the original "ended"
+// row stays in the list for context (the user can remove it from the page).
+async function snoozeMulti(originalId, minutes) {
+  const ms = Math.max(SECOND, minutes * 60 * SECOND);
+  const timers = await getTimers();
+  const original = timers.find((x) => x.id === originalId);
+  if (timers.length >= 8) return; // matches the page-side cap (MULTI_CAP)
+  const id = newMultiId();
+  const endTime = Date.now() + ms;
+  const newT = {
+    id,
+    label: original?.label || "",
+    status: "running",
+    endTime,
+    remaining: ms,
+    duration: ms,
+  };
+  await chrome.storage.local.set({ timers: [...timers, newT] });
+  await scheduleMulti(id, endTime);
+}
 
 // A running countdown must re-arm its alarm after the SW restarts or the browser
 // relaunches; if it already lapsed while we were gone, end it now.
 async function rehydrate() {
   const tm = await getTimer();
-  if (tm.status !== "running") {
-    await refreshBadge();
-    return;
+  if (tm.status === "running") {
+    if (tm.endTime > Date.now()) await scheduleEnd(tm.endTime);
+    else await endNow();
   }
-  if (tm.endTime > Date.now()) await scheduleEnd(tm.endTime);
-  else await endNow();
+  // Same for each running multi-timer
+  const timers = await getTimers();
+  for (const tim of timers) {
+    if (tim.status !== "running") continue;
+    if (tim.endTime > Date.now()) await scheduleMulti(tim.id, tim.endTime);
+    else await endMultiNow(tim.id);
+  }
   await refreshBadge();
 }
 

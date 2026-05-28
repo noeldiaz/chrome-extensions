@@ -20,6 +20,17 @@
   "toolClock": { "message": "Clock" },
   "toolStopwatch": { "message": "Stopwatch" },
   "toolTimer": { "message": "Timer" },
+  "toolMultiTimers": { "message": "Timers" },
+
+  "multiAdd": { "message": "Add" },
+  "multiLabel": { "message": "Label" },
+  "multiLabelPlaceholder": { "message": "Name this timer (optional)" },
+  "multiEmpty": { "message": "No timers running yet. Set a duration above and Add." },
+  "multiRemove": { "message": "Remove timer" },
+  "multiNotifyBodyLabeled": {
+    "message": "$label$ is up.",
+    "placeholders": { "label": { "content": "$1" } }
+  },
 
   "start": { "message": "Start" },
   "stop": { "message": "Stop" },

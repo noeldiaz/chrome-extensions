@@ -31,6 +31,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12M6 21h12M8 3c0 3.5 8 4.5 8 9s-8 5.5-8 9M16 3c0 3.5-8 4.5-8 9s8 5.5 8 9" /></svg>
           <span data-i18n="toolTimer">Timer</span>
         </button>
+        <button type="button" class="seg" data-tool="timers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <circle cx="10" cy="12" r="7" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 8v4l3 1" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 8v6M16 11h6" />
+          </svg>
+          <span data-i18n="toolMultiTimers">Timers</span>
+        </button>
         </nav>
         <!-- alert toggles beside the tabs: alarm mute + screen flash -->
         <div class="flex gap-1 rounded-lg bg-slate-200 p-1 dark:border dark:border-slate-700 dark:bg-slate-900">
@@ -214,6 +222,41 @@
               <span data-i18n="lblTrim">Hide zeros</span>
             </button>
           </div>
+        </section>
+
+        <!-- multiple concurrent timers (full page only) -->
+        <section id="panel-timers" class="hidden">
+          <!-- setup: duration + label + Add -->
+          <div class="flex items-end gap-2">
+            <label class="flex-1">
+              <input id="mt-h" type="number" min="0" max="99" inputmode="numeric" placeholder="00" class="timefield !text-2xl !py-3" aria-label="Hours" />
+              <span data-i18n="hours" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Hours</span>
+            </label>
+            <span class="pb-7 text-2xl font-bold text-slate-300 dark:text-slate-600">:</span>
+            <label class="flex-1">
+              <input id="mt-m" type="number" min="0" max="59" inputmode="numeric" placeholder="00" class="timefield !text-2xl !py-3" aria-label="Minutes" />
+              <span data-i18n="minutes" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Minutes</span>
+            </label>
+            <span class="pb-7 text-2xl font-bold text-slate-300 dark:text-slate-600">:</span>
+            <label class="flex-1">
+              <input id="mt-s" type="number" min="0" max="59" inputmode="numeric" placeholder="00" class="timefield !text-2xl !py-3" aria-label="Seconds" />
+              <span data-i18n="seconds" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Seconds</span>
+            </label>
+            <label class="flex-[2]">
+              <input id="mt-label" type="text" maxlength="60" placeholder="Name this timer (optional)" data-i18n-attr="placeholder:multiLabelPlaceholder" class="timefield !text-base !py-3 !text-left !px-3" aria-label="Label" />
+              <span data-i18n="multiLabel" class="mt-1 block text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">Label</span>
+            </label>
+            <button id="mt-add" type="button" class="btn btn-primary pb-3 pt-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+              </svg>
+              <span data-i18n="multiAdd">Add</span>
+            </button>
+          </div>
+          <!-- preset chips fill the H/M/S inputs above; built from state.timerPresets -->
+          <div id="mt-presets" class="mx-auto mt-4 flex max-w-lg flex-wrap justify-center gap-2"></div>
+          <!-- the running list (each row built by controllers.js renderMultiTimers) -->
+          <div id="mt-list" class="mt-8 space-y-2"></div>
         </section>
       </div>
     </main>
