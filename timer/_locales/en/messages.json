@@ -194,5 +194,5 @@
   "optAlertFlash": { "message": "Flash the screen" },
   "optAlertFlashHint": { "message": "Pulse the open Timer window so it's noticeable when muted." },
   "optAlertNotify": { "message": "Show a system notification" },
-  "optAlertNotifyHint": { "message": "Notify you even when no Timer window is open." }
+  "optAlertNotifyHint": { "message": "Notify you when a countdown ends, even if no Timer window is open. Applies to both the single Timer and the Timers list." }
 }

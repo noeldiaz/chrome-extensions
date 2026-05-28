@@ -238,21 +238,22 @@
                 </span>
                 <input id="alert-flash" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
               </label>
-              <label class="flex cursor-pointer items-start justify-between gap-4">
-                <span>
-                  <span class="text-sm font-medium" data-i18n="optAlertNotify">Show a system notification</span>
-                  <span class="opt-hint block" data-i18n="optAlertNotifyHint">Notify you even when no Timer window is open.</span>
-                </span>
-                <input id="alert-notify" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
-              </label>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- General: cross-device sync (and future global settings) -->
+      <!-- General: cross-device sync + global alerts that apply to both
+           the single Timer and the Timers tab -->
       <section id="opanel-general" class="hidden" role="tabpanel">
-        <div class="opt-card">
+        <div class="opt-card space-y-4">
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optAlertNotify">Show a system notification</span>
+              <span class="opt-hint block" data-i18n="optAlertNotifyHint">Notify you even when no Timer window is open.</span>
+            </span>
+            <input id="alert-notify" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
           <label class="flex cursor-pointer items-start justify-between gap-4">
             <span>
               <span class="opt-label" data-i18n="optSync">Sync across devices</span>
