@@ -79,6 +79,15 @@ test("formatStopwatch drops centiseconds when hundredths is off", () => {
   assert.equal(formatStopwatch(HOUR + 990, noCs), "01:00:00");
 });
 
+test("formatStopwatch trims empty leading groups when asked", () => {
+  const t = { trimLeading: true };
+  assert.equal(formatStopwatch(5 * SECOND + 180, t), "5.18");
+  assert.equal(formatStopwatch(0, t), "0.00");
+  assert.equal(formatStopwatch(MINUTE + 5 * SECOND, t), "1:05.00");
+  assert.equal(formatStopwatch(HOUR + 2 * MINUTE + 3 * SECOND, t), "1:02:03.00");
+  assert.equal(formatStopwatch(5 * SECOND, { hundredths: false, trimLeading: true }), "5");
+});
+
 test("formatClock handles 24h and 12h", () => {
   const d = new Date(2026, 4, 27, 13, 5, 9);
   assert.deepEqual(formatClock(d), { h: "13", m: "05", s: "09", ampm: "" });

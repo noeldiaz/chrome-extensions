@@ -28,6 +28,7 @@ const DEFAULTS = {
   clockSeconds: true,
   clockDate: true, // show the date line under the clock
   swHundredths: true, // show the stopwatch's centiseconds (.CC)
+  swTrim: false, // hide empty leading groups on the stopwatch (5.18 vs 00:00:05.18)
   timerTrim: false, // hide leading zero groups on the countdown (4:54 vs 00:04:54)
   timerStyle: "digital", // "digital" | "analog" (visual-timer dial)
   timerNumerals: true, // print the time marks around the visual-timer dial
@@ -197,7 +198,8 @@ function renderStopwatch() {
   if (!els.swTime) return;
   const { running, laps } = state.sw;
   const cs = { hundredths: state.swHundredths };
-  els.swTime.textContent = formatStopwatch(stopwatchElapsed(state.sw), cs);
+  els.swTime.textContent = formatStopwatch(stopwatchElapsed(state.sw), { ...cs, trimLeading: state.swTrim });
+  togglePill($("sw-trim"), state.swTrim);
 
   if (els.swStartLabel) els.swStartLabel.textContent = running ? "Stop" : laps.length || stopwatchElapsed(state.sw) ? "Resume" : "Start";
   els.swStart?.classList.toggle("is-danger", running);
@@ -329,8 +331,11 @@ function renderTimerControls() {
   const analog = state.timerStyle === "analog";
   $("tm-digital")?.classList.toggle("is-active", !analog);
   $("tm-analog")?.classList.toggle("is-active", analog);
+  // numbers only matter on the dial; trimming leading zeros only on the digits
   $("tm-numbers")?.classList.toggle("hidden", !analog);
+  $("tm-trim")?.classList.toggle("hidden", analog);
   togglePill($("tm-numbers"), state.timerNumerals);
+  togglePill($("tm-trim"), state.timerTrim);
 }
 
 function renderTimer() {
@@ -520,6 +525,10 @@ export async function initApp(opts = {}) {
   }
   els.swStart?.addEventListener("click", swToggle);
   els.swSecond?.addEventListener("click", swSecond);
+  $("sw-trim")?.addEventListener("click", () => {
+    persist({ swTrim: !state.swTrim });
+    renderStopwatch();
+  });
   els.tmStart?.addEventListener("click", tmStart);
   els.tmReset?.addEventListener("click", tmReset);
   for (const chip of document.querySelectorAll(".tm-preset")) {
@@ -548,6 +557,11 @@ export async function initApp(opts = {}) {
   }
   $("tm-numbers")?.addEventListener("click", () => {
     persist({ timerNumerals: !state.timerNumerals });
+    renderTimer();
+    renderTimerControls();
+  });
+  $("tm-trim")?.addEventListener("click", () => {
+    persist({ timerTrim: !state.timerTrim });
     renderTimer();
     renderTimerControls();
   });
@@ -611,6 +625,7 @@ export async function initApp(opts = {}) {
   renderClockControls();
   renderAlarm();
   renderFlash();
+  renderStopwatch();
   renderTimerControls();
   renderTimer();
   highlightPresets();

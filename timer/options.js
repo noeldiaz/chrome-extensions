@@ -43,6 +43,7 @@ const seconds = document.getElementById("clock-seconds");
 const numbers = document.getElementById("clock-numbers");
 const dateLine = document.getElementById("clock-date");
 const hundredths = document.getElementById("sw-hundredths");
+const swTrim = document.getElementById("sw-trim");
 const trim = document.getElementById("timer-trim");
 const timerNumbers = document.getElementById("timer-numbers");
 const timerBadge = document.getElementById("timer-badge");
@@ -51,13 +52,14 @@ const flash = document.getElementById("alert-flash");
 const notify = document.getElementById("alert-notify");
 
 async function load() {
-  const { clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate, swHundredths, timerStyle, timerNumerals, timerBadge: badge, timerTrim, alerts } = await chrome.storage.local.get({
+  const { clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate, swHundredths, swTrim: swTrimVal, timerStyle, timerNumerals, timerBadge: badge, timerTrim, alerts } = await chrome.storage.local.get({
     clockStyle: "digital",
     clockFormat: "24",
     clockSeconds: true,
     clockNumerals: true,
     clockDate: true,
     swHundredths: true,
+    swTrim: false,
     timerStyle: "digital",
     timerNumerals: true,
     timerBadge: false,
@@ -72,6 +74,7 @@ async function load() {
   numbers.checked = clockNumerals;
   dateLine.checked = clockDate;
   hundredths.checked = swHundredths;
+  swTrim.checked = swTrimVal;
   timerNumbers.checked = timerNumerals;
   timerBadge.checked = badge;
   trim.checked = timerTrim;
@@ -96,6 +99,7 @@ seconds.addEventListener("change", () => chrome.storage.local.set({ clockSeconds
 numbers.addEventListener("change", () => chrome.storage.local.set({ clockNumerals: numbers.checked }));
 dateLine.addEventListener("change", () => chrome.storage.local.set({ clockDate: dateLine.checked }));
 hundredths.addEventListener("change", () => chrome.storage.local.set({ swHundredths: hundredths.checked }));
+swTrim.addEventListener("change", () => chrome.storage.local.set({ swTrim: swTrim.checked }));
 timerNumbers.addEventListener("change", () => chrome.storage.local.set({ timerNumerals: timerNumbers.checked }));
 timerBadge.addEventListener("change", () => chrome.storage.local.set({ timerBadge: timerBadge.checked }));
 trim.addEventListener("change", () => chrome.storage.local.set({ timerTrim: trim.checked }));

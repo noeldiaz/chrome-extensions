@@ -48,11 +48,16 @@ export function formatTimer(ms, { trimLeading = false } = {}) {
 }
 
 // "HH:MM:SS.CC" for the stopwatch — floors, with centiseconds (matches 00:04:19.06).
-// hundredths:false drops the ".CC" for a calmer, second-resolution readout.
-export function formatStopwatch(ms, { hundredths = true } = {}) {
+// hundredths:false drops the ".CC"; trimLeading drops empty leading h/m groups
+// (and the first group's leading zero): 00:00:05.18 → 5.18, 00:01:05 → 1:05.
+export function formatStopwatch(ms, { hundredths = true, trimLeading = false } = {}) {
   const clamped = Math.max(0, Math.floor(ms));
   const { h, m, s } = msToFields(clamped);
-  const base = `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  let base;
+  if (!trimLeading) base = `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  else if (h > 0) base = `${h}:${pad2(m)}:${pad2(s)}`;
+  else if (m > 0) base = `${m}:${pad2(s)}`;
+  else base = `${s}`;
   if (!hundredths) return base;
   const cs = Math.floor((clamped % SECOND) / 10);
   return `${base}.${pad2(cs)}`;
