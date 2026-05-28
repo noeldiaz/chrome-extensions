@@ -1058,8 +1058,8 @@ function renderCollectionBar() {
   if (collections.length) {
     const manage = document.createElement("button");
     manage.type = "button";
-    // Icon-only — the icon column is far right, after the save buttons.
-    manage.className = "icon-btn !p-2";
+    // Same btn-soft surface as Save / Save as…, just icon-only for compactness.
+    manage.className = "btn btn-soft !px-2.5";
     manage.title = t("mtManage");
     manage.setAttribute("aria-label", t("mtManage"));
     manage.append(makeIcon("pencil"));
