@@ -32,6 +32,9 @@
   "multiUnsilence": { "message": "Unmute this timer" },
   "multiLink": { "message": "Chain to the next timer" },
   "multiUnlink": { "message": "Break chain to the next timer" },
+  "editTime": { "message": "Edit duration" },
+  "editSave": { "message": "Save" },
+  "editCancel": { "message": "Cancel" },
   "multiNotifyBodyLabeled": {
     "message": "$label$ is up.",
     "placeholders": { "label": { "content": "$1" } }

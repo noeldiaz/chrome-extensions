@@ -70,6 +70,7 @@ let wakeLock = null; // Screen Wake Lock sentinel (full page only), held while a
 let activeTool = "clock"; // the tool actually shown — usually state.tool, but the popup clamps "timers" → "timer"
 const multiAlerted = new Map(); // id → endTime we've chimed for, so each multi-timer rings exactly once
 let mtDragId = null; // id of the row currently being dragged (drag-and-drop reorder)
+let mtEditingId = null; // id of the row currently in inline-edit mode (or null)
 const mtRows = new Map(); // id → { row, lbl, time, primary } — references for per-frame updates without rebuilding
 // Honour the OS "reduce motion" setting: the analog second hand ticks per second
 // instead of sweeping, and the visual-timer dial steps once a second.
@@ -619,6 +620,16 @@ function makeIcon(kind) {
     svg.setAttribute("stroke", "currentColor");
     svg.setAttribute("stroke-width", "1.8");
     svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M5 19h11l-1-1.5V11a5 5 0 0 0-7.5-4.3M5 5l14 14M10 21a2 2 0 0 0 4 0" }));
+  } else if (kind === "pencil") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.7");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.862 4.487zm0 0L19.5 7.125" }));
+  } else if (kind === "check") {
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2.2");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M4.5 12.75l6 6 9-13.5" }));
   } else if (kind === "link-off") {
     // Same chain as link-on with a single diagonal slash through the middle
     // — the universal "this link is broken" mark.
@@ -654,6 +665,39 @@ function chainIdsFor(id) {
   const { start, end } = chainSliceFor(id);
   if (start < 0) return [id];
   return (state.timers || []).slice(start, end + 1).map((x) => x.id);
+}
+
+// Inline duration edit. Allowed when the timer is idle / paused / ended —
+// editing a running timer is intentionally blocked (would mid-flight rewrite
+// the endTime), so the edit button on a running row is disabled.
+function multiBeginEdit(id) {
+  const tim = (state.timers || []).find((x) => x.id === id);
+  if (!tim || tim.status === "running") return;
+  mtEditingId = id;
+  renderMultiTimers();
+}
+
+function multiCancelEdit() {
+  if (!mtEditingId) return;
+  mtEditingId = null;
+  renderMultiTimers();
+}
+
+function multiSaveEdit(id, ms) {
+  if (ms < TIMER_MIN_MS) return;
+  const timers = (state.timers || []).map((x) => {
+    if (x.id !== id) return x;
+    // Idle/ended → reset to the new duration as a fresh idle row.
+    if (x.status === "idle" || x.status === "ended") {
+      multiAlerted.delete(id);
+      return { ...x, status: "idle", endTime: 0, remaining: ms, duration: ms };
+    }
+    // Paused → keep paused, but remaining now matches the new duration.
+    if (x.status === "paused") return { ...x, remaining: ms, duration: ms };
+    return x;
+  });
+  mtEditingId = null;
+  persist({ timers });
 }
 
 function toggleSilent(id) {
@@ -730,19 +774,18 @@ function multiResume(id) {
   updateWakeLock();
 }
 
+// Reset an ended (or paused) timer back to idle with its full duration —
+// does NOT auto-start. The user clicks ▶ separately when they're ready.
 function multiRestart(id) {
-  const now = Date.now();
-  let endTime = 0;
   const timers = (state.timers || []).map((x) => {
     if (x.id === id && (x.status === "ended" || x.status === "paused")) {
-      endTime = now + x.duration;
-      multiAlerted.delete(id); // let the next end re-fire
-      return { ...x, status: "running", endTime, remaining: x.duration };
+      multiAlerted.delete(id);
+      return { ...x, status: "idle", endTime: 0, remaining: x.duration };
     }
     return x;
   });
   persist({ timers });
-  if (endTime) bg("multi:start", { id, endTime });
+  bg("multi:clear", { id }); // drop any lingering alarm
   updateWakeLock();
 }
 
@@ -793,6 +836,13 @@ function renderMultiTimers() {
   if (!els.mtList) return;
   els.mtList.replaceChildren();
   mtRows.clear();
+  // Drop the edit pointer if the row was removed elsewhere, or if it's now
+  // running (chain auto-advance, sync from another surface) — edit mode is
+  // only valid for idle/paused/ended.
+  if (mtEditingId) {
+    const cur = (state.timers || []).find((x) => x.id === mtEditingId);
+    if (!cur || cur.status === "running") mtEditingId = null;
+  }
   if (!state.timers || state.timers.length === 0) {
     const empty = document.createElement("p");
     empty.className = "py-8 text-center text-sm text-slate-400 dark:text-slate-500";
@@ -839,6 +889,71 @@ function renderMultiTimers() {
     const time = document.createElement("div");
     time.className = "display text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-50";
 
+    // ---- inline edit mode: H/M/S inputs swap into the time slot --------
+    const editing = mtEditingId === tim.id && tim.status !== "running";
+    if (editing) {
+      const totalSec = Math.max(0, Math.round((tim.duration || 0) / 1000));
+      const editWrap = document.createElement("div");
+      editWrap.className = "flex shrink-0 items-center gap-1.5";
+      const mkField = (val, max, aria) => {
+        const f = document.createElement("input");
+        f.type = "number";
+        f.min = "0";
+        f.max = String(max);
+        f.inputMode = "numeric";
+        f.value = String(val);
+        f.setAttribute("aria-label", aria);
+        f.className = "w-14 rounded-md border border-slate-300 bg-white py-1 text-center text-base font-bold tabular-nums focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100";
+        return f;
+      };
+      const eh = mkField(Math.floor(totalSec / 3600), 99, t("hours"));
+      const em = mkField(Math.floor((totalSec % 3600) / 60), 59, t("minutes"));
+      const es = mkField(totalSec % 60, 59, t("seconds"));
+      const colon = () => {
+        const c = document.createElement("span");
+        c.textContent = ":";
+        c.className = "text-base font-bold text-slate-400";
+        return c;
+      };
+      editWrap.append(eh, colon(), em, colon(), es);
+
+      const save = () => {
+        const ms = hmsToMs({ h: Number(eh.value) || 0, m: Number(em.value) || 0, s: Number(es.value) || 0 });
+        multiSaveEdit(tim.id, ms);
+      };
+      for (const f of [eh, em, es]) {
+        f.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); save(); }
+          else if (e.key === "Escape") { e.preventDefault(); multiCancelEdit(); }
+        });
+      }
+
+      const ctrlEdit = document.createElement("div");
+      ctrlEdit.className = "flex items-center gap-1";
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.className = "icon-btn !p-2 text-blue-600 dark:text-blue-400";
+      saveBtn.title = t("editSave");
+      saveBtn.setAttribute("aria-label", t("editSave"));
+      saveBtn.append(makeIcon("check"));
+      saveBtn.addEventListener("click", save);
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "icon-btn !p-2";
+      cancelBtn.title = t("editCancel");
+      cancelBtn.setAttribute("aria-label", t("editCancel"));
+      cancelBtn.append(makeIcon("close"));
+      cancelBtn.addEventListener("click", multiCancelEdit);
+      ctrlEdit.append(saveBtn, cancelBtn);
+
+      row.append(grip, lbl, editWrap, ctrlEdit);
+      els.mtList.append(row);
+      mtRows.set(tim.id, { row, lbl, time: editWrap, primary: null, editing: true });
+      // Focus the hours field for fast keyboard editing.
+      setTimeout(() => eh.focus(), 0);
+      continue;
+    }
+
     const ctrl = document.createElement("div");
     ctrl.className = "flex items-center gap-1";
     const primary = document.createElement("button");
@@ -851,6 +966,21 @@ function renderMultiTimers() {
       primary.append(ic);
     }
     primary.addEventListener("click", () => multiToggle(tim.id));
+
+    // Edit duration in place. Disabled while running — would mid-flight
+    // rewrite the endTime. Pause / let it end first, then edit.
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "icon-btn !p-2";
+    if (tim.status === "running") {
+      editBtn.disabled = true;
+      editBtn.classList.add("opacity-30", "cursor-not-allowed");
+    } else {
+      editBtn.title = t("editTime");
+      editBtn.setAttribute("aria-label", t("editTime"));
+      editBtn.addEventListener("click", () => multiBeginEdit(tim.id));
+    }
+    editBtn.append(makeIcon("pencil"));
 
     // Per-row alert toggle. When silent, the bg skips chime + notification
     // for this timer's end — useful as the middle steps in a chain so only
@@ -892,7 +1022,7 @@ function renderMultiTimers() {
     removeBtn.append(makeIcon("close"));
     removeBtn.addEventListener("click", () => multiRemove(tim.id));
 
-    ctrl.append(primary, bellBtn, linkBtn, removeBtn);
+    ctrl.append(primary, editBtn, bellBtn, linkBtn, removeBtn);
     row.append(grip, lbl, time, ctrl);
 
     // Native HTML5 drag-and-drop: dragstart carries the id; dragover decides
@@ -936,7 +1066,7 @@ function renderMultiTimers() {
     });
 
     els.mtList.append(row);
-    mtRows.set(tim.id, { row, lbl, time, primary });
+    mtRows.set(tim.id, { row, lbl, time, primary, editing: false });
   }
   tickMultiTimers(); // paint initial text + icons
 }
@@ -946,7 +1076,7 @@ function tickMultiTimers() {
   const now = Date.now();
   for (const tim of state.timers || []) {
     const r = mtRows.get(tim.id);
-    if (!r) continue;
+    if (!r || r.editing) continue; // edit mode owns the row's time slot
     const ms = tim.status === "running"
       ? remainingMs(tim.endTime, now)
       : tim.status === "paused"
