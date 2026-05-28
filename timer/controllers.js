@@ -965,7 +965,7 @@ function openManageCollections() {
         const li = document.createElement("li");
         li.className = "flex items-center justify-between gap-2 px-3 py-2 text-sm text-slate-800 dark:text-slate-100";
         const name = document.createElement("span");
-        name.textContent = `${c.name} (${(c.items || []).length})`;
+        name.textContent = `${c.name} (${(c.items || []).length} ${(c.items || []).length === 1 ? t("mtTimerOne") : t("mtTimerMany")})`;
         name.className = "truncate";
         const rm = document.createElement("button");
         rm.type = "button";
@@ -1067,7 +1067,7 @@ function renderCollectionBar() {
     for (const c of collections) {
       const opt = document.createElement("option");
       opt.value = c.name;
-      opt.textContent = `${c.name} (${(c.items || []).length})`;
+      opt.textContent = `${c.name} (${(c.items || []).length} ${(c.items || []).length === 1 ? t("mtTimerOne") : t("mtTimerMany")})`;
       select.append(opt);
     }
     select.value = loadedExists ? loaded : "";

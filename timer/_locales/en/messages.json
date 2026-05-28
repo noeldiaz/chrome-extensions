@@ -81,6 +81,8 @@
     "placeholders": { "name": { "content": "$1" } }
   },
   "mtClose": { "message": "Close" },
+  "mtTimerOne": { "message": "timer" },
+  "mtTimerMany": { "message": "timers" },
   "multiNotifyBodyLabeled": {
     "message": "$label$ is up.",
     "placeholders": { "label": { "content": "$1" } }
