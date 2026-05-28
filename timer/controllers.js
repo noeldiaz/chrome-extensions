@@ -606,6 +606,12 @@ function makeIcon(kind) {
     svg.setAttribute("stroke", "currentColor");
     svg.setAttribute("stroke-width", "1.6");
     svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M4.5 12a7.5 7.5 0 1 1 2.2 5.3M4.5 12V7.5M4.5 12H9" }));
+  } else if (kind === "stop") {
+    // Heroicons stop — a rounded square. Used as the disabled "ended" state
+    // on the multi-timer primary, since the dedicated reset button to the
+    // right already handles the actual reset action.
+    svg.setAttribute("fill", "currentColor");
+    svg.append(svgEl("path", { d: "M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" }));
   } else if (kind === "close") {
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
@@ -1368,7 +1374,7 @@ function renderMultiTimers() {
     const primary = document.createElement("button");
     primary.type = "button";
     primary.className = "icon-btn !p-2";
-    for (const kind of ["play", "pause", "restart"]) {
+    for (const kind of ["play", "pause", "stop"]) {
       const ic = makeIcon(kind);
       ic.dataset.ic = kind;
       ic.classList.add("hidden");
@@ -1517,11 +1523,18 @@ function tickMultiTimers() {
     r.time.classList.toggle("dark:text-slate-50", !ended);
     r.row.classList.toggle("border-rose-300", ended);
     r.row.classList.toggle("dark:border-rose-700", ended);
-    const which = ended ? "restart" : tim.status === "running" ? "pause" : "play";
+    const which = ended ? "stop" : tim.status === "running" ? "pause" : "play";
     setPrimaryIcon(r.primary, which);
     // Pause reads as the active state — paint it blue. Other icons revert.
     r.primary?.classList.toggle("text-blue-600", which === "pause");
     r.primary?.classList.toggle("dark:text-blue-400", which === "pause");
+    // The "stop" state is decorative — the reset button to the right does the
+    // actual reset. Disable the primary so clicks don't trip the toggle.
+    if (r.primary) {
+      r.primary.disabled = ended;
+      r.primary.classList.toggle("opacity-30", ended);
+      r.primary.classList.toggle("cursor-not-allowed", ended);
+    }
   }
 }
 
