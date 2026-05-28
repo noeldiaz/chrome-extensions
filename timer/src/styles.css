@@ -286,6 +286,12 @@ body.fs #mt-loaded-name {
   font-size: clamp(1.5rem, 3vw, 3rem);
   margin-bottom: clamp(1rem, 2vh, 2rem);
 }
+/* Label inputs are non-interactive in fullscreen so an accidental click
+   doesn't drop focus into the field and trigger an edit. */
+body.fs #mt-list input[type="text"] {
+  pointer-events: none;
+  user-select: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   body.flashing #flash {
