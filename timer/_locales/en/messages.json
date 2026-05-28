@@ -48,14 +48,22 @@
     "placeholders": { "duration": { "content": "$1" } }
   },
 
-  "tabSettings": { "message": "Settings" },
+  "tabGeneral": { "message": "General" },
   "tabAbout": { "message": "About" },
   "version": { "message": "Version" },
 
+  "optSync": { "message": "Sync across devices" },
+  "optSyncHint": { "message": "Keep your Timer preferences in sync across the devices where you're signed in to this browser. Off by default." },
+  "optSyncErr": {
+    "message": "Couldn't turn on sync: $error$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "lapAnnounce": {
+    "message": "Lap $n$: $time$",
+    "placeholders": { "n": { "content": "$1" }, "time": { "content": "$2" } }
+  },
+
   "optClock": { "message": "Clock" },
-  "optClockCard": { "message": "Clock Settings" },
-  "optStopwatchCard": { "message": "Stopwatch Settings" },
-  "optTimerCard": { "message": "Timer Settings" },
   "optSwHundredths": { "message": "Show hundredths" },
   "optSwHundredthsHint": { "message": "Show the running hundredths of a second (the .06 in 00:04:19.06)." },
   "optSwTrim": { "message": "Hide leading zeros" },
@@ -90,6 +98,8 @@
   "optTimerNumeralsHint": { "message": "Print the time marks around the visual-timer dial." },
   "optTimerBadge": { "message": "Show countdown on the icon" },
   "optTimerBadgeHint": { "message": "Display the time left as a badge on the toolbar icon while a countdown runs." },
+  "optTimerOvertime": { "message": "Count up after zero" },
+  "optTimerOvertimeHint": { "message": "When a countdown reaches zero, keep counting up in red (+0:15) instead of stopping." },
 
   "optAlerts": { "message": "When a countdown ends" },
   "optAlertsHint": { "message": "Pick how Timer lets you know a countdown has finished." },

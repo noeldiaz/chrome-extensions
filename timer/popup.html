@@ -6,6 +6,8 @@
   </head>
   <body class="invisible w-80 bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
     <div id="flash"></div>
+    <!-- discrete screen-reader announcements (countdown end, laps) -->
+    <div id="sr-status" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
 
     <!-- header -->
     <header class="flex items-center justify-between px-4 pt-3">
@@ -59,7 +61,7 @@
         <!-- fixed-height area sized for the analog face, so switching faces never resizes the popup -->
         <div class="flex h-44 items-center justify-center">
           <div id="clock-time" class="display text-5xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
-          <svg id="clock-analog" class="hidden h-44 w-44" aria-hidden="true"></svg>
+          <svg id="clock-analog" class="hidden h-44 w-44" role="img" aria-label="Clock"></svg>
         </div>
         <div id="clock-date" class="mt-1 text-sm text-slate-500 dark:text-slate-400"></div>
         <!-- digital / analog face switcher -->
@@ -77,7 +79,7 @@
 
       <!-- stopwatch -->
       <section id="panel-stopwatch" class="hidden">
-        <div id="sw-time" class="display text-center text-5xl font-bold text-slate-900 dark:text-slate-50">00:00:00.00</div>
+        <div id="sw-time" role="timer" class="display text-center text-5xl font-bold text-slate-900 dark:text-slate-50">00:00:00.00</div>
         <div id="sw-laps-wrap" class="mt-4 hidden">
           <div class="flex items-center justify-between gap-3 px-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             <span data-i18n="lapCol" class="w-8">Lap</span>
@@ -131,8 +133,8 @@
           </div>
         </div>
         <div id="tm-display" class="hidden text-center">
-          <div id="tm-time" class="display text-5xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
-          <svg id="tm-dial" class="mx-auto hidden h-44 w-44" aria-hidden="true"></svg>
+          <div id="tm-time" role="timer" class="display text-5xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
+          <svg id="tm-dial" class="mx-auto hidden h-44 w-44" role="img" aria-label="Timer"></svg>
         </div>
         <div class="mt-5 flex items-center justify-center gap-2">
           <button id="tm-reset" type="button" class="btn btn-soft">

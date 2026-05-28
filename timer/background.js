@@ -6,6 +6,7 @@
 // nothing on screen), and fires the system notification. The on-page flash is the
 // page's job; the chime/notification are ours alone, which keeps them from doubling.
 import { ALERT_DEFAULTS, formatTimer, formatBadge } from "./lib.js";
+import { syncGet } from "./sync.js";
 
 const ALARM = "timerEnd";
 const NOTIFY_ID = "timerDone";
@@ -18,7 +19,8 @@ async function getTimer() {
 }
 
 async function getAlerts() {
-  const { alerts } = await chrome.storage.local.get({ alerts: { ...ALERT_DEFAULTS } });
+  // alerts is a synced preference — read it from whichever area is active.
+  const { alerts } = await syncGet({ alerts: { ...ALERT_DEFAULTS } });
   return { ...ALERT_DEFAULTS, ...alerts };
 }
 
@@ -65,7 +67,7 @@ async function tickBadge() {
 
 async function refreshBadge() {
   stopBadgeTimers();
-  const { timerBadge } = await chrome.storage.local.get({ timerBadge: false });
+  const { timerBadge } = await syncGet({ timerBadge: false }); // synced preference
   const tm = await getTimer();
   if (timerBadge && tm.status === "running") {
     await tickBadge();
@@ -150,7 +152,14 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // The badge follows the timer's stored state and the opt-in toggle, from whichever
 // surface changed them (start/pause/reset in a page, the switch in options).
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && ("tm" in changes || "timerBadge" in changes)) refreshBadge();
+  // tm is always local; timerBadge is a synced preference (sync area when on,
+  // local when off), so watch both areas for it.
+  if (
+    (area === "local" && ("tm" in changes || "timerBadge" in changes)) ||
+    (area === "sync" && "timerBadge" in changes)
+  ) {
+    refreshBadge();
+  }
 });
 
 // A running countdown must re-arm its alarm after the SW restarts or the browser

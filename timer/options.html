@@ -30,17 +30,18 @@
     </header>
 
     <main class="mx-auto w-full max-w-xl flex-1 p-6">
-      <!-- tabs -->
+      <!-- tabs: one per settings group, plus General (sync) and About -->
       <div class="mb-5 flex gap-1 rounded-lg bg-slate-200 p-1 dark:border dark:border-slate-700 dark:bg-slate-900" role="tablist">
-        <button class="tab-btn is-active" data-otab="settings" role="tab" aria-selected="true" data-i18n="tabSettings">Settings</button>
+        <button class="tab-btn is-active" data-otab="clock" role="tab" aria-selected="true" data-i18n="toolClock">Clock</button>
+        <button class="tab-btn" data-otab="stopwatch" role="tab" aria-selected="false" data-i18n="toolStopwatch">Stopwatch</button>
+        <button class="tab-btn" data-otab="timer" role="tab" aria-selected="false" data-i18n="toolTimer">Timer</button>
+        <button class="tab-btn" data-otab="general" role="tab" aria-selected="false" data-i18n="tabGeneral">General</button>
         <button class="tab-btn" data-otab="about" role="tab" aria-selected="false" data-i18n="tabAbout">About</button>
       </div>
 
-      <!-- settings panel: one card per tool -->
-      <section id="opanel-settings" class="space-y-6">
-        <!-- Clock -->
+      <!-- Clock -->
+      <section id="opanel-clock" role="tabpanel">
         <div class="opt-card space-y-5">
-          <h2 class="opt-card-title" data-i18n="optClockCard">Clock Settings</h2>
 
           <div>
             <div class="opt-label" data-i18n="optClockStyle">Clock face</div>
@@ -92,10 +93,11 @@
             <input id="clock-date" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
           </label>
         </div>
+      </section>
 
-        <!-- Stopwatch -->
+      <!-- Stopwatch -->
+      <section id="opanel-stopwatch" class="hidden" role="tabpanel">
         <div class="opt-card space-y-5">
-          <h2 class="opt-card-title" data-i18n="optStopwatchCard">Stopwatch Settings</h2>
 
           <label class="flex cursor-pointer items-start justify-between gap-4">
             <span>
@@ -113,10 +115,11 @@
             <input id="sw-trim" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
           </label>
         </div>
+      </section>
 
-        <!-- Timer -->
+      <!-- Timer -->
+      <section id="opanel-timer" class="hidden" role="tabpanel">
         <div class="opt-card space-y-5">
-          <h2 class="opt-card-title" data-i18n="optTimerCard">Timer Settings</h2>
 
           <div>
             <div class="opt-label" data-i18n="optTimerStyle">Timer face</div>
@@ -155,6 +158,16 @@
             <input id="timer-trim" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
           </label>
 
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optTimerOvertime">Count up after zero</span>
+              <span class="opt-hint block" data-i18n="optTimerOvertimeHint">When a countdown reaches zero, keep counting up in red (+0:15) instead of stopping.</span>
+            </span>
+            <input id="timer-overtime" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
+
+          <div class="border-t border-slate-200 dark:border-slate-700"></div>
+
           <div>
             <div class="opt-label" data-i18n="optAlerts">When a countdown ends</div>
             <p class="opt-hint" data-i18n="optAlertsHint">Pick how Timer lets you know a countdown has finished.</p>
@@ -182,6 +195,19 @@
               </label>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- General: cross-device sync (and future global settings) -->
+      <section id="opanel-general" class="hidden" role="tabpanel">
+        <div class="opt-card">
+          <label class="flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span class="opt-label" data-i18n="optSync">Sync across devices</span>
+              <span class="opt-hint block" data-i18n="optSyncHint">Keep your Timer preferences in sync across the devices where you're signed in to this browser. Off by default.</span>
+            </span>
+            <input id="syncToggle" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-blue-600" />
+          </label>
         </div>
       </section>
 

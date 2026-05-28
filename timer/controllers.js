@@ -3,6 +3,7 @@
 // stopwatch survives the popup closing and stays in lock-step between the popup
 // and an open full-page tab. Pure formatting/maths live in lib.js.
 import { t } from "./i18n.js";
+import { SYNC_KEYS, syncGet, syncSet } from "./sync.js";
 import {
   ALERT_DEFAULTS,
   TIMER_MIN_MS,
@@ -20,6 +21,10 @@ import {
   timerTickStep,
 } from "./lib.js";
 
+// Preferences live in the active storage area (sync when the user opts in, else
+// local); the running state stays local. SYNC_SET partitions reads/writes.
+const SYNC_SET = new Set(SYNC_KEYS);
+
 const DEFAULTS = {
   tool: "clock",
   clockStyle: "digital", // "digital" | "analog"
@@ -33,6 +38,8 @@ const DEFAULTS = {
   timerStyle: "digital", // "digital" | "analog" (visual-timer dial)
   timerNumerals: true, // print the time marks around the visual-timer dial
   timerBadge: false, // show the remaining time as a badge on the toolbar icon
+  timerOvertime: false, // after zero, keep counting up in red (+0:15) instead of stopping
+  timerLast: 0, // last-used countdown length (s); prefilled on open — local, not synced
   alerts: { ...ALERT_DEFAULTS },
   sw: { running: false, startTime: 0, elapsed: 0, laps: [] },
   tm: { status: "idle", endTime: 0, remaining: 0, duration: 0 }, // idle|running|paused|ended
@@ -44,8 +51,19 @@ let els = {};
 let audioCtx = null;
 let alertedFor = null; // endTime we've already chimed for, so we ring exactly once
 let selectedPreset = null; // seconds of the chosen preset chip; reset returns here (or 00)
+let baseTitle = ""; // the page's plain title; the full page prefixes a running countdown
+let lastTitle = ""; // last value written to document.title, so we only set it when it changes
 
 const $ = (id) => document.getElementById(id);
+// Speak a one-off message through the visually-hidden live region, so screen
+// readers hear discrete events (a countdown ending, a lap) without the per-second
+// readouts spamming them. Re-setting identical text wouldn't re-announce, so we
+// clear first on a microtask when needed.
+const announce = (msg) => {
+  if (!els.srStatus || !msg) return;
+  els.srStatus.textContent = "";
+  els.srStatus.textContent = msg;
+};
 // Swap a primary button's glyph to match its state (play / pause / stop / restart).
 // Each button carries the icons as hidden [data-ic] svgs, toggled like moon/sun.
 const setPrimaryIcon = (btn, which) => {
@@ -62,13 +80,26 @@ const showPanel = (name) => {
 };
 
 async function load() {
-  const got = await chrome.storage.local.get(DEFAULTS);
+  // Preferences come from the active area; running state always from local.
+  const localDefaults = {};
+  const syncDefaults = {};
+  for (const [k, v] of Object.entries(DEFAULTS)) (SYNC_SET.has(k) ? syncDefaults : localDefaults)[k] = v;
+  const [localGot, syncGot] = await Promise.all([chrome.storage.local.get(localDefaults), syncGet(syncDefaults)]);
+  const got = { ...localGot, ...syncGot };
   state = { ...DEFAULTS, ...got, alerts: { ...ALERT_DEFAULTS, ...(got.alerts || {}) } };
 }
 
+// Write each key to its area: synced preferences via the sync helper, running
+// state to local. Patches here are single-purpose, but partitioning keeps it safe.
 const persist = (patch) => {
   Object.assign(state, patch);
-  return chrome.storage.local.set(patch);
+  const local = {};
+  const sync = {};
+  for (const [k, v] of Object.entries(patch)) (SYNC_SET.has(k) ? sync : local)[k] = v;
+  const writes = [];
+  if (Object.keys(local).length) writes.push(chrome.storage.local.set(local));
+  if (Object.keys(sync).length) writes.push(syncSet(sync));
+  return Promise.all(writes);
 };
 
 // ---- clock ----------------------------------------------------------------
@@ -134,12 +165,13 @@ function renderClock() {
   const analog = state.clockStyle === "analog";
   els.clockTime?.classList.toggle("hidden", analog);
   els.clockAnalog?.classList.toggle("hidden", !analog);
+  const { h, m, s, ampm } = formatClock(now, { hour12: state.clockFormat === "12" });
+  const time = (state.clockSeconds ? `${h}:${m}:${s}` : `${h}:${m}`) + (ampm ? ` ${ampm}` : "");
   if (analog) {
     renderAnalog(now);
+    els.clockAnalog?.setAttribute("aria-label", time); // the SVG reads as the time for screen readers
   } else if (els.clockTime) {
-    const { h, m, s, ampm } = formatClock(now, { hour12: state.clockFormat === "12" });
-    const time = state.clockSeconds ? `${h}:${m}:${s}` : `${h}:${m}`;
-    els.clockTime.textContent = ampm ? `${time} ${ampm}` : time;
+    els.clockTime.textContent = time;
   }
   if (els.clockDate) els.clockDate.textContent = formatDate(now);
 }
@@ -247,6 +279,7 @@ function swSecond() {
   if (state.sw.running) {
     const laps = [...state.sw.laps, stopwatchElapsed(state.sw)];
     persist({ sw: { ...state.sw, laps } });
+    announce(t("lapAnnounce", [String(laps.length), formatStopwatch(laps.at(-1), { hundredths: state.swHundredths })]));
   } else {
     persist({ sw: { running: false, startTime: 0, elapsed: 0, laps: [] } });
   }
@@ -324,6 +357,7 @@ function renderTimerDial(remaining, duration, status) {
   els.tmWedge.setAttribute("d", wedgePath(50, 50, 44, f));
   els.tmWedge.setAttribute("class", status === "ended" ? "fill-rose-500" : "fill-blue-500");
   rotate(els.tmHand, 360 * f);
+  els.tmDial.setAttribute("aria-label", formatTimer(Math.max(0, remaining), { trimLeading: state.timerTrim }));
 }
 
 // face/numbers switches on the timer tab (full page), mirroring the clock's
@@ -345,12 +379,17 @@ function renderTimer() {
   els.tmSetup?.classList.toggle("hidden", !idle);
   els.tmDisplay?.classList.toggle("hidden", idle);
 
+  const overtime = status === "ended" && state.timerOvertime; // keep counting up past zero
   const ms = status === "running" ? remainingMs(state.tm.endTime) : status === "paused" ? state.tm.remaining : status === "ended" ? 0 : state.tm.duration;
   const analog = state.timerStyle === "analog";
   els.tmTime?.classList.toggle("hidden", analog);
   els.tmDial?.classList.toggle("hidden", !analog);
   if (analog) renderTimerDial(ms, state.tm.duration, status);
-  else if (els.tmTime) els.tmTime.textContent = formatTimer(ms, { trimLeading: state.timerTrim });
+  else if (els.tmTime) {
+    els.tmTime.textContent = overtime
+      ? `+${formatTimer(Math.max(0, Date.now() - state.tm.endTime), { trimLeading: true })}`
+      : formatTimer(ms, { trimLeading: state.timerTrim });
+  }
   els.tmDisplay?.classList.toggle("is-ended", status === "ended");
 
   if (els.tmStartLabel) {
@@ -358,6 +397,21 @@ function renderTimer() {
   }
   els.tmStart?.classList.toggle("is-danger", status === "running");
   setPrimaryIcon(els.tmStart, status === "running" ? "pause" : status === "ended" ? "restart" : "play");
+}
+
+// Full page only: prefix the tab title with a running countdown ("4:32 — Timer")
+// so a backgrounded tab shows the time without switching to it. Only writes when
+// the string changes, so the per-frame tick doesn't thrash document.title.
+function updateTitle() {
+  if (mode !== "full") return;
+  const title =
+    state.tm.status === "running"
+      ? `${formatTimer(remainingMs(state.tm.endTime), { trimLeading: true })} — ${baseTitle}`
+      : baseTitle;
+  if (title !== lastTitle) {
+    document.title = title;
+    lastTitle = title;
+  }
 }
 
 function bg(type, payload = {}) {
@@ -382,11 +436,14 @@ function tmStart() {
     bg("timer:start", { endTime });
   } else {
     // idle or ended → (re)start. From idle read the inputs; from ended reuse duration.
-    const duration = status === "ended" ? state.tm.duration : hmsToMs(readInputs());
+    const fromInputs = status !== "ended";
+    const duration = fromInputs ? hmsToMs(readInputs()) : state.tm.duration;
     if (duration < TIMER_MIN_MS) return;
     const endTime = now + duration;
     alertedFor = null;
-    persist({ tm: { status: "running", endTime, remaining: duration, duration } });
+    const patch = { tm: { status: "running", endTime, remaining: duration, duration } };
+    if (fromInputs) patch.timerLast = Math.round(duration / 1000); // remember for the next open
+    persist(patch);
     bg("timer:start", { endTime });
   }
   renderTimer();
@@ -395,9 +452,10 @@ function tmStart() {
 function tmReset() {
   persist({ tm: { status: "idle", endTime: 0, remaining: 0, duration: 0 } });
   bg("timer:clear");
-  // back to the selected preset if one is chosen, otherwise all 00
-  if (selectedPreset) setInputsFromSeconds(selectedPreset);
-  else clearInputs();
+  // reset always returns to 00:00:00 — drop any chosen preset too
+  selectedPreset = null;
+  clearInputs();
+  highlightPresets();
   renderTimer();
 }
 
@@ -471,6 +529,7 @@ function tick() {
   if (state.tool === "clock") renderClock();
   else if (state.tool === "stopwatch" && state.sw.running) renderStopwatch();
   else if (state.tool === "timer") renderTimer();
+  updateTitle();
 
   // End detection runs regardless of the visible tab so an open surface reacts.
   // The background owns the state flip + sound + notification (deduped), so it's
@@ -479,6 +538,7 @@ function tick() {
     alertedFor = state.tm.endTime;
     bg("timer:ended");
     fireAlerts();
+    announce(t("notifyTitle"));
     renderTimer();
   }
   requestAnimationFrame(tick);
@@ -495,6 +555,7 @@ function selectTool(tool) {
 
 export async function initApp(opts = {}) {
   mode = opts.mode || "compact";
+  baseTitle = document.title; // captured after localize(); the full page prefixes the countdown
   await load();
 
   els = {
@@ -518,6 +579,7 @@ export async function initApp(opts = {}) {
     tmStart: $("tm-start"),
     tmStartLabel: $("tm-start-label"),
     tmReset: $("tm-reset"),
+    srStatus: $("sr-status"),
   };
 
   for (const btn of document.querySelectorAll("[data-tool]")) {
@@ -543,6 +605,13 @@ export async function initApp(opts = {}) {
     f?.addEventListener("input", () => {
       selectedPreset = null;
       highlightPresets();
+    });
+    // Enter in any field starts the countdown, like a form submit
+    f?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        tmStart();
+      }
     });
   }
   // on-page clock settings (full page)
@@ -604,9 +673,11 @@ export async function initApp(opts = {}) {
 
   if (mode === "full") wireFullscreen();
 
-  // Reflect changes made in the other surface (popup ↔ full page) live.
+  // Reflect changes made in the other surface (popup ↔ full page) live. Running
+  // state changes in local; synced preferences in sync (when on) or local (off),
+  // so we honour either area — newValue is authoritative whichever it came from.
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== "local") return;
+    if (area !== "local" && area !== "sync") return;
     for (const [key, { newValue }] of Object.entries(changes)) {
       if (key in state && newValue !== undefined) state[key] = newValue;
     }
@@ -619,6 +690,9 @@ export async function initApp(opts = {}) {
     renderTimer();
     if (state.tool === "clock") renderClock();
   });
+
+  // prefill the H/M/S fields with the last-used duration when nothing's running yet
+  if (state.tm.status === "idle" && state.timerLast > 0) setInputsFromSeconds(state.timerLast);
 
   showPanel(state.tool);
   renderClock();

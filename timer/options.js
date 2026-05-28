@@ -1,6 +1,7 @@
-import { localize } from "./i18n.js";
+import { localize, t } from "./i18n.js";
 import { initTheme } from "./theme.js";
 import { ALERT_DEFAULTS } from "./lib.js";
+import { isSyncOn, setSyncEnabled, syncGet, syncSet } from "./sync.js";
 
 localize();
 initTheme({
@@ -26,8 +27,14 @@ document.getElementById("winClose").addEventListener("click", async () => {
   window.close();
 });
 
-// tab switcher
-const panels = { settings: document.getElementById("opanel-settings"), about: document.getElementById("opanel-about") };
+// tab switcher — one panel per settings group, plus General (sync) and About
+const panels = {
+  clock: document.getElementById("opanel-clock"),
+  stopwatch: document.getElementById("opanel-stopwatch"),
+  timer: document.getElementById("opanel-timer"),
+  general: document.getElementById("opanel-general"),
+  about: document.getElementById("opanel-about"),
+};
 for (const btn of document.querySelectorAll("[data-otab]")) {
   btn.addEventListener("click", () => {
     for (const b of document.querySelectorAll("[data-otab]")) {
@@ -45,6 +52,7 @@ const dateLine = document.getElementById("clock-date");
 const hundredths = document.getElementById("sw-hundredths");
 const swTrim = document.getElementById("sw-trim");
 const trim = document.getElementById("timer-trim");
+const overtime = document.getElementById("timer-overtime");
 const timerNumbers = document.getElementById("timer-numbers");
 const timerBadge = document.getElementById("timer-badge");
 const sound = document.getElementById("alert-sound");
@@ -52,7 +60,7 @@ const flash = document.getElementById("alert-flash");
 const notify = document.getElementById("alert-notify");
 
 async function load() {
-  const { clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate, swHundredths, swTrim: swTrimVal, timerStyle, timerNumerals, timerBadge: badge, timerTrim, alerts } = await chrome.storage.local.get({
+  const { clockStyle, clockFormat, clockSeconds, clockNumerals, clockDate, swHundredths, swTrim: swTrimVal, timerStyle, timerNumerals, timerBadge: badge, timerTrim, timerOvertime, alerts } = await syncGet({
     clockStyle: "digital",
     clockFormat: "24",
     clockSeconds: true,
@@ -64,6 +72,7 @@ async function load() {
     timerNumerals: true,
     timerBadge: false,
     timerTrim: false,
+    timerOvertime: false,
     alerts: { ...ALERT_DEFAULTS },
   });
   const a = { ...ALERT_DEFAULTS, ...alerts };
@@ -78,33 +87,52 @@ async function load() {
   timerNumbers.checked = timerNumerals;
   timerBadge.checked = badge;
   trim.checked = timerTrim;
+  overtime.checked = timerOvertime;
   sound.checked = a.sound;
   flash.checked = a.flash;
   notify.checked = a.notify;
 }
 
 const saveAlerts = () =>
-  chrome.storage.local.set({ alerts: { sound: sound.checked, flash: flash.checked, notify: notify.checked } });
+  syncSet({ alerts: { sound: sound.checked, flash: flash.checked, notify: notify.checked } });
 
 for (const r of document.querySelectorAll('input[name="clockStyle"]')) {
-  r.addEventListener("change", () => r.checked && chrome.storage.local.set({ clockStyle: r.value }));
+  r.addEventListener("change", () => r.checked && syncSet({ clockStyle: r.value }));
 }
 for (const r of document.querySelectorAll('input[name="clockFormat"]')) {
-  r.addEventListener("change", () => r.checked && chrome.storage.local.set({ clockFormat: r.value }));
+  r.addEventListener("change", () => r.checked && syncSet({ clockFormat: r.value }));
 }
 for (const r of document.querySelectorAll('input[name="timerStyle"]')) {
-  r.addEventListener("change", () => r.checked && chrome.storage.local.set({ timerStyle: r.value }));
+  r.addEventListener("change", () => r.checked && syncSet({ timerStyle: r.value }));
 }
-seconds.addEventListener("change", () => chrome.storage.local.set({ clockSeconds: seconds.checked }));
-numbers.addEventListener("change", () => chrome.storage.local.set({ clockNumerals: numbers.checked }));
-dateLine.addEventListener("change", () => chrome.storage.local.set({ clockDate: dateLine.checked }));
-hundredths.addEventListener("change", () => chrome.storage.local.set({ swHundredths: hundredths.checked }));
-swTrim.addEventListener("change", () => chrome.storage.local.set({ swTrim: swTrim.checked }));
-timerNumbers.addEventListener("change", () => chrome.storage.local.set({ timerNumerals: timerNumbers.checked }));
-timerBadge.addEventListener("change", () => chrome.storage.local.set({ timerBadge: timerBadge.checked }));
-trim.addEventListener("change", () => chrome.storage.local.set({ timerTrim: trim.checked }));
+seconds.addEventListener("change", () => syncSet({ clockSeconds: seconds.checked }));
+numbers.addEventListener("change", () => syncSet({ clockNumerals: numbers.checked }));
+dateLine.addEventListener("change", () => syncSet({ clockDate: dateLine.checked }));
+hundredths.addEventListener("change", () => syncSet({ swHundredths: hundredths.checked }));
+swTrim.addEventListener("change", () => syncSet({ swTrim: swTrim.checked }));
+timerNumbers.addEventListener("change", () => syncSet({ timerNumerals: timerNumbers.checked }));
+timerBadge.addEventListener("change", () => syncSet({ timerBadge: timerBadge.checked }));
+trim.addEventListener("change", () => syncSet({ timerTrim: trim.checked }));
+overtime.addEventListener("change", () => syncSet({ timerOvertime: overtime.checked }));
 sound.addEventListener("change", saveAlerts);
 flash.addEventListener("change", saveAlerts);
 notify.addEventListener("change", saveAlerts);
 
+// Sync across devices (opt-in). Toggling migrates the synced preferences, then we
+// reload so the page reflects the now-active storage area.
+const syncToggleEl = document.getElementById("syncToggle");
+syncToggleEl.addEventListener("change", async (e) => {
+  const on = e.target.checked;
+  try {
+    await setSyncEnabled(on);
+    location.reload();
+  } catch (err) {
+    e.target.checked = !on; // revert (e.g. over the sync quota)
+    console.error(t("optSyncErr", String(err?.message || err)));
+  }
+});
+
 load();
+(async () => {
+  syncToggleEl.checked = await isSyncOn();
+})();

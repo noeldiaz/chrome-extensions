@@ -7,6 +7,8 @@
   </head>
   <body class="invisible flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
     <div id="flash"></div>
+    <!-- discrete screen-reader announcements (countdown end, laps) -->
+    <div id="sr-status" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
 
     <!-- header: brand + tool switcher + window controls -->
     <header class="fs-hide flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-800">
@@ -87,7 +89,7 @@
         <!-- clock -->
         <section id="panel-clock" class="hidden text-center">
           <div id="clock-time" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
-          <svg id="clock-analog" class="mx-auto hidden h-72 w-72" aria-hidden="true"></svg>
+          <svg id="clock-analog" class="mx-auto hidden h-72 w-72" role="img" aria-label="Clock"></svg>
           <div id="clock-date" class="mt-4 text-lg text-slate-500 dark:text-slate-400"></div>
           <!-- on-page clock settings (hidden in fullscreen) -->
           <div class="fs-hide mt-8 flex flex-col items-center gap-3">
@@ -126,7 +128,7 @@
 
         <!-- stopwatch -->
         <section id="panel-stopwatch" class="hidden text-center">
-          <div id="sw-time" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00.00</div>
+          <div id="sw-time" role="timer" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00.00</div>
           <div id="sw-laps-wrap" class="fs-hide mx-auto mt-8 hidden max-w-xl">
             <div class="flex items-center justify-between gap-3 px-1 pb-1 text-sm font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               <span data-i18n="lapCol" class="w-12">Lap</span>
@@ -182,8 +184,8 @@
             </div>
           </div>
           <div id="tm-display" class="hidden">
-            <div id="tm-time" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
-            <svg id="tm-dial" class="mx-auto hidden h-72 w-72" aria-hidden="true"></svg>
+            <div id="tm-time" role="timer" class="display text-8xl font-bold text-slate-900 dark:text-slate-50">00:00:00</div>
+            <svg id="tm-dial" class="mx-auto hidden h-72 w-72" role="img" aria-label="Timer"></svg>
           </div>
           <div class="fs-hide mt-10 flex items-center justify-center gap-3">
             <button id="tm-reset" type="button" class="btn btn-soft">
