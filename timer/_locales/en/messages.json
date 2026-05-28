@@ -43,7 +43,7 @@
   "editSave": { "message": "Save" },
   "editCancel": { "message": "Cancel" },
 
-  "mtResetAll": { "message": "Reset all" },
+  "mtResetAll": { "message": "Reset" },
   "mtResetAllTitle": { "message": "Reset every timer?" },
   "mtResetAllBody": { "message": "Every timer in this list will return to its full configured duration and stop running." },
   "mtSaveCollection": { "message": "Save as…" },
@@ -62,6 +62,12 @@
     "placeholders": { "name": { "content": "$1" } }
   },
   "mtOverwrite": { "message": "Overwrite" },
+  "mtUpdate": { "message": "Save" },
+  "mtUpdateTitle": { "message": "Update this collection?" },
+  "mtUpdateBody": {
+    "message": "The saved version of \"$name$\" will be replaced with the current timers.",
+    "placeholders": { "name": { "content": "$1" } }
+  },
   "mtManage": { "message": "Manage" },
   "mtManageTitle": { "message": "Manage collections" },
   "mtNoCollections": { "message": "You haven't saved any collections yet." },

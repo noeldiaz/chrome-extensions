@@ -827,6 +827,23 @@ async function multiResetAll() {
   updateWakeLock();
 }
 
+async function updateLoadedCollection() {
+  const name = state.timerCollectionLoaded;
+  if (!name) return;
+  const list = state.timerCollections || [];
+  const idx = list.findIndex((c) => c.name === name);
+  if (idx < 0) return;
+  const ok = await confirmModal({
+    title: t("mtUpdateTitle"),
+    body: t("mtUpdateBody", name),
+    confirmLabel: t("mtUpdate"),
+    danger: false,
+  });
+  if (!ok) return;
+  const next = list.map((c, i) => (i === idx ? { name, items: collectionItemsFromState() } : c));
+  persist({ timerCollections: next });
+}
+
 async function saveCurrentCollection() {
   if (!state.timers?.length) return;
   const name = await promptModal({
@@ -981,25 +998,49 @@ function renderCollectionBar() {
   const right = document.createElement("div");
   right.className = "ml-auto flex items-center gap-2";
 
+  const loaded = state.timerCollectionLoaded;
+  const loadedExists = !!loaded && collections.some((c) => c.name === loaded);
+
   if (collections.length) {
     const select = document.createElement("select");
     select.className = "h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = t("mtLoadPlaceholder");
-    select.append(placeholder);
+    // Placeholder only shown when nothing is loaded — otherwise the loaded
+    // name is the visible selection.
+    if (!loadedExists) {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = t("mtLoadPlaceholder");
+      select.append(placeholder);
+    }
     for (const c of collections) {
       const opt = document.createElement("option");
       opt.value = c.name;
       opt.textContent = `${c.name} (${(c.items || []).length})`;
       select.append(opt);
     }
+    select.value = loadedExists ? loaded : "";
     select.addEventListener("change", () => {
       const name = select.value;
-      select.value = "";
-      if (name) loadCollection(name);
+      // Reset back to the currently-loaded name (or placeholder) so the
+      // dropdown stays accurate after the modal closes either way.
+      select.value = loadedExists ? loaded : "";
+      if (name && name !== state.timerCollectionLoaded) loadCollection(name);
     });
     right.append(select);
+  }
+
+  // "Save" updates the loaded collection in place — only meaningful when
+  // one is loaded and the timer list isn't empty.
+  if (hasTimers && loadedExists) {
+    const update = document.createElement("button");
+    update.type = "button";
+    update.className = "btn btn-soft";
+    update.append(makeIcon("check"));
+    const lbl = document.createElement("span");
+    lbl.textContent = t("mtUpdate");
+    update.append(lbl);
+    update.addEventListener("click", updateLoadedCollection);
+    right.append(update);
   }
 
   if (hasTimers) {
@@ -1017,11 +1058,11 @@ function renderCollectionBar() {
   if (collections.length) {
     const manage = document.createElement("button");
     manage.type = "button";
-    manage.className = "btn btn-soft";
+    // Icon-only — the icon column is far right, after the save buttons.
+    manage.className = "icon-btn !p-2";
+    manage.title = t("mtManage");
+    manage.setAttribute("aria-label", t("mtManage"));
     manage.append(makeIcon("pencil"));
-    const lbl = document.createElement("span");
-    lbl.textContent = t("mtManage");
-    manage.append(lbl);
     manage.addEventListener("click", openManageCollections);
     right.append(manage);
   }
