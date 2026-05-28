@@ -1048,6 +1048,19 @@ function renderCollectionBar() {
   const loaded = state.timerCollectionLoaded;
   const loadedExists = !!loaded && collections.some((c) => c.name === loaded);
 
+  // "New" — icon-only, sits at the very left of the row before the dropdown.
+  // Snapshots the current timers under a brand-new name.
+  if (hasTimers) {
+    const newBtn = document.createElement("button");
+    newBtn.type = "button";
+    newBtn.className = "btn btn-soft !px-2.5";
+    newBtn.title = t("mtSaveCollection");
+    newBtn.setAttribute("aria-label", t("mtSaveCollection"));
+    newBtn.append(makeIcon("plus"));
+    newBtn.addEventListener("click", saveCurrentCollection);
+    right.append(newBtn);
+  }
+
   if (collections.length) {
     const select = document.createElement("select");
     select.className = "h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
@@ -1088,18 +1101,6 @@ function renderCollectionBar() {
     update.append(lbl);
     update.addEventListener("click", updateLoadedCollection);
     right.append(update);
-  }
-
-  if (hasTimers) {
-    const save = document.createElement("button");
-    save.type = "button";
-    save.className = "btn btn-soft";
-    save.append(makeIcon("plus"));
-    const lbl = document.createElement("span");
-    lbl.textContent = t("mtSaveCollection");
-    save.append(lbl);
-    save.addEventListener("click", saveCurrentCollection);
-    right.append(save);
   }
 
   if (collections.length) {
