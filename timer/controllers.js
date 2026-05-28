@@ -615,13 +615,18 @@ function makeIcon(kind) {
       svg.append(svgEl("circle", { cx: String(cx), cy: String(cy), r: "1.4" }));
     }
   } else if (kind === "bell-on") {
-    svg.setAttribute("fill", "currentColor");
-    svg.append(svgEl("path", { d: "M12 2a2 2 0 0 0-2 2v.5C7.2 5.3 5 7.9 5 11v4l-1.7 2.6a1 1 0 0 0 .8 1.4h15.8a1 1 0 0 0 .8-1.4L19 15v-4c0-3.1-2.2-5.7-5-6.5V4a2 2 0 0 0-2-2zM10 21a2 2 0 0 0 4 0h-4z" }));
-  } else if (kind === "bell-off") {
+    // Heroicons bell-alert outline — bell with two vibration arcs flanking
+    // the top, signalling "sound is on".
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "1.8");
-    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M5 19h11l-1-1.5V11a5 5 0 0 0-7.5-4.3M5 5l14 14M10 21a2 2 0 0 0 4 0" }));
+    svg.setAttribute("stroke-width", "1.6");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.454 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" }));
+  } else if (kind === "bell-off") {
+    // Heroicons bell-slash outline — clear bell silhouette + diagonal slash.
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.6");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M9.143 17.082a24.248 24.248 0 0 0 3.844.148m-3.844-.148a23.856 23.856 0 0 1-5.455-1.31 8.964 8.964 0 0 0 2.3-5.542m3.155 6.852a3 3 0 0 0 5.667 1.97m1.965-2.277L21 21M4.5 4.5l15 15" }));
   } else if (kind === "pencil") {
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
@@ -1112,11 +1117,12 @@ function multiResume(id) {
   updateWakeLock();
 }
 
-// Reset an ended (or paused) timer back to idle with its full duration —
-// does NOT auto-start. The user clicks ▶ separately when they're ready.
+// Reset a row back to idle with its full duration from any non-idle status
+// (running, paused, ended). Does NOT auto-start — the user clicks ▶ when
+// they're ready.
 function multiRestart(id) {
   const timers = (state.timers || []).map((x) => {
-    if (x.id === id && (x.status === "ended" || x.status === "paused")) {
+    if (x.id === id && x.status !== "idle") {
       multiAlerted.delete(id);
       return { ...x, status: "idle", endTime: 0, remaining: x.duration };
     }
@@ -1315,6 +1321,22 @@ function renderMultiTimers() {
     }
     primary.addEventListener("click", () => multiToggle(tim.id));
 
+    // Reset back to idle with the full duration — always present (the
+    // master "Reset all" handles the whole list; this is the per-row
+    // version). Disabled when there's nothing to reset (already idle).
+    const resetBtn = document.createElement("button");
+    resetBtn.type = "button";
+    resetBtn.className = "icon-btn !p-2";
+    if (tim.status === "idle") {
+      resetBtn.disabled = true;
+      resetBtn.classList.add("opacity-30", "cursor-not-allowed");
+    } else {
+      resetBtn.title = t("multiResetRow");
+      resetBtn.setAttribute("aria-label", t("multiResetRow"));
+      resetBtn.addEventListener("click", () => multiRestart(tim.id));
+    }
+    resetBtn.append(makeIcon("restart"));
+
     // Edit duration in place. Disabled while running — would mid-flight
     // rewrite the endTime. Pause / let it end first, then edit.
     const editBtn = document.createElement("button");
@@ -1370,7 +1392,7 @@ function renderMultiTimers() {
     removeBtn.append(makeIcon("close"));
     removeBtn.addEventListener("click", () => multiRemove(tim.id));
 
-    ctrl.append(primary, editBtn, bellBtn, linkBtn, removeBtn);
+    ctrl.append(primary, resetBtn, editBtn, bellBtn, linkBtn, removeBtn);
     row.append(grip, lbl, time, ctrl);
 
     // Native HTML5 drag-and-drop: dragstart carries the id; dragover decides
@@ -1442,6 +1464,9 @@ function tickMultiTimers() {
     r.row.classList.toggle("dark:border-rose-700", ended);
     const which = ended ? "restart" : tim.status === "running" ? "pause" : "play";
     setPrimaryIcon(r.primary, which);
+    // Pause reads as the active state — paint it blue. Other icons revert.
+    r.primary?.classList.toggle("text-blue-600", which === "pause");
+    r.primary?.classList.toggle("dark:text-blue-400", which === "pause");
   }
 }
 

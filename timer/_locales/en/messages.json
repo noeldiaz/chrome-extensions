@@ -34,6 +34,7 @@
     "placeholders": { "name": { "content": "$1" } }
   },
   "multiReorder": { "message": "Drag to reorder" },
+  "multiResetRow": { "message": "Reset this timer" },
   "multiSilence": { "message": "Mute this timer" },
   "multiUnsilence": { "message": "Unmute this timer" },
   "multiLink": { "message": "Chain to the next timer" },
