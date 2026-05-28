@@ -149,6 +149,16 @@
   }
 }
 
+/* The full-page stage uses place-items-center so Clock/Stopwatch/Timer sit
+   in the middle of the viewport. The Timers list grows downward, so when
+   that panel is active, top-align the wrapper instead. */
+main#stage:has(> div > #panel-timers:not(.hidden)) {
+  place-items: start center;
+}
+main#stage:has(> div > #panel-timers:not(.hidden)) > div {
+  padding-top: 1.5rem;
+}
+
 /* the timer's "ended" state nudges the digits red */
 .is-ended .display {
   color: var(--color-rose-600);
