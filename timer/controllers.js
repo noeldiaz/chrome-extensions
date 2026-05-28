@@ -620,15 +620,18 @@ function makeIcon(kind) {
     svg.setAttribute("stroke-width", "1.8");
     svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M5 19h11l-1-1.5V11a5 5 0 0 0-7.5-4.3M5 5l14 14M10 21a2 2 0 0 0 4 0" }));
   } else if (kind === "link-off") {
+    // A broken chain — two halves angling apart, with three "snap" sparks
+    // where the bond used to be. Matches the heroicons link-slash family.
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "1.8");
-    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M9.5 14.5l5-5M8 8.5l-2.1 2.1a3.5 3.5 0 0 0 5 5L13 13.5M11 15.5l2.1-2.1a3.5 3.5 0 0 0-5-5L6 10.5" }));
+    svg.setAttribute("stroke-width", "1.7");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-1.5 1.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-1.5 1.5m-1.563 4.94 4.5 4.5m1.5-9 3-3m-3 3 3 3m-3-3-3 3" }));
   } else if (kind === "link-on") {
+    // A continuous chain — two oval links joined on the diagonal.
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2");
-    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M10 14L14 10M8.5 8.5L7 10a3.5 3.5 0 0 0 5 5l1.5-1.5M10.5 15.5L12 14a3.5 3.5 0 0 0-5-5L5.5 10.5" }));
+    svg.setAttribute("stroke-width", "1.9");
+    svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" }));
   }
   return svg;
 }
@@ -861,13 +864,17 @@ function renderMultiTimers() {
     if (!tim.silent) bellBtn.classList.add("text-blue-600", "dark:text-blue-400");
     bellBtn.addEventListener("click", () => toggleSilent(tim.id));
 
-    // Chain to the next row. Hidden on the last row (nothing to chain to).
+    // Chain to the next row. Shown disabled on the last row (nothing to
+    // chain to) so the icon column stays visually consistent down the list.
     // When on, the bg auto-starts the next idle row when this one ends.
-    let linkBtn = null;
-    if (!isLast) {
-      linkBtn = document.createElement("button");
-      linkBtn.type = "button";
-      linkBtn.className = "icon-btn !p-2";
+    const linkBtn = document.createElement("button");
+    linkBtn.type = "button";
+    linkBtn.className = "icon-btn !p-2";
+    if (isLast) {
+      linkBtn.disabled = true;
+      linkBtn.classList.add("opacity-30", "cursor-not-allowed");
+      linkBtn.append(makeIcon("link-off"));
+    } else {
       const linkTitle = linkedDown ? t("multiUnlink") : t("multiLink");
       linkBtn.title = linkTitle;
       linkBtn.setAttribute("aria-label", linkTitle);
@@ -884,9 +891,7 @@ function renderMultiTimers() {
     removeBtn.append(makeIcon("close"));
     removeBtn.addEventListener("click", () => multiRemove(tim.id));
 
-    ctrl.append(primary, bellBtn);
-    if (linkBtn) ctrl.append(linkBtn);
-    ctrl.append(removeBtn);
+    ctrl.append(primary, bellBtn, linkBtn, removeBtn);
     row.append(grip, lbl, time, ctrl);
 
     // Native HTML5 drag-and-drop: dragstart carries the id; dragover decides
