@@ -53,6 +53,11 @@ let alertedFor = null; // endTime we've already chimed for, so we ring exactly o
 let selectedPreset = null; // seconds of the chosen preset chip; reset returns here (or 00)
 let baseTitle = ""; // the page's plain title; the full page prefixes a running countdown
 let lastTitle = ""; // last value written to document.title, so we only set it when it changes
+let wakeLock = null; // Screen Wake Lock sentinel (full page only), held while a countdown runs
+// Honour the OS "reduce motion" setting: the analog second hand ticks per second
+// instead of sweeping, and the visual-timer dial steps once a second.
+const reduceMotionMQ = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+let reduceMotion = !!reduceMotionMQ?.matches;
 
 const $ = (id) => document.getElementById(id);
 // Speak a one-off message through the visually-hidden live region, so screen
@@ -156,7 +161,8 @@ function renderAnalog(now) {
   rotate(els.handHour, hour);
   rotate(els.handMin, minute);
   els.handSec?.classList.toggle("hidden", !state.clockSeconds);
-  if (state.clockSeconds) rotate(els.handSec, second);
+  // reduced motion: tick to the whole second rather than sweeping with the milliseconds
+  if (state.clockSeconds) rotate(els.handSec, reduceMotion ? now.getSeconds() * 6 : second);
 }
 
 function renderClock() {
@@ -353,7 +359,9 @@ function renderTimerDial(remaining, duration, status) {
   const total = Math.max(1, Math.round(duration / 1000));
   if (els.tmDialFor !== total) rebuildTimerTicks(total);
   els.tmNums?.classList.toggle("hidden", !state.timerNumerals);
-  const f = duration > 0 ? Math.max(0, Math.min(1, remaining / duration)) : 0;
+  // reduced motion: step the wedge/hand once per second (matching the ceil'd digits) rather than sweeping
+  const rem = reduceMotion ? Math.ceil(Math.max(0, remaining) / 1000) * 1000 : remaining;
+  const f = duration > 0 ? Math.max(0, Math.min(1, rem / duration)) : 0;
   els.tmWedge.setAttribute("d", wedgePath(50, 50, 44, f));
   els.tmWedge.setAttribute("class", status === "ended" ? "fill-rose-500" : "fill-blue-500");
   rotate(els.tmHand, 360 * f);
@@ -414,6 +422,29 @@ function updateTitle() {
   }
 }
 
+// Full page only: hold a Screen Wake Lock while a countdown runs so the display
+// doesn't sleep mid-cook. The browser auto-releases the lock when the tab is
+// hidden, so we re-request it on visibility. Engines without the API (Safari) or
+// that deny it just no-op — the countdown still runs.
+async function updateWakeLock() {
+  if (mode !== "full" || !navigator.wakeLock) return;
+  const want = state.tm.status === "running" && document.visibilityState === "visible";
+  try {
+    if (want && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => {
+        wakeLock = null;
+      });
+    } else if (!want && wakeLock) {
+      const held = wakeLock;
+      wakeLock = null;
+      await held.release();
+    }
+  } catch {
+    /* denied / unavailable — the countdown still runs, just without the lock */
+  }
+}
+
 function bg(type, payload = {}) {
   try {
     chrome.runtime.sendMessage({ type, ...payload }, () => void chrome.runtime.lastError);
@@ -447,6 +478,7 @@ function tmStart() {
     bg("timer:start", { endTime });
   }
   renderTimer();
+  updateWakeLock();
 }
 
 function tmReset() {
@@ -457,6 +489,7 @@ function tmReset() {
   clearInputs();
   highlightPresets();
   renderTimer();
+  updateWakeLock();
 }
 
 function readInputs() {
@@ -671,7 +704,16 @@ export async function initApp(opts = {}) {
     renderFlash();
   });
 
-  if (mode === "full") wireFullscreen();
+  // track live OS "reduce motion" changes; the running tick re-renders with it
+  reduceMotionMQ?.addEventListener?.("change", (e) => {
+    reduceMotion = e.matches;
+  });
+
+  if (mode === "full") {
+    wireFullscreen();
+    // the wake lock is dropped when the tab hides; reclaim it when it's shown again
+    document.addEventListener("visibilitychange", updateWakeLock);
+  }
 
   // Reflect changes made in the other surface (popup ↔ full page) live. Running
   // state changes in local; synced preferences in sync (when on) or local (off),
@@ -689,6 +731,7 @@ export async function initApp(opts = {}) {
     renderTimerControls();
     renderTimer();
     if (state.tool === "clock") renderClock();
+    updateWakeLock(); // a countdown started/paused/ended in the other surface
   });
 
   // prefill the H/M/S fields with the last-used duration when nothing's running yet
@@ -703,6 +746,7 @@ export async function initApp(opts = {}) {
   renderTimerControls();
   renderTimer();
   highlightPresets();
+  updateWakeLock(); // a countdown may already be running when this surface opens
   requestAnimationFrame(tick);
 }
 
@@ -716,10 +760,13 @@ function wireFullscreen() {
   });
   document.addEventListener("fullscreenchange", apply);
   document.addEventListener("keydown", (e) => {
-    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || "");
-    if (typing) return;
+    const tag = e.target?.tagName || "";
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
     if (e.key === "f" || e.key === "F") btn?.click();
     else if (e.key === " ") {
+      // a focused button/link already activates on Space natively — bail so we
+      // don't toggle a second time and cancel ourselves out
+      if (tag === "BUTTON" || tag === "A") return;
       e.preventDefault();
       (state.tool === "timer" ? els.tmStart : state.tool === "stopwatch" ? els.swStart : null)?.click();
     }
