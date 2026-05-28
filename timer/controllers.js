@@ -1318,7 +1318,7 @@ function renderMultiTimers() {
         f.inputMode = "numeric";
         f.value = String(val);
         f.setAttribute("aria-label", aria);
-        f.className = "w-14 rounded-md border border-slate-300 bg-white py-1 text-center text-base font-bold tabular-nums focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100";
+        f.className = "w-20 rounded-md border border-slate-300 bg-white py-1 text-center text-base font-bold tabular-nums focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100";
         return f;
       };
       const eh = mkField(Math.floor(totalSec / 3600), 99, t("hours"));
