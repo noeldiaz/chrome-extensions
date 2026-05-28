@@ -233,6 +233,27 @@ body.fs #tm-dial {
   height: min(78vh, 78vw);
 }
 
+/* Multi-timer fullscreen: cards take 80% of the viewport, the digits are
+   moderate (not the giant single-timer readout), and the label dominates
+   each card — just a notch under the digit size. */
+body.fs #panel-timers {
+  width: 80vw;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 2vh;
+}
+body.fs #mt-list .display {
+  font-size: clamp(1.75rem, 4vw, 4rem);
+}
+body.fs #mt-list input[type="text"] {
+  font-size: clamp(1.25rem, 3.2vw, 3.25rem);
+  font-weight: 600;
+}
+body.fs #mt-list > div {
+  padding: clamp(0.75rem, 2vh, 2rem) clamp(1rem, 2vw, 2rem);
+  gap: clamp(0.75rem, 1.5vw, 1.5rem);
+}
+
 @media (prefers-reduced-motion: reduce) {
   body.flashing #flash {
     animation-duration: 0.6s;
