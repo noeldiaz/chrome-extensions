@@ -69,6 +69,7 @@ let lastTitle = ""; // last value written to document.title, so we only set it w
 let wakeLock = null; // Screen Wake Lock sentinel (full page only), held while a countdown runs
 let activeTool = "clock"; // the tool actually shown — usually state.tool, but the popup clamps "timers" → "timer"
 const multiAlerted = new Map(); // id → endTime we've chimed for, so each multi-timer rings exactly once
+let mtDragId = null; // id of the row currently being dragged (drag-and-drop reorder)
 const mtRows = new Map(); // id → { row, lbl, time, primary } — references for per-frame updates without rebuilding
 // Honour the OS "reduce motion" setting: the analog second hand ticks per second
 // instead of sweeping, and the visual-timer dial steps once a second.
@@ -604,6 +605,12 @@ function makeIcon(kind) {
     svg.setAttribute("stroke", "currentColor");
     svg.setAttribute("stroke-width", "2");
     svg.append(svgEl("path", { "stroke-linecap": "round", "stroke-linejoin": "round", d: "M6 18 18 6M6 6l12 12" }));
+  } else if (kind === "grip") {
+    // Two columns of three dots — the universal drag handle.
+    svg.setAttribute("fill", "currentColor");
+    for (const [cx, cy] of [[9, 6], [9, 12], [9, 18], [15, 6], [15, 12], [15, 18]]) {
+      svg.append(svgEl("circle", { cx: String(cx), cy: String(cy), r: "1.4" }));
+    }
   }
   return svg;
 }
@@ -623,11 +630,25 @@ function multiAdd() {
   if ((state.timers || []).length >= MULTI_CAP) return; // silent cap — list is already full
   const label = String(els.mtLabel?.value || "").trim().slice(0, 60);
   const id = newMultiId();
-  const newT = { id, label, status: "running", endTime: Date.now() + ms, remaining: ms, duration: ms };
+  // Add as idle — the user clicks ▶ to actually start the countdown.
+  const newT = { id, label, status: "idle", endTime: 0, remaining: ms, duration: ms };
   persist({ timers: [...(state.timers || []), newT] });
-  bg("multi:start", { id, endTime: newT.endTime });
   clearMtInputs();
   els.mtH?.focus();
+}
+
+function multiStart(id) {
+  const now = Date.now();
+  let endTime = 0;
+  const timers = (state.timers || []).map((x) => {
+    if (x.id === id && x.status === "idle") {
+      endTime = now + x.duration;
+      return { ...x, status: "running", endTime, remaining: x.duration };
+    }
+    return x;
+  });
+  persist({ timers });
+  if (endTime) bg("multi:start", { id, endTime });
   updateWakeLock();
 }
 
@@ -688,6 +709,26 @@ function multiToggle(id) {
   if (tim.status === "running") multiPause(id);
   else if (tim.status === "paused") multiResume(id);
   else if (tim.status === "ended") multiRestart(id);
+  else if (tim.status === "idle") multiStart(id);
+}
+
+// Drag-and-drop reorder. Persists the new order; alarms/endTimes are untouched
+// so a running timer keeps ticking in its new slot.
+function multiReorder(srcId, destId, dropAfter) {
+  if (srcId === destId) return;
+  const list = state.timers || [];
+  const src = list.find((x) => x.id === srcId);
+  if (!src) return;
+  const without = list.filter((x) => x.id !== srcId);
+  const destIdx = without.findIndex((x) => x.id === destId);
+  if (destIdx < 0) return;
+  const insertAt = destIdx + (dropAfter ? 1 : 0);
+  const next = [...without.slice(0, insertAt), src, ...without.slice(insertAt)];
+  persist({ timers: next });
+}
+
+function clearMtDropHints() {
+  for (const { row } of mtRows.values()) row.classList.remove("mt-drop-before", "mt-drop-after");
 }
 
 // Build the list of timer rows. Called on add/remove/replace; per-frame text
@@ -707,6 +748,19 @@ function renderMultiTimers() {
   for (const tim of state.timers) {
     const row = document.createElement("div");
     row.className = "flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800";
+    row.dataset.mtid = tim.id;
+
+    // Drag handle — the row only becomes draggable while the grip is held,
+    // so click-to-focus on the label and the buttons still works normally.
+    const grip = document.createElement("button");
+    grip.type = "button";
+    grip.tabIndex = -1;
+    grip.className = "cursor-grab text-slate-300 hover:text-slate-500 focus:outline-none dark:text-slate-600 dark:hover:text-slate-300";
+    grip.title = t("multiReorder");
+    grip.setAttribute("aria-label", t("multiReorder"));
+    grip.append(makeIcon("grip"));
+    grip.addEventListener("pointerdown", () => { row.draggable = true; });
+    grip.addEventListener("pointerup", () => { row.draggable = false; });
 
     const lbl = document.createElement("input");
     lbl.type = "text";
@@ -745,7 +799,45 @@ function renderMultiTimers() {
     removeBtn.addEventListener("click", () => multiRemove(tim.id));
 
     ctrl.append(primary, removeBtn);
-    row.append(lbl, time, ctrl);
+    row.append(grip, lbl, time, ctrl);
+
+    // Native HTML5 drag-and-drop: dragstart carries the id; dragover decides
+    // whether to drop above or below this target by which half of it the
+    // pointer is over. A faint top/bottom border previews the insertion line.
+    row.addEventListener("dragstart", (e) => {
+      mtDragId = tim.id;
+      row.classList.add("opacity-40");
+      try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", tim.id); }
+      catch { /* dataTransfer may be unavailable in tests */ }
+    });
+    row.addEventListener("dragend", () => {
+      mtDragId = null;
+      row.draggable = false;
+      row.classList.remove("opacity-40");
+      clearMtDropHints();
+    });
+    row.addEventListener("dragover", (e) => {
+      if (!mtDragId || mtDragId === tim.id) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const rect = row.getBoundingClientRect();
+      const after = (e.clientY - rect.top) > rect.height / 2;
+      clearMtDropHints();
+      row.classList.add(after ? "mt-drop-after" : "mt-drop-before");
+    });
+    row.addEventListener("dragleave", () => {
+      row.classList.remove("mt-drop-before", "mt-drop-after");
+    });
+    row.addEventListener("drop", (e) => {
+      if (!mtDragId || mtDragId === tim.id) return;
+      e.preventDefault();
+      const rect = row.getBoundingClientRect();
+      const after = (e.clientY - rect.top) > rect.height / 2;
+      const src = mtDragId;
+      clearMtDropHints();
+      multiReorder(src, tim.id, after);
+    });
+
     els.mtList.append(row);
     mtRows.set(tim.id, { row, lbl, time, primary });
   }

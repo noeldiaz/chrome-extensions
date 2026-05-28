@@ -226,7 +226,8 @@
 
         <!-- multiple concurrent timers (full page only) -->
         <section id="panel-timers" class="hidden">
-          <!-- setup: duration + label + Add (Add aligns with the input row via an invisible caption spacer) -->
+          <!-- setup card: duration + label + Add (Add aligns with the input row via an invisible caption spacer) -->
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-end gap-2">
             <label class="w-24 shrink-0">
               <input id="mt-h" type="number" min="0" max="99" inputmode="numeric" placeholder="00" class="timefield !h-14 !py-0 !text-2xl" aria-label="Hours" />
@@ -256,8 +257,11 @@
               <span aria-hidden="true" class="invisible mt-1 block text-[10px] font-semibold uppercase tracking-wider">·</span>
             </div>
           </div>
+          </div>
+          <!-- divider between the setup card and the timer list -->
+          <hr class="my-6 border-t border-slate-200 dark:border-slate-700" />
           <!-- the running list (each row built by controllers.js renderMultiTimers) -->
-          <div id="mt-list" class="mt-8 space-y-2"></div>
+          <div id="mt-list" class="space-y-2"></div>
         </section>
       </div>
     </main>

@@ -138,6 +138,15 @@
   .tab-btn.is-active {
     @apply bg-white text-slate-800 shadow-sm dark:bg-slate-700 dark:text-slate-100;
   }
+
+  /* Drag-and-drop reorder hints on the Timers list — a 2px blue line at the
+     edge where the dragged row would land if dropped. */
+  .mt-drop-before {
+    @apply !border-t-2 !border-t-blue-500;
+  }
+  .mt-drop-after {
+    @apply !border-b-2 !border-b-blue-500;
+  }
 }
 
 /* the timer's "ended" state nudges the digits red */
