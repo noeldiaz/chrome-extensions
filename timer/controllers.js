@@ -1030,12 +1030,11 @@ function renderCollectionBar() {
   const hasTimers = (state.timers || []).length > 0;
   const collections = state.timerCollections || [];
 
-  // Single centered row: collection controls + Clear all on the far right.
-  // Reset lives outside the card next to the collection title (see
-  // renderLoadedName) so the master "stop everything" action is always
-  // beside the loaded-group label.
+  // Single full-width row: collection controls + Clear all on the far right.
+  // The dropdown gets flex-1 below so it eats the empty space between the
+  // buttons; everything else stays content-sized.
   const collectionRow = document.createElement("div");
-  collectionRow.className = "flex items-center justify-center gap-2";
+  collectionRow.className = "flex w-full items-center gap-2";
   const right = collectionRow;
 
   const loaded = state.timerCollectionLoaded;
@@ -1056,7 +1055,7 @@ function renderCollectionBar() {
 
   if (collections.length) {
     const select = document.createElement("select");
-    select.className = "h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+    select.className = "h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
     // Placeholder only shown when nothing is loaded — otherwise the loaded
     // name is the visible selection.
     if (!loadedExists) {
