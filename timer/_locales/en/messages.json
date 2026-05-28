@@ -24,7 +24,7 @@
 
   "multiAdd": { "message": "Add" },
   "multiLabel": { "message": "Label" },
-  "multiLabelPlaceholder": { "message": "Name this timer (optional)" },
+  "multiLabelPlaceholder": { "message": "(optional)" },
   "multiEmpty": { "message": "No timers yet. Set a duration above and Add." },
   "multiRemove": { "message": "Remove timer" },
   "mtRemoveTitle": { "message": "Remove this timer?" },
@@ -44,6 +44,9 @@
   "editCancel": { "message": "Cancel" },
 
   "mtResetAll": { "message": "Reset" },
+  "mtClearAll": { "message": "Clear all" },
+  "mtClearAllTitle": { "message": "Clear every timer?" },
+  "mtClearAllBody": { "message": "Every timer on this list will be removed. This can't be undone." },
   "mtResetAllTitle": { "message": "Reset every timer?" },
   "mtResetAllBody": { "message": "Every timer in this list will return to its full configured duration and stop running." },
   "mtSaveCollection": { "message": "Save as…" },
